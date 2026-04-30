@@ -83,7 +83,12 @@ npx @auto.dev/sdk login
 npx @auto.dev/sdk whoami
 ```
 
-If not logged in, all Auto.dev CLI calls below will fail with "You need to log in first." In that case, fall back to the documented alternatives (NHTSA browser automation for recalls; skip TCO/taxes sections).
+**Auth and tier failure modes:**
+- `"You need to log in first."` → not authenticated; run `npx @auto.dev/sdk login`
+- `"402: Payment Required … requires a Growth plan"` → TCO not available on current tier; skip silently
+- `"402: Payment Required … requires a Scale plan"` → open-recalls and/or taxes not available; use NHTSA browser fallback for recalls, skip taxes
+- The `listings` command works on the **Starter tier** (free). TCO requires Growth; open-recalls and taxes require Scale. Treat any `402` response from these commands as "tier not available" and follow the skip/fallback instructions in the relevant step.
+
 
 ---
 
@@ -358,6 +363,10 @@ Run one query per (make, model) pair. Run all in parallel.
 **Extract per listing:**
 - `price`, `mileage` (odometer), `year`, `make`, `model`, `trim`, `location` (city/state), `listing URL` or dealer name
 - Mark `dealer` column as the dealership name (Auto.dev listings are dealer inventory; mark `Private? = No`)
+- `retailListing.miles` field path; `vehicle.year/make/model/trim`; `retailListing.price/city/state/dealer`
+
+**⚠️ 0-miles guard:** Auto.dev sometimes returns `"miles": 0` for listings where the dealer didn't report odometer data. A 0-miles reading is **not** a new car — it means the mileage is unknown. **Skip CPM calculation for any listing where `miles == 0`**; include the listing in a separate "Mileage not reported" section at the end of Step 2 output. Do NOT let these rank #1 — at 0 miles the CPM formula produces an artifically low number (e.g., $3,500 / 250,000 = $0.014/mi) that is meaningless.
+
 
 **Deduplication:** If a listing URL from Auto.dev matches one already found via AutoTrader or CarGurus scraping, keep the scraped version (richer description for disqualification scanning) and note "also on Auto.dev" in Notes.
 
@@ -701,7 +710,8 @@ npx @auto.dev/sdk open-recalls {VIN} --json 2>&1
 ```
 Returns only unrepaired recalls for this specific VIN. Empty array = all recalls remedied.
 
-**Fallback — NHTSA browser automation (if not logged in to Auto.dev):**
+**Fallback — NHTSA browser automation (if not logged in to Auto.dev, or if CLI returns 402 Payment Required):**
+
 The public NHTSA recall API (`api.nhtsa.gov/recalls/recallsByVin`) returns "Missing Authentication Token" — it's not a real public endpoint. Drive it via the Chrome MCP:
 
 1. Navigate the tab to `https://www.nhtsa.gov/recalls`
@@ -846,7 +856,8 @@ Parse the JSON response:
 
 **Tell the user to NOT take delivery until the dealer fixes any open recalls — Honda/Toyota fix open recalls for free regardless of buyer.**
 
-**Fallback — browser automation (if Auto.dev CLI not logged in):**
+**Fallback — browser automation (if Auto.dev CLI not logged in, or if CLI returns 402 Payment Required):**
+
 
 Drive `https://www.nhtsa.gov/recalls` via the Chrome MCP. Use the 6-step flow documented in Step 5 §F2:
 1. Navigate to `https://www.nhtsa.gov/recalls`

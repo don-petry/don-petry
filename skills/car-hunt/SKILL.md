@@ -1,6 +1,6 @@
 ---
 name: car-hunt
-description: Find, research, and rank used Honda/Toyota vehicles (Civic, Accord, CR-V, Camry, Corolla, RAV4) by CPM (cost per remaining mile). Researches reliability by model year, searches AutoTrader/CarGurus/Facebook Marketplace, calculates value score, ranks candidates, and optionally runs VIN history/recall lookups.
+description: Find, research, and rank used Honda/Toyota vehicles (Civic, Accord, CR-V, Camry, Corolla, RAV4) by CPM (cost per remaining mile). Researches reliability by model year, searches AutoTrader/CarGurus/Facebook Marketplace/Auto.dev, calculates value score, ranks candidates, and runs VIN recall/TCO lookups via NHTSA + Auto.dev CLI.
 argument-hint: [make model year-range max-price zip radius]
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash, Agent, AskUserQuestion, WebFetch, WebSearch, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__search_files, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__read_file_content, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__get_file_metadata, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__download_file_content
@@ -59,6 +59,31 @@ Baseline data — augmented each run by Step 1 (live reliability research). Do N
 | Toyota | Camry   | L → LE → SE → XLE → XSE → TRD → XSE V6 → XLE V6                    |
 | Toyota | Corolla | L → LE → SE → XLE → XSE → Apex                                      |
 | Toyota | RAV4    | LE → XLE → XLE Premium → TRD → Adventure → Limited → Platinum       |
+
+---
+
+## Auto.dev CLI — Setup (one-time)
+
+Several steps in this skill use the [Auto.dev](https://auto.dev) automotive data API via its CLI (`npx @auto.dev/sdk`). The CLI handles auth, pagination, and output formatting automatically.
+
+**What it provides (used in this skill):**
+- `listings` — search dealer inventory by make/model/year/price/state (Starter tier)
+- `open-recalls` — unrepaired VIN recalls via API (replaces fragile NHTSA browser automation)
+- `tco` — 5-year total cost of ownership estimate by VIN (Growth tier)
+- `taxes` — sales tax + registration fee estimate by VIN + ZIP (Scale tier)
+
+**One-time login (requires browser):**
+```bash
+npx @auto.dev/sdk login
+# Opens browser → sign in → CLI is authorized
+```
+
+**Check auth status:**
+```bash
+npx @auto.dev/sdk whoami
+```
+
+If not logged in, all Auto.dev CLI calls below will fail with "You need to log in first." In that case, fall back to the documented alternatives (NHTSA browser automation for recalls; skip TCO/taxes sections).
 
 ---
 
@@ -157,7 +182,9 @@ If research contradicts the static table (e.g., a year previously flagged is now
 
 ## Step 2: Search for Listings
 
-Search AutoTrader, CarGurus, and Facebook Marketplace in parallel for each make/model combination.
+Search AutoTrader, CarGurus, Facebook Marketplace, Craigslist, and Auto.dev in parallel for each make/model combination.
+
+> **Inspect before batch:** Before running bulk Auto.dev CLI listing queries, run one single-model call (e.g., `--make Honda --model Civic --limit 1 --json`) and inspect the actual JSON field names. Do not assume field names from documentation — verify `make`, `model`, `price`, `mileage`, `year` paths in the real response before extracting across all models.
 
 ### AutoTrader
 
@@ -274,6 +301,46 @@ From the search page HTML, extract all individual listing URLs in the format `{r
 **Exhaustive coverage — do NOT stop at first page.** Check the total result count returned by the search page (e.g., "1–120 of 340 results"). If more pages exist, fetch subsequent pages by adding `&s=120`, `&s=240`, etc. until all results are retrieved.
 
 **Link rule:** Use only the exact URL scraped from the page. Never construct or guess a Craigslist listing URL — IDs are not predictable and a wrong ID is a 404.
+
+### Auto.dev (dealer inventory — structured API)
+
+Auto.dev's listings API provides clean, structured dealer inventory without JS rendering or scraping fragility. It **complements** private-seller sources (Craigslist, FB Marketplace) rather than replacing them — its coverage skews toward dealer lots.
+
+**Check auth first:**
+```bash
+npx @auto.dev/sdk whoami 2>&1
+```
+If not logged in, skip this section and note "Auto.dev: skipped (not logged in)" in the Step 2 summary.
+
+**Run one model first to inspect field names:**
+```bash
+npx @auto.dev/sdk listings --make Honda --model Civic --limit 1 --json 2>&1
+```
+Verify the actual JSON field paths for price, mileage, year, trim, location, and listing URL before building the full query.
+
+**Full search per make/model:**
+```bash
+npx @auto.dev/sdk listings \
+  --make {make} \
+  --model {model} \
+  --year {YEAR_MIN}-{YEAR_MAX} \
+  --price 0-{MAX_PRICE} \
+  --miles 0-{MAX_ODOMETER} \
+  --state AL \
+  --sort "price:asc" \
+  --limit 50 \
+  --json 2>&1
+```
+
+Run one query per (make, model) pair. Run all in parallel.
+
+**Extract per listing:**
+- `price`, `mileage` (odometer), `year`, `make`, `model`, `trim`, `location` (city/state), `listing URL` or dealer name
+- Mark `dealer` column as the dealership name (Auto.dev listings are dealer inventory; mark `Private? = No`)
+
+**Deduplication:** If a listing URL from Auto.dev matches one already found via AutoTrader or CarGurus scraping, keep the scraped version (richer description for disqualification scanning) and note "also on Auto.dev" in Notes.
+
+**Why this matters:** When AutoTrader/CarGurus scraping fails (JS rendering issues, 503s, URL structure changes), Auto.dev provides a stable structured fallback for dealer listings.
 
 ### WebSearch Fallback (any source)
 
@@ -457,7 +524,7 @@ Present reliability cards first, then the ranked table:
 ═══════════════════════════════════════════════════════════════════
   CAR HUNT RESULTS — {N} candidates — {date}
   Search: {makes/models} | {year_min}–{year_max} | ≤${max_price} | {zip} +{radius}mi
-  Sources: AutoTrader · CarGurus · Facebook Marketplace
+  Sources: AutoTrader · CarGurus · Craigslist · Facebook Marketplace · Auto.dev
 ═══════════════════════════════════════════════════════════════════
 
 [Reliability cards from Step 1 — one per model — displayed here]
@@ -529,18 +596,51 @@ Market Context — {year} {make} {model} {trim} @ {miles}mi:
   Verdict:      [Below market / At market / Above market by ~${delta}]
 ```
 
-### E. VIN Lookup (user provides VIN — image, sticker photo, or string)
+### E. Total Cost of Ownership (Auto.dev CLI — when logged in)
+
+```bash
+npx @auto.dev/sdk tco {VIN} --zip {ZIP} --json 2>&1
+```
+
+If the command fails (not logged in or Growth tier not enabled), skip this section silently — it's informational, not blocking.
+
+Parse the JSON and surface a TCO block in the deep-dive summary:
+
+```
+💵 5-YEAR TOTAL COST OF OWNERSHIP (Auto.dev estimate):
+  Fuel:           ~$X,XXX
+  Insurance:      ~$X,XXX
+  Maintenance:    ~$X,XXX
+  Depreciation:   ~$X,XXX
+  ─────────────────────
+  5-yr TCO:       ~$XX,XXX   (~$X,XXX/yr)
+```
+
+**Usage rules:**
+- TCO is a **secondary signal only** — never use it to override CPM for ranking decisions.
+- TCO assumes average driving (~15K mi/yr, national avg fuel/insurance rates). Flag to the user if their usage patterns differ significantly.
+- Comparing two candidates' TCO alongside their CPM helps surface cases where a nominally cheaper car (lower price, better CPM) has higher ongoing ownership costs.
+
+### F. VIN Lookup (user provides VIN — image, sticker photo, or string)
 
 When the user gives you a VIN (or a photo of one — read it from the image), run these in parallel:
 
-#### E1. NHTSA VIN decode — free, always works
+#### F1. NHTSA VIN decode — free, always works
 ```
 GET https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{VIN}?format=json
 ```
 Verify: model year, make, model, trim, body class, engine displacement, cylinders, transmission, drive type, plant city all match the listing. **Flag any mismatch as 🚫 — possible fraud, salvage rebuild, or wrong sticker.**
 
-#### E2. NHTSA per-VIN remedy status — automate via browser, not API
-The public NHTSA recall API (`api.nhtsa.gov/recalls/recallsByVin`) returns "Missing Authentication Token" — it's not a real public endpoint. Per-VIN remedy status is only exposed through the NHTSA web UI. Drive it via the Chrome MCP:
+#### F2. Per-VIN remedy status — Auto.dev CLI (preferred) or browser fallback
+
+**Preferred — Auto.dev CLI (no browser needed):**
+```bash
+npx @auto.dev/sdk open-recalls {VIN} --json 2>&1
+```
+Returns only unrepaired recalls for this specific VIN. Empty array = all recalls remedied.
+
+**Fallback — NHTSA browser automation (if not logged in to Auto.dev):**
+The public NHTSA recall API (`api.nhtsa.gov/recalls/recallsByVin`) returns "Missing Authentication Token" — it's not a real public endpoint. Drive it via the Chrome MCP:
 
 1. Navigate the tab to `https://www.nhtsa.gov/recalls`
 2. Find input `#ymm-vin-recalls-search-input`, focus it, set value via the prototype setter, dispatch `InputEvent('input')` with `inputType: 'insertText'` and `data: <VIN>`, then `change`.
@@ -559,7 +659,7 @@ The public NHTSA recall API (`api.nhtsa.gov/recalls/recallsByVin`) returns "Miss
 
 **Do NOT use Honda's owner recall portal (`mygarage.honda.com/s/recall-search`).** Its Salesforce LWC form rejects programmatically-typed VINs as "Incorrect VIN entered" regardless of how the input value is set (prototype setter, InputEvent with data, execCommand insertText, blur-to-commit). NHTSA's site works; Honda's does not.
 
-#### E3. Vehicle history report (Carfax-style accident/ownership data)
+#### F3. Vehicle history report (Carfax-style accident/ownership data)
 
 Carfax and AutoCheck are **paid** ($45–$100 per report) and require a logged-in user account. Do NOT automate these — point the user to them. There are also **free** alternatives that should be checked first:
 
@@ -603,6 +703,10 @@ Present deep-dive report:
 
 💰 MARKET VALUE:
   Ask: ${price} | KBB fair: ~${kbb} | [{verdict}]
+
+💵 5-YEAR TCO (Auto.dev — if available):
+  Fuel: ~$X,XXX | Insurance: ~$X,XXX | Maintenance: ~$X,XXX | Depreciation: ~$X,XXX
+  Total: ~$XX,XXX (~$X,XXX/yr)   [omit section if Auto.dev not logged in]
 
 🔑 VIN CHECK:
   Decoded: {year} {make} {model} {trim} — ✅ matches listing / ⚠️ mismatch: {detail}
@@ -666,19 +770,37 @@ GET https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{VIN}?format=json
 
 **🚫 If ANY field disagrees with the listing → STOP.** Possible causes: salvage rebuild with mismatched parts/body, fraudulent listing, sticker swap on a stolen car, or a typo. Do not let the user proceed until the discrepancy is resolved.
 
-### B. NHTSA per-VIN unrepaired-recall check (browser automation)
+### B. Per-VIN unrepaired-recall check (Auto.dev CLI — preferred)
 
-Drive `https://www.nhtsa.gov/recalls` via the Chrome MCP using the flow documented in §E2 above. The result block to parse:
+**Try Auto.dev first** — it provides the same per-VIN unrepaired recall data via a stable API, without browser automation:
 
+```bash
+npx @auto.dev/sdk open-recalls {VIN} --json 2>&1
 ```
-{YEAR} {MAKE} {MODEL}
-VIN: {VIN}
+
+Parse the JSON response:
+- If the recalls array is empty → "All recalls remedied — no open recalls on this VIN."
+- If recalls present → list each with campaign number, component, and remedy-available status.
+
+**Tell the user to NOT take delivery until the dealer fixes any open recalls — Honda/Toyota fix open recalls for free regardless of buyer.**
+
+**Fallback — browser automation (if Auto.dev CLI not logged in):**
+
+Drive `https://www.nhtsa.gov/recalls` via the Chrome MCP. Use the 6-step flow documented in Step 5 §F2:
+1. Navigate to `https://www.nhtsa.gov/recalls`
+2. Find `#ymm-vin-recalls-search-input`, set value via prototype setter, dispatch `InputEvent('input')` with `inputType: 'insertText'` and `data: <VIN>`, then `change`.
+3. Walk up ~12 parents to find the enclosing container, click the visible "Search" submit button.
+4. Wait ~6s for the result panel to render (URL redirects to `?vymm={VIN}`).
+5. Read `document.body.innerText` and parse the result block:
+```
+{YEAR} {MAKE} {MODEL} VIN: {VIN}
 Recall data refreshed on {date}
 {N} Unrepaired Recalls associated with this VIN
 ```
+6. Match against the result block (which has `VIN: {VIN}` immediately above) — not just the literal phrase — to avoid the false-positive in the page's help text.
 
 - `N == 0` → safe; report "all recalls remedied"
-- `N > 0` → list each unrepaired campaign with NHTSA #, component, and remedy availability. **Tell the user to NOT take delivery until the dealer fixes them — Honda/Toyota fix open recalls for free regardless of buyer.**
+- `N > 0` → list each unrepaired campaign with NHTSA #, component, and remedy availability.
 
 ### C. Title pre-flight (free)
 
@@ -697,7 +819,32 @@ Compare:
 
 Flag any inconsistency for the user to ask about face-to-face.
 
-### E. Generate the printable test-drive checklist
+### E. Estimated Out-of-Pocket (Auto.dev taxes — when logged in)
+
+After VIN decode confirms the car, run:
+
+```bash
+npx @auto.dev/sdk taxes {VIN} --price {LISTING_PRICE} --zip {ZIP} --json 2>&1
+# {LISTING_PRICE} = the seller's asking price from the listing, not the user's target budget
+```
+
+If the command fails (not logged in or Scale tier not enabled), **omit the entire block** — do not show empty fields. Just show: `Asking price: ${listing_price}`.
+
+Parse and add an out-of-pocket block to the test-drive summary before handing the user the checklist:
+
+```
+💳 ESTIMATED OUT-OF-POCKET (ZIP {ZIP}):
+  Asking price:       ${listing_price}
+  Sales tax (est.):   ${tax_amount}
+  Registration fee:   ${reg_fee}
+  Doc fee:            ${doc_fee}
+  ─────────────────────────────
+  Total (est.):       ${total}
+```
+
+This helps set the negotiation ceiling: if total is tight, the user knows to negotiate more aggressively on price to stay within budget after taxes and fees.
+
+### F. Generate the printable test-drive checklist
 
 After all VIN checks complete, **always** generate a checklist for this specific car. The checklist is the deliverable of Step 5.5 — it's what the user takes with them to the seller. Format it as a single block of clean Markdown that prints/copies cleanly to a phone or paper. Use this template:
 
@@ -844,7 +991,7 @@ After all VIN checks complete, **always** generate a checklist for this specific
 - For the `MODEL-SPECIFIC RED FLAGS` section: only emit the rows that match the year+make+model. If none match, emit a single line: `[ ] No known year-specific issues — standard inspection only`. Pull from the static caution table AND any live Step 1 reliability card findings.
 - Substitute the price and the `walk-away` line — walk-away should default to ask price minus typical inspection-revealed deductions (~$500 for most listings).
 
-### F. Save the checklist as a PDF (always)
+### G. Save the checklist as a PDF (always)
 
 **Every checklist generated in Step 5.5 must also be saved as a printable PDF.** The Markdown is for the chat; the PDF is for the user's pocket — they'll print it or open it on their phone at the seller's driveway.
 
@@ -864,7 +1011,7 @@ Example: `car-hunt-checklist-2026-04-28-honda-accord-9855.pdf`
 
 After writing the file, tell the user the absolute path and say: "Open it on your phone or AirPrint it. Take it to the seller."
 
-### G. Fraud / paperwork checklist (always emit alongside the test-drive checklist)
+### H. Fraud / paperwork checklist (always emit alongside the test-drive checklist)
 
 Used-car fraud is a multi-billion-dollar industry: forged titles, VIN cloning, curbstoning, title-jumping, odometer rollback, fake cashier's checks. **Every test-drive checklist generated in §F must be paired with a fraud / paperwork checklist** so the user can verify the documents against the car. This is a vehicle-agnostic checklist — it doesn't change based on year/make/model — so generate it once and reuse it across cars in the same hunt session.
 
@@ -1008,7 +1155,7 @@ Save this ID to memory (`project_car_hunt_skill.md`) so future runs can update t
 
 **Step 2** — Merge with new results: deduplicate by Link URL, update prices, mark stale.
 
-**Step 3** — Rebuild the full CSV and call `mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file` with the same title — this overwrites the existing sheet content.
+**Step 3** — Rebuild the full CSV and call `mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file` with the same title. **This creates a new file (new ID), not an overwrite** — see Drive MCP limitation note above. Save the new ID to memory and show the new URL prominently.
 
 ### Row Order and Completeness
 

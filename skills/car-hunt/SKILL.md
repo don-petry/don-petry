@@ -248,10 +248,12 @@ After clicking the listing's "Message" button, the composer appears as an inline
 
 **Seller name extraction for personalization:** The seller's full name appears in the page text after the literal string `"Seller details "`. Match `/Seller details ([^()\n]+?)(?:\(|Joined|Profile|Message|$)/` and split the captured name on whitespace — first whitespace-delimited token is the first name. If that match fails, fall back to `[aria-label^="Send message to"]` and parse the suffix after `"to "`.
 
-**Seller profile extraction (for Seller Trust Score — Step 3):** After extracting listing fields, extract seller profile signals from the same "Seller details" sidebar. Run these against `document.body.innerText` (or the WebFetch page text):
+**Seller profile extraction (for Seller Trust Score — Step 3, Option C only):** This extraction is only possible when using Option C (Chrome MCP with a live logged-in session). Options A and B have no sidebar to extract from — default those to NEUTRAL. After extracting listing fields, extract seller profile signals from the same "Seller details" sidebar. Run these against `document.body.innerText`:
 
 ```
 /Joined Facebook (\d+) (year|month)s? ago/i
+/Joined Facebook (\d+) weeks? ago/i
+/Joined Facebook \d+ days? ago/i
 /(\d+\.\d+) \((\d+) ratings?\)/i
 /(\d+) active listings?/i
 ```
@@ -260,6 +262,8 @@ Convert to canonical form:
 - "Joined Facebook 3 years ago" → `joined_months = 36` (multiply years × 12)
 - "Joined Facebook 1 year ago" → `joined_months = 12`
 - "Joined Facebook 8 months ago" → `joined_months = 8`
+- "Joined Facebook N weeks ago" → `joined_months = 0` (force CAUTION — account is days/weeks old)
+- "Joined Facebook N days ago" → `joined_months = 0` (force CAUTION)
 - Rating not found → `fb_rating = null`, `fb_rating_count = 0`
 - Active listings not found → `active_listings = null` (not a flag — treated as low)
 
@@ -468,11 +472,13 @@ After applying the location-quality tier, compute a **Seller Trust Score** for e
 
 **Classification table (Facebook Marketplace):**
 
+**Evaluate in order — CAUTION first, then TRUSTED, then NEUTRAL as the fallback.**
+
 | Score | Label | Criteria |
 |-------|-------|----------|
-| S+ | `TRUSTED` | `joined_months ≥ 36` AND (`fb_rating ≥ 4.5` OR `fb_rating_count = 0` with `joined_months ≥ 24`) AND (`active_listings ≤ 3` OR `active_listings = null`) |
-| S0 | `NEUTRAL` | `joined_months 12–35` OR rating missing with `joined_months ≥ 12`; or profile unreadable (default) |
 | S− | `CAUTION` | `joined_months < 12` OR `active_listings ≥ 10` (flipper/dealer front) OR (`fb_rating < 4.0` AND `fb_rating_count ≥ 5`) |
+| S+ | `TRUSTED` | `joined_months ≥ 36` AND (`fb_rating ≥ 4.5` OR `fb_rating_count = 0` with `joined_months ≥ 24`) AND (`active_listings ≤ 3` OR `active_listings = null`) |
+| S0 | `NEUTRAL` | All other cases, including profile unreadable (default) |
 
 **Default seller trust by platform (when no profile data is available):**
 - Craigslist private: `NEUTRAL` (always anonymous; no signals)
@@ -520,7 +526,7 @@ Present reliability cards first, then the ranked table:
 
 | # | Make/Model | Year | Trim | Dr | Trans | Miles | Price | CPM | Adj.CPM | Life% | Dist | Posted | Location | Tier | Seller | Dealer | Flags | Link |
 |---|-----------|------|------|----|-------|-------|-------|-----|---------|-------|------|--------|----------|------|--------|--------|-------|------|
-| 1 | Honda Civic | 2021 | EX-L | 4 | Auto | 42,000 | $21,500 | $0.103 | $0.095 | 17% | ~12 mi | Apr 20 | Mountain Brook, AL | **A** | TRUSTED ★4.9(31) | Dealer | — | [link] |
+| 1 | Honda Civic | 2021 | EX-L | 4 | Auto | 42,000 | $21,500 | $0.103 | $0.098 | 17% | ~12 mi | Apr 20 | Mountain Brook, AL | **A** | — | Dealer | — | [link] |
 | 2 | Toyota Camry | 2019 | XLE | 4 | Auto | 68,000 | $21,000 | $0.091 | $0.089 | 23% | ~172 mi | Apr 18 | Homewood, AL | **B** | — | CarMax | — | [link] |
 | 3 | Honda Accord | 2018 | Sport | 4 | Auto | 89,000 | $19,500 | $0.121 | $0.128 | 36% | ~8 mi | Apr 10 | Center Point, AL | **D** | CAUTION ⚠ new acct | Private 🏠 | ⚠️ CAUTION YEAR 🔴 CAUTION SELLER | [link] |
 ...

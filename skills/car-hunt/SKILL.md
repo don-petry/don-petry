@@ -248,6 +248,27 @@ After clicking the listing's "Message" button, the composer appears as an inline
 
 **Seller name extraction for personalization:** The seller's full name appears in the page text after the literal string `"Seller details "`. Match `/Seller details ([^()\n]+?)(?:\(|Joined|Profile|Message|$)/` and split the captured name on whitespace — first whitespace-delimited token is the first name. If that match fails, fall back to `[aria-label^="Send message to"]` and parse the suffix after `"to "`.
 
+**Seller profile extraction (for Seller Trust Score — Step 3, Option C only):** This extraction is only possible when using Option C (Chrome MCP with a live logged-in session). Options A and B have no sidebar to extract from — default those to NEUTRAL. After extracting listing fields, extract seller profile signals from the same "Seller details" sidebar. Run these against `document.body.innerText`:
+
+```
+/Joined Facebook (\d+) (year|month)s? ago/i
+/Joined Facebook (\d+) weeks? ago/i
+/Joined Facebook \d+ days? ago/i
+/(\d+\.\d+) \((\d+) ratings?\)/i
+/(\d+) active listings?/i
+```
+
+Convert to canonical form:
+- "Joined Facebook 3 years ago" → `joined_months = 36` (multiply years × 12)
+- "Joined Facebook 1 year ago" → `joined_months = 12`
+- "Joined Facebook 8 months ago" → `joined_months = 8`
+- "Joined Facebook N weeks ago" → `joined_months = 0` (force CAUTION — account is days/weeks old)
+- "Joined Facebook N days ago" → `joined_months = 0` (force CAUTION)
+- Rating not found → `fb_rating = null`, `fb_rating_count = 0`
+- Active listings not found → `active_listings = null` (not a flag — treated as low)
+
+**Failure handling:** If any regex fails (login wall crept in mid-session, React re-render changed DOM), default `seller_trust = NEUTRAL` and note `(profile unreadable)` in the Seller column. Never retry or block — one extraction attempt per listing, then move on.
+
 **Already-messaged detection:** `Message again` appearing on the listing page means a prior message was sent in this account. Always check this before opening the composer; never message twice. Also cross-check the sheet's `Contacted` column.
 
 **Stale composer state:** If a prior listing's composer is still floating in the page, you may see its `aria-label` ("Write to Donald · 2008 Honda Accord") on the contenteditable element. That's a different, dismissible chat panel — the inline `<textarea>` for the *current* listing is the one to target. Don't be misled by the contenteditable.
@@ -445,6 +466,45 @@ This is a **ranking modifier only** — the displayed CPM remains the real numbe
 
 When you cite tier in a recommendation or warning, name the actual mechanism, not the demographic. Good: *"Sellers in Mountain Brook tend to be less price-sensitive — there's room to negotiate $300–500 off ask."* Bad: *"Mountain Brook is a rich neighborhood."* The signal is economic and behavioral, not identity-based; keep the language objective.
 
+### Seller Trust Score
+
+After applying the location-quality tier, compute a **Seller Trust Score** for each listing based on observable seller profile signals. This score stacks on top of the location-tier CPM adjustment.
+
+**Classification table (Facebook Marketplace):**
+
+**Evaluate in order — CAUTION first, then TRUSTED, then NEUTRAL as the fallback.**
+
+| Score | Label | Criteria |
+|-------|-------|----------|
+| S− | `CAUTION` | `joined_months < 12` OR `active_listings ≥ 10` (flipper/dealer front) OR (`fb_rating < 4.0` AND `fb_rating_count ≥ 5`) |
+| S+ | `TRUSTED` | `joined_months ≥ 36` AND (`fb_rating ≥ 4.5` OR `fb_rating_count = 0` with `joined_months ≥ 24`) AND (`active_listings ≤ 3` OR `active_listings = null`) |
+| S0 | `NEUTRAL` | All other cases, including profile unreadable (default) |
+
+**Default seller trust by platform (when no profile data is available):**
+- Craigslist private: `NEUTRAL` (always anonymous; no signals)
+- AutoTrader / CarGurus private seller: `NEUTRAL` (no profile exposed)
+- Dealer listings (any platform): `—` (institutional sellers; no trust tier applies)
+
+**CPM adjustment (stacked on location-tier adjustment):**
+- `TRUSTED` → subtract $0.003/mi from quality-adjusted CPM
+- `NEUTRAL` → no change
+- `CAUTION` → add $0.004/mi to quality-adjusted CPM
+
+The final `Adj.CPM` used for sort order = real CPM ± location-tier adjustment ± seller-trust adjustment.
+
+**Seller column display format:**
+- `TRUSTED ★4.8(12)` — long-tenure account with rating and count
+- `TRUSTED` — long tenure, no ratings yet
+- `NEUTRAL` — default / no strong signal
+- `NEUTRAL (profile unreadable)` — extraction failed; treated conservatively
+- `CAUTION ⚠ new acct` — joined < 12 months
+- `CAUTION ⚠ 14 listings` — high active-listing count (flipper/dealer signal)
+- `—` — dealer listing (not applicable)
+
+**Additional flags** (add to Flags column):
+- `🔴 CAUTION SELLER` — seller is classified CAUTION; complements the CPM penalty so it's visible at a glance
+- `🟡 UNVERIFIED SELLER` — seller profile was unreachable or unreadable; score defaulted to NEUTRAL
+
 ---
 
 ## Step 4: Rank and Present Results
@@ -464,21 +524,23 @@ Present reliability cards first, then the ranked table:
 
 ─── RANKED LISTINGS (by CPM) ───────────────────────────────────
 
-| # | Make/Model | Year | Trim | Dr | Trans | Miles | Price | CPM | Adj.CPM | Life% | Dist | Posted | Location | Tier | Dealer | Flags | Link |
-|---|-----------|------|------|----|-------|-------|-------|-----|---------|-------|------|--------|----------|------|--------|-------|------|
-| 1 | Honda Civic | 2021 | EX-L | 4 | Auto | 42,000 | $21,500 | $0.103 | $0.098 | 17% | ~12 mi | Apr 20 | Mountain Brook, AL | **A** | Dealer | — | [link] |
-| 2 | Toyota Camry | 2019 | XLE | 4 | Auto | 68,000 | $21,000 | $0.091 | $0.089 | 23% | ~172 mi | Apr 18 | Homewood, AL | **B** | CarMax | — | [link] |
-| 3 | Honda Accord | 2018 | Sport | 4 | Auto | 89,000 | $19,500 | $0.121 | $0.124 | 36% | ~8 mi | Apr 10 | Center Point, AL | **D** | Private 🏠 | ⚠️ CAUTION YEAR | [link] |
+| # | Make/Model | Year | Trim | Dr | Trans | Miles | Price | CPM | Adj.CPM | Life% | Dist | Posted | Location | Tier | Seller | Dealer | Flags | Link |
+|---|-----------|------|------|----|-------|-------|-------|-----|---------|-------|------|--------|----------|------|--------|--------|-------|------|
+| 1 | Honda Civic | 2021 | EX-L | 4 | Auto | 42,000 | $21,500 | $0.103 | $0.098 | 17% | ~12 mi | Apr 20 | Mountain Brook, AL | **A** | — | Dealer | — | [link] |
+| 2 | Toyota Camry | 2019 | XLE | 4 | Auto | 68,000 | $21,000 | $0.091 | $0.089 | 23% | ~172 mi | Apr 18 | Homewood, AL | **B** | — | CarMax | — | [link] |
+| 3 | Honda Accord | 2018 | Sport | 4 | Auto | 89,000 | $19,500 | $0.121 | $0.128 | 36% | ~8 mi | Apr 10 | Center Point, AL | **D** | CAUTION ⚠ new acct | Private 🏠 | ⚠️ CAUTION YEAR 🔴 CAUTION SELLER | [link] |
 ...
 
 ⚠️  FLAGS:
   #3: Accord 2018 — CVT shudder reported at 70k+ miles (per CarComplaints); confirm transmission service history
+  #3: 🔴 CAUTION SELLER — FB account joined < 12 months ago; verify identity and title carefully
   #N: [any other flags]
 
 📊 SUMMARY:
   Best CPM overall:  #N — {make/model/year} @ ${cpm}/mi
   Best local deal:   #N — within 50 miles of {zip}
   Best private seller: #N — {make/model} via FB Marketplace
+  Best trusted seller: #N — {make/model}, TRUSTED ★{rating}({count}) (if any TRUSTED-classified FB listing exists)
   Best Toyota:       #N — {model/year} @ ${cpm}/mi
   Best Honda:        #N — {model/year} @ ${cpm}/mi
   ✅ Best reliability year in results: {year} {make} {model} (per Step 1 research)
@@ -954,7 +1016,7 @@ The skill maintains a **single persistent tracking sheet** across runs. On each 
 ### Column Order
 
 ```
-Date | Make | Model | Year | Package | Doors | Trans | Miles | Cost | CPM | Adj.CPM | Life | Dist | Posted | Location | Tier | Dealer | Link | Notes | Contacted
+Date | Make | Model | Year | Package | Doors | Trans | Miles | Cost | CPM | Adj.CPM | Life | Dist | Posted | Location | Tier | Seller | Dealer | Link | Notes | Contacted
 ```
 
 - **Date** — `DD Mon YYYY` format (e.g., `25 Apr 2026`) — date this row was last updated
@@ -965,9 +1027,10 @@ Date | Make | Model | Year | Package | Doors | Trans | Miles | Cost | CPM | Adj.
 - **Miles** — numeric, no commas (e.g., `53000`)
 - **Cost** — formatted as `$4750`
 - **CPM** — formatted as `$0.019` (3 decimal places) — the *real* cost-per-mile
-- **Adj.CPM** — formatted as `$0.014` — the *quality-adjusted* CPM with location-tier modifier applied (this is the column to sort by)
+- **Adj.CPM** — formatted as `$0.014` — the *quality-adjusted* CPM with location-tier AND seller-trust modifiers stacked (this is the column to sort by)
 - **Life** — formatted as `18%`
 - **Tier** — `A` / `B` / `C` / `D` — Location Quality Tier per the metro table; blank if metro not yet tabled
+- **Seller** — Seller Trust Score with detail (e.g., `TRUSTED ★4.8(12)`, `NEUTRAL`, `CAUTION ⚠ new acct`); `—` for dealer listings
 - **Notes** — include emoji flags (✅ BEST YEAR / ⚠️ CAUTION / 🚫 AVOID / ★ BEST PICK) and the specific reason
 - **Contacted** — `YYYY-MM-DD sent` when a message was sent to this seller (e.g., `2026-04-27 sent`); blank if not yet contacted. Updated by Step 7.
 
@@ -979,7 +1042,7 @@ Date | Make | Model | Year | Package | Doors | Trans | Miles | Cost | CPM | Adj.
 
 ```python
 import base64
-csv_content = "Date,Make,Model,Year,Package,Doors,Trans,Miles,Cost,CPM,Life,Posted,Location,Dealer,Link,Notes\n"
+csv_content = "Date,Make,Model,Year,Package,Doors,Trans,Miles,Cost,CPM,Adj.CPM,Life,Dist,Posted,Location,Tier,Seller,Dealer,Link,Notes,Contacted\n"
 # ... one row per listing, sorted by CPM ascending ...
 encoded = base64.b64encode(csv_content.encode('utf-8')).decode('utf-8')
 ```

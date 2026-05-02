@@ -118,7 +118,7 @@ Before uploading, the script validates the OCR'd PDF against the original:
 
 1. **File size** — output must be ≥ 50% of input size (catches catastrophic re-encoding failures)
 2. **Page count** — output must have the same number of pages as the input (via `pdfinfo`)
-3. **Text layer** — output must now have ≥ 50 characters of extractable text (via `pdftotext`)
+3. **Text layer** — output must now have extractable text (any non-empty content via `pdftotext`)
 
 If any check fails, the original in Drive is left untouched and the failure is logged with the reason.
 

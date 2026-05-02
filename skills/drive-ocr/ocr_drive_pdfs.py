@@ -126,13 +126,21 @@ def discover_pdfs(service, folder_id: Optional[str]) -> Iterator[dict]:
             break
 
 
-def download_pdf(service, file_id: str, dest_path: str) -> None:
+def download_pdf(service, file_id: str, dest_path: str, retries: int = 5) -> None:
     request = service.files().get_media(fileId=file_id, supportsAllDrives=True)
-    with open(dest_path, "wb") as fh:
-        downloader = MediaIoBaseDownload(fh, request)
-        done = False
-        while not done:
-            _, done = downloader.next_chunk()
+    for attempt in range(retries):
+        try:
+            with open(dest_path, "wb") as fh:
+                downloader = MediaIoBaseDownload(fh, request)
+                done = False
+                while not done:
+                    _, done = downloader.next_chunk()
+            return
+        except HttpError as e:
+            if e.resp.status in (429, 500, 502, 503, 504) and attempt < retries - 1:
+                time.sleep(2 ** attempt)
+            else:
+                raise
 
 
 def _pdftotext(pdf_path: str, timeout: int = 30) -> Optional[str]:

@@ -106,7 +106,7 @@ After completion, read the log file (`ocr_run_YYYYMMDD_HHMMSS.log`) and report:
 ### Validation checks (run before every upload)
 - **File size ≥ 50% of input** — catches catastrophic re-encoding
 - **Page count matches input** — via `pdfinfo`
-- **Text layer present** — `pdftotext` must return ≥ 50 chars on output
+- **Text layer present** — `pdftotext` must return any non-empty text on output
 
 ---
 

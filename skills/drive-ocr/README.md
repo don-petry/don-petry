@@ -37,7 +37,7 @@ pip3 install -r requirements.txt
 The first run opens a browser window to authorize the app with your Google account. After you approve, `token.json` is saved and future runs skip the browser step.
 
 ```bash
-cd scripts/drive-ocr
+cd skills/drive-ocr
 
 # Dry run: lists PDFs needing OCR without changing anything
 python3 ocr_drive_pdfs.py --dry-run

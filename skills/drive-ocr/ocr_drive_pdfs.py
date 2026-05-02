@@ -123,21 +123,27 @@ def download_pdf(service, file_id: str, dest_path: str) -> None:
             _, done = downloader.next_chunk()
 
 
+def _pdftotext(pdf_path: str, timeout: int = 30) -> Optional[str]:
+    """Run pdftotext; returns stdout text on success, None if unreadable/encrypted. Raises TimeoutExpired."""
+    result = subprocess.run(
+        ["pdftotext", pdf_path, "-"],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    return result.stdout if result.returncode == 0 else None
+
+
 def has_text_layer(pdf_path: str) -> Optional[bool]:
     """
     Returns True if the PDF has sufficient text, False if it needs OCR,
     None if it's unreadable (e.g. encrypted).
     """
     try:
-        result = subprocess.run(
-            ["pdftotext", pdf_path, "-"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode != 0:
+        text = _pdftotext(pdf_path)
+        if text is None:
             return None  # unreadable / encrypted
-        return len(result.stdout.strip()) >= OCR_TEXT_MIN_CHARS
+        return len(text.strip()) >= OCR_TEXT_MIN_CHARS
     except subprocess.TimeoutExpired:
         return True  # assume has text if pdftotext hangs; skip safely
 
@@ -198,9 +204,6 @@ def validate_ocr_output(input_path: str, output_path: str) -> tuple[bool, str]:
     Validate the OCR'd PDF against the original.
     Returns (ok, reason) where ok=False means the output should not be uploaded.
     """
-    if not os.path.exists(output_path):
-        return False, "output file does not exist"
-
     input_size = os.path.getsize(input_path)
     output_size = os.path.getsize(output_path)
 
@@ -217,13 +220,8 @@ def validate_ocr_output(input_path: str, output_path: str) -> tuple[bool, str]:
 
     # Output must now have a text layer
     try:
-        result = subprocess.run(
-            ["pdftotext", output_path, "-"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if result.returncode != 0 or len(result.stdout.strip()) < OCR_TEXT_MIN_CHARS:
+        text = _pdftotext(output_path)
+        if text is None or len(text.strip()) < OCR_TEXT_MIN_CHARS:
             return False, "output has no readable text layer after OCR"
     except subprocess.TimeoutExpired:
         pass  # very large file — assume ok if pdftotext hangs
@@ -327,21 +325,13 @@ def run_pipeline(service, args: argparse.Namespace) -> None:
             results.append(result)
             print(result["status"])
 
-            key = result["status"]
-            if key == "skipped_has_text":
-                stats["skipped_has_text"] += 1
-            elif key == "skipped_unreadable":
-                stats["skipped_unreadable"] += 1
-            elif key == "needs_ocr_dry_run":
-                stats["needs_ocr"] += 1
-            elif key == "ocr_applied":
-                stats["ocr_applied"] += 1
-            elif key == "ocr_failed":
-                stats["ocr_failed"] += 1
-            elif key == "validation_failed":
-                stats["validation_failed"] += 1
-            elif key in ("error", "unknown"):
-                stats["errors"] += 1
+            stat_key = {
+                "needs_ocr_dry_run": "needs_ocr",
+                "error": "errors",
+                "unknown": "errors",
+            }.get(result["status"], result["status"])
+            if stat_key in stats:
+                stats[stat_key] += 1
 
     write_log(results, stats, args.log_file)
     print_summary(stats, args.dry_run)

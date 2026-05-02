@@ -18,7 +18,7 @@ Find Google Drive PDFs missing an embedded text layer (e.g. scanned with the Dri
 ## Step 1 — Check prerequisites
 
 ```bash
-cd scripts/drive-ocr
+cd skills/drive-ocr
 
 # Verify ocrmypdf is installed
 ocrmypdf --version
@@ -50,7 +50,7 @@ If the user isn't sure, default to `--dry-run` first.
 ## Step 3 — Dry run (always do this first for a new full-Drive run)
 
 ```bash
-cd scripts/drive-ocr
+cd skills/drive-ocr
 .venv/bin/python3 ocr_drive_pdfs.py --dry-run [--folder-id FOLDER_ID]
 ```
 
@@ -69,7 +69,7 @@ Get confirmation before proceeding to the full run.
 ## Step 4 — Full run
 
 ```bash
-cd scripts/drive-ocr
+cd skills/drive-ocr
 .venv/bin/python3 ocr_drive_pdfs.py [--folder-id FOLDER_ID]
 ```
 

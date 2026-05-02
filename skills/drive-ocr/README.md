@@ -7,6 +7,7 @@ Finds Google Drive PDFs missing an embedded text layer (e.g. scanned with the Dr
 ### System tools
 ```bash
 brew install ocrmypdf   # includes Tesseract, deskew, cleaning tools
+brew install poppler    # provides pdftotext (text detection) and pdfinfo (page count validation)
 ```
 
 ### Python dependencies

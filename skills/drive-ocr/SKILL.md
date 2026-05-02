@@ -20,8 +20,10 @@ Find Google Drive PDFs missing an embedded text layer (e.g. scanned with the Dri
 ```bash
 cd skills/drive-ocr
 
-# Verify ocrmypdf is installed
+# Verify system tools
 ocrmypdf --version
+pdftotext -v 2>&1 | head -1
+pdfinfo -v 2>&1 | head -1
 
 # Verify Python venv and Drive API packages exist
 .venv/bin/python3 -c "import googleapiclient; print('OK')"
@@ -31,7 +33,7 @@ ls credentials.json
 ```
 
 If any check fails:
-- **ocrmypdf missing:** `brew install ocrmypdf`
+- **ocrmypdf / pdftotext / pdfinfo missing:** `brew install ocrmypdf poppler`
 - **venv missing:** `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
 - **credentials.json missing:** Guide the user through GCP setup (see `README.md`)
 

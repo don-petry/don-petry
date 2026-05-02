@@ -145,10 +145,11 @@ def has_text_layer(pdf_path: str) -> Optional[bool]:
             return None  # unreadable / encrypted
         return len(text.strip()) >= OCR_TEXT_MIN_CHARS
     except subprocess.TimeoutExpired:
-        return True  # assume has text if pdftotext hangs; skip safely
+        return False  # large file that pdftotext can't finish — treat as needing OCR
 
 
-def run_ocr(input_path: str, output_path: str) -> bool:
+def run_ocr(input_path: str, output_path: str) -> tuple[bool, str]:
+    """Returns (success, error_detail). error_detail is empty on success."""
     try:
         result = subprocess.run(
             [
@@ -165,9 +166,12 @@ def run_ocr(input_path: str, output_path: str) -> bool:
             text=True,
             timeout=300,
         )
-        return result.returncode == 0
+        if result.returncode == 0:
+            return True, ""
+        detail = (result.stderr or result.stdout or "").strip().splitlines()[-1] if (result.stderr or result.stdout) else ""
+        return False, detail
     except subprocess.TimeoutExpired:
-        return False
+        return False, "timed out after 300s"
     except FileNotFoundError:
         print("\nERROR: ocrmypdf not found. Run: brew install ocrmypdf")
         raise SystemExit(1)
@@ -218,10 +222,10 @@ def validate_ocr_output(input_path: str, output_path: str) -> tuple[bool, str]:
         if input_pages != output_pages:
             return False, f"page count mismatch: input {input_pages} pages, output {output_pages} pages"
 
-    # Output must now have a text layer
+    # Output must now have a text layer (any text — short docs like IDs are valid)
     try:
         text = _pdftotext(output_path)
-        if text is None or len(text.strip()) < OCR_TEXT_MIN_CHARS:
+        if text is None or len(text.strip()) == 0:
             return False, "output has no readable text layer after OCR"
     except subprocess.TimeoutExpired:
         pass  # very large file — assume ok if pdftotext hangs
@@ -258,8 +262,10 @@ def process_file(service, file_meta: dict, tmpdir: str, dry_run: bool, force: bo
             result["status"] = "needs_ocr_dry_run"
             return result
 
-        if not run_ocr(input_path, output_path):
+        ocr_ok, ocr_error = run_ocr(input_path, output_path)
+        if not ocr_ok:
             result["status"] = "ocr_failed"
+            result["error"] = ocr_error
             return result
 
         valid, reason = validate_ocr_output(input_path, output_path)

@@ -49,11 +49,12 @@ python3 ocr_drive_pdfs.py --dry-run
 python3 ocr_drive_pdfs.py [OPTIONS]
 
 Options:
-  --dry-run              List PDFs needing OCR, no changes made
-  --folder-id FOLDER_ID  Scope to a specific folder (get ID from Drive URL)
-  --log-file PATH        Summary log path (default: ocr_run_YYYYMMDD_HHMMSS.log)
-  --credentials PATH     Path to credentials.json (default: ./credentials.json)
-  --token PATH           Path to token.json cache (default: ./token.json)
+  --dry-run                  List PDFs needing OCR, no changes made (no downloads)
+  --folder-id FOLDER_ID      Scope to a specific folder (get ID from Drive URL)
+  --reprocess-log PATH       Re-OCR files from a previous run's log (bypasses Drive discovery)
+  --log-file PATH            Summary log path (default: ocr_run_YYYYMMDD_HHMMSS.log)
+  --credentials PATH         Path to credentials.json (default: ./credentials.json)
+  --token PATH               Path to token.json cache (default: ./token.json)
 ```
 
 ### How to find a folder ID

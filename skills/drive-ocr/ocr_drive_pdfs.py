@@ -8,7 +8,7 @@ import os
 import subprocess
 import tempfile
 from datetime import datetime
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -35,7 +35,7 @@ def parse_args() -> argparse.Namespace:
         help="Scope to a specific Drive folder ID (from the Drive URL).",
     )
     p.add_argument(
-        "--file-ids",
+        "--reprocess-log",
         help="Path to a log file from a previous run — reprocesses only the 'ocr_applied' entries, "
              "bypassing Drive discovery and the text-layer check. Use to re-run with new OCR settings.",
     )
@@ -56,7 +56,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def authenticate(credentials_path: str, token_path: str):
+def authenticate(credentials_path: str, token_path: str) -> Any:
     creds = None
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
@@ -234,6 +234,11 @@ def process_file(service, file_meta: dict, tmpdir: str, dry_run: bool, force: bo
     name = file_meta["name"]
     result = {"id": file_id, "name": name, "status": "unknown", "error": None}
 
+    # Dry run without --reprocess-log: no Drive traffic at all
+    if dry_run and not force:
+        result["status"] = "needs_ocr_dry_run"
+        return result
+
     input_path = os.path.join(tmpdir, f"{file_id}_input.pdf")
     output_path = os.path.join(tmpdir, f"{file_id}_output.pdf")
 
@@ -291,16 +296,16 @@ def run_pipeline(service, args: argparse.Namespace) -> None:
     }
     results = []
 
-    force = bool(args.file_ids)
+    force = bool(args.reprocess_log)
     mode = " [DRY RUN]" if args.dry_run else ""
-    reprocess_note = f" [reprocessing from {os.path.basename(args.file_ids)}]" if args.file_ids else ""
+    reprocess_note = f" [reprocessing from {os.path.basename(args.reprocess_log)}]" if args.reprocess_log else ""
     print(f"Drive OCR{mode}{reprocess_note} — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     if args.folder_id:
         print(f"Scoped to folder: {args.folder_id}")
     print()
 
-    if args.file_ids:
-        file_list = load_file_ids_from_log(args.file_ids)
+    if args.reprocess_log:
+        file_list = load_file_ids_from_log(args.reprocess_log)
         print(f"Loaded {len(file_list)} file(s) from log.")
     else:
         file_list = None  # will use discover_pdfs

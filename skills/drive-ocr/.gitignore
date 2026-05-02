@@ -1,0 +1,4 @@
+.venv/
+credentials.json
+token.json
+ocr_run_*.log

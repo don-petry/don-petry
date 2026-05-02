@@ -56,11 +56,11 @@ cd skills/drive-ocr
 
 First run opens a browser for OAuth (one-time). After auth, `token.json` is cached.
 
+Dry run makes no Drive API calls beyond discovery — it lists all PDFs but does not download any.
+
 Report the summary to the user:
-- Total PDFs scanned
-- Already have text (will be skipped)
-- Need OCR (will be processed)
-- Unreadable/encrypted (will be skipped)
+- Total PDFs found
+- Would be OCR'd (count of files discovered)
 
 Get confirmation before proceeding to the full run.
 
@@ -85,7 +85,7 @@ After completion, read the log file (`ocr_run_YYYYMMDD_HHMMSS.log`) and report:
 - How many PDFs were OCR'd successfully
 - Any failures (`ocr_failed` or `error` status) — list the file names
 - Confirm the run is idempotent: files with existing text layers will be skipped on re-run
-- Note: to reprocess previously OCR'd files with new settings, use `--file-ids <previous-log>`
+- Note: to reprocess previously OCR'd files with new settings, use `--reprocess-log <previous-log>`
 
 ---
 
@@ -114,7 +114,7 @@ After completion, read the log file (`ocr_run_YYYYMMDD_HHMMSS.log`) and report:
 
 **`FileNotFoundError: credentials.json`** — User needs to complete GCP setup. See `skills/drive-ocr/README.md`.
 
-**Text not selectable in Drive viewer** — This should not occur with `--pdf-renderer hocr`. If it does, re-run with `--file-ids` pointing to the previous log to reprocess affected files.
+**Text not selectable in Drive viewer** — This should not occur with `--pdf-renderer hocr`. If it does, re-run with `--reprocess-log` pointing to the previous log to reprocess affected files.
 
 **`ocrmypdf` timeout** — PDF has too many pages. The 5-min timeout is set conservatively; large vocational reports or IEP documents may hit it. Run with `--folder-id` to process in smaller batches.
 
@@ -132,4 +132,4 @@ After completion, read the log file (`ocr_run_YYYYMMDD_HHMMSS.log`) and report:
 - ~7% validation failures — all image-only content (site plans, design files, scanned drawings, IDs) — expected and safe to ignore
 - ~1% persistent `ocr_failed` — corrupted or non-standard PDFs
 - Default sandwich renderer made text searchable but **not selectable** in Drive viewer — fixed by switching to `--pdf-renderer hocr` with `--force-ocr`
-- To re-apply new OCR settings to previously processed files, use `--file-ids <previous-log>` — bypasses Drive discovery and text-layer check entirely
+- To re-apply new OCR settings to previously processed files, use `--reprocess-log <previous-log>` — bypasses Drive discovery and text-layer check entirely

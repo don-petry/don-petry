@@ -7,6 +7,7 @@ import argparse
 import os
 import subprocess
 import tempfile
+import time
 from datetime import datetime
 from typing import Any, Iterator, Optional
 
@@ -14,6 +15,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
@@ -46,12 +48,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--credentials",
         default=os.path.join(os.path.dirname(__file__), "credentials.json"),
-        help="Path to credentials.json (default: ./credentials.json).",
+        help="Path to credentials.json (default: next to this script).",
     )
     p.add_argument(
         "--token",
         default=os.path.join(os.path.dirname(__file__), "token.json"),
-        help="Path to token.json cache (default: ./token.json).",
+        help="Path to token.json cache (default: next to this script).",
     )
     return p.parse_args()
 
@@ -89,15 +91,26 @@ def load_file_ids_from_log(log_path: str) -> list[dict]:
     return entries
 
 
+def _execute(request, retries: int = 5) -> Any:
+    """Execute a Drive API request with exponential backoff on 429/5xx."""
+    for attempt in range(retries):
+        try:
+            return request.execute()
+        except HttpError as e:
+            if e.resp.status in (429, 500, 502, 503, 504) and attempt < retries - 1:
+                time.sleep(2 ** attempt)
+            else:
+                raise
+
+
 def discover_pdfs(service, folder_id: Optional[str]) -> Iterator[dict]:
     query = "mimeType='application/pdf' and trashed=false"
     if folder_id:
         query += f" and '{folder_id}' in parents"
     page_token = None
     while True:
-        response = (
-            service.files()
-            .list(
+        response = _execute(
+            service.files().list(
                 q=query,
                 pageSize=PAGE_SIZE,
                 fields="nextPageToken, files(id, name, size, modifiedTime)",
@@ -105,7 +118,6 @@ def discover_pdfs(service, folder_id: Optional[str]) -> Iterator[dict]:
                 includeItemsFromAllDrives=True,
                 supportsAllDrives=True,
             )
-            .execute()
         )
         for f in response.get("files", []):
             yield f
@@ -179,11 +191,11 @@ def run_ocr(input_path: str, output_path: str) -> tuple[bool, str]:
 
 def upload_pdf(service, file_id: str, pdf_path: str) -> None:
     media = MediaFileUpload(pdf_path, mimetype="application/pdf", resumable=True)
-    service.files().update(
+    _execute(service.files().update(
         fileId=file_id,
         media_body=media,
         supportsAllDrives=True,
-    ).execute()
+    ))
 
 
 def get_page_count(pdf_path: str) -> Optional[int]:
@@ -215,12 +227,13 @@ def validate_ocr_output(input_path: str, output_path: str) -> tuple[bool, str]:
     if input_size > 0 and output_size < input_size * 0.5:
         return False, f"output too small: {output_size} bytes vs input {input_size} bytes"
 
-    # Page count must match
+    # Page count must match (skipped with a warning if pdfinfo is unavailable)
     input_pages = get_page_count(input_path)
     output_pages = get_page_count(output_path)
-    if input_pages is not None and output_pages is not None:
-        if input_pages != output_pages:
-            return False, f"page count mismatch: input {input_pages} pages, output {output_pages} pages"
+    if input_pages is None or output_pages is None:
+        print("  [warn: pdfinfo unavailable, page-count check skipped]", end=" ", flush=True)
+    elif input_pages != output_pages:
+        return False, f"page count mismatch: input {input_pages} pages, output {output_pages} pages"
 
     # Output must now have a text layer (any text — short docs like IDs are valid)
     try:

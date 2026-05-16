@@ -1,7 +1,7 @@
 ---
 name: car-hunt
-description: Find, research, and rank used Honda/Toyota vehicles (Civic, Accord, CR-V, Camry, Corolla, RAV4) by CPM (cost per remaining mile). Researches reliability by model year, searches AutoTrader/CarGurus/Facebook Marketplace/Auto.dev, calculates value score, ranks candidates, and runs VIN recall/TCO lookups via NHTSA + Auto.dev CLI.
-argument-hint: [make model year-range max-price zip radius]
+description: Find, research, and rank used Honda/Toyota vehicles (Civic, Accord, CR-V, Camry, Corolla, RAV4) by CPM (cost per remaining mile). Also supports Insurance Claim Comp mode: finds the highest-priced national dealer comps for a totalled vehicle to maximize insurance ACV payout. Researches reliability by model year, searches AutoTrader/CarGurus/Facebook Marketplace/Auto.dev, calculates value score, ranks candidates, and runs VIN recall/TCO lookups via NHTSA + Auto.dev CLI.
+argument-hint: [make model year-range max-price zip radius | --mode insurance-comp year make model trim drivetrain mileage]
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash, Agent, AskUserQuestion, WebFetch, WebSearch, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__search_files, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__read_file_content, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__get_file_metadata, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__download_file_content
 ---
@@ -9,6 +9,21 @@ allowed-tools: Read, Grep, Glob, Bash, Agent, AskUserQuestion, WebFetch, WebSear
 # Car Hunt — Used Vehicle Finder & Ranker
 
 Search, score, and rank used Honda/Toyota vehicles by Cost Per Mile (CPM) — the core value metric. Lower CPM = more remaining useful life per dollar spent.
+
+Also supports **Insurance Claim Comp mode** — finds the highest-priced national dealer comps for a vehicle being totalled by insurance, to maximize your ACV payout.
+
+---
+
+## Mode Detection
+
+Car Hunt has two modes. Detect from `$0` keywords or ask if ambiguous:
+
+| Trigger keywords | Mode |
+|---|---|
+| "insurance comp", "insurance claim", "totalled", "total loss", "ACV", "actual cash value", "totaled" | **Insurance Claim Comp** — skip to [Insurance Claim Comp Mode](#insurance-claim-comp-mode) |
+| All other invocations | **Standard Hunt** — continue through Core Formula and Steps 1–7 |
+
+**If mode is Insurance Claim Comp:** jump directly to the Insurance Claim Comp Mode section. Do NOT run the Standard Hunt steps (reliability research, CPM scoring, test-drive prep, outreach). Those are irrelevant to an insurance claim.
 
 ---
 
@@ -1324,6 +1339,278 @@ Replace `[FIRST_NAME]` with the seller's actual first name extracted from the li
 - **Skip non-FB listings** — this outreach flow only works on FB Marketplace; other sources require manual contact
 - **Skip listings where the modal doesn't open** — some FB profiles block messages; note it and move on
 - **Log every send attempt** — update the sheet regardless of whether the send succeeded or failed (note "FAILED" if the modal didn't respond)
+
+---
+
+---
+
+## Insurance Claim Comp Mode
+
+**Purpose:** Find the highest-priced comparable dealer listings (and recently-sold dealer comps) for a vehicle being totalled by insurance. The goal is to arm the user with evidence to extract the **maximum actual cash value (ACV)** from their insurer.
+
+**Core insight:** Insurance companies calculate ACV using comparable vehicles in the market. The higher the comps you present, the stronger your negotiating position. Dealer prices are the gold standard because they are published, verifiable, and represent "what you would have to pay to replace your vehicle today."
+
+---
+
+### Step IC-1: Collect Totalled Vehicle Details
+
+Ask in one prompt (or parse from `$0`):
+
+> "To find insurance comps, I need a few details about your totalled vehicle:
+> 1. Year, make, model, and trim?
+> 2. Drivetrain — FWD, RWD, AWD, or 4WD?
+> 3. Current mileage on the odometer?
+> 4. Any significant packages or options? (e.g., Sport, Technology Package, sunroof — optional)"
+
+Store as:
+- `COMP_YEAR` — model year of totalled vehicle
+- `COMP_MAKE`, `COMP_MODEL`, `COMP_TRIM`
+- `COMP_DRIVETRAIN` — FWD / RWD / AWD / 4WD
+- `COMP_MILEAGE` — current odometer reading
+- `COMP_PACKAGES` — notable packages/options (optional)
+
+**Derived search parameters (set automatically — do NOT ask the user):**
+- `SEARCH_YEAR_MIN` = `COMP_YEAR − 1`
+- `SEARCH_YEAR_MAX` = `COMP_YEAR + 1`
+- `SEARCH_MILE_MIN` = max(0, `COMP_MILEAGE − 20000`)
+- `SEARCH_MILE_MAX` = `COMP_MILEAGE + 20000`
+- `DEALER_ONLY` = `true` — no private sellers
+- `SEARCH_SCOPE` = national (no radius limit)
+- `INCLUDE_SOLD` = `true` — listings sold within the past 12 months are valid comps
+- `SORT` = price DESCENDING — highest-priced comps first
+
+---
+
+### Step IC-2: National Dealer Search
+
+Search **nationally** across all available sources for dealer listings matching the parameters. No radius filter. Do not remove listings based on distance.
+
+**Why national:** Insurance companies accept comps from anywhere in the country. A 2021 Toyota RAV4 AWD sold at a Seattle dealer for $32,000 is valid evidence even if you're in Alabama. National scope dramatically increases sample size and finds the highest-value comps.
+
+**Why dealers only:** Dealer prices are published, verifiable, and represent the true replacement cost. Private-party listings can be dismissed by insurers as below-market. Dealer prices carry more weight in negotiations.
+
+**Why include sold:** Sold listings represent actual transaction prices — money that changed hands. They are the strongest evidence of true market value. Most insurers accept recently-sold (last 12 months) as valid comps.
+
+#### Auto.dev (primary — structured, national, dealer-focused)
+
+```bash
+npx @auto.dev/sdk whoami 2>&1
+```
+
+If logged in, run:
+
+```bash
+npx @auto.dev/sdk listings \
+  --make {COMP_MAKE} \
+  --model {COMP_MODEL} \
+  --year {SEARCH_YEAR_MIN}-{SEARCH_YEAR_MAX} \
+  --miles {SEARCH_MILE_MIN}-{SEARCH_MILE_MAX} \
+  --sort "price:desc" \
+  --limit 100 \
+  --json 2>&1
+```
+
+Post-filter results to drivetrain match: keep only listings where the drivetrain field (or trim name) matches `COMP_DRIVETRAIN`. Drivetrain can differ $2,000–$8,000+ between AWD and FWD variants — a mismatch weakens the comp.
+
+**0-miles guard:** Same as Standard Hunt — skip listings where `miles == 0` (data missing, not a new car).
+
+#### AutoTrader (national dealer search)
+
+```
+WebSearch: site:autotrader.com dealer {COMP_YEAR-1} OR {COMP_YEAR} OR {COMP_YEAR+1} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
+WebSearch: site:autotrader.com certified {COMP_MAKE} {COMP_MODEL} {COMP_YEAR} {COMP_DRIVETRAIN}
+```
+
+Target CPO (certified pre-owned) listings specifically — they carry a premium that strengthens your comp package.
+
+#### CarGurus (national — includes sold data and Instant Market Value)
+
+```
+WebSearch: site:cargurus.com {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN} dealer
+```
+
+CarGurus is valuable because it includes **sold listings** and its "Instant Market Value" (IMV) is accepted by some insurers as a third-party valuation reference. If a CarGurus IMV appears on any result page, capture and cite it.
+
+#### Cars.com (national dealer inventory)
+
+```
+WebSearch: site:cars.com {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN} dealer
+```
+
+#### CarMax (national — fixed no-haggle prices, strongest comp credibility)
+
+CarMax prices are non-negotiable and publicly posted — they represent what you would actually pay a dealer today. Even a lower CarMax comp establishes a verifiable floor.
+
+```
+WebSearch: site:carmax.com {COMP_YEAR} {COMP_MAKE} {COMP_MODEL}
+```
+
+Verify drivetrain from the listing page.
+
+#### KBB / Edmunds (dealer retail reference values)
+
+Even without a specific listing, KBB Dealer Retail and Edmunds True Market Value (TMV) for dealer retail are accepted reference points in insurance negotiations.
+
+```
+WebSearch: KBB {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_TRIM} {COMP_MILEAGE} miles dealer retail value
+WebSearch: Edmunds {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} True Market Value dealer retail
+```
+
+Capture the range (low / mid / high) and the mileage basis from any KBB or Edmunds page found. These become reference anchors even if no matching listing is found.
+
+#### Sold comps (CarGurus + search)
+
+```
+WebSearch: "{COMP_YEAR} {COMP_MAKE} {COMP_MODEL}" sold dealer {COMP_DRIVETRAIN} 2025 OR 2026
+WebSearch: site:cargurus.com sold {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
+```
+
+Mark all confirmed sold listings as `Status: SOLD` — these are the highest-credibility comps.
+
+---
+
+### Step IC-3: Score and Rank Comps
+
+**No CPM calculation in this mode.** This is an insurance valuation exercise, not a CPM optimization.
+
+**Sort: price DESCENDING** — the most expensive comparable is listed first.
+
+For each listing, record:
+- `year`, `make`, `model`, `trim`
+- `drivetrain` — FWD / RWD / AWD / 4WD (infer from trim name if not explicitly stated)
+- `miles`
+- `price` — asking price, or confirmed sold price for SOLD listings
+- `status` — Available / Sold
+- `source` — AutoTrader / CarGurus / Auto.dev / Cars.com / CarMax / etc.
+- `dealer` — dealership name and state
+- `miles_delta` — signed difference from `COMP_MILEAGE` (negative = fewer miles than yours)
+- `year_delta` — signed difference from `COMP_YEAR`
+- `link` — direct listing URL
+- `notes` — CPO status, condition flags, special packages
+
+**Drivetrain mismatch handling:**
+- If drivetrain is confirmed different (e.g., FWD listing when totalled car is AWD), **exclude it** from the main comp table and show it in a separate "Excluded — different drivetrain" section at the end.
+- If drivetrain is ambiguous (not stated, inferred from trim name only), include the listing but mark as `⚠️ DRIVETRAIN UNVERIFIED`.
+
+**Mileage proximity flag:** Mark listings within ±5,000 miles of `COMP_MILEAGE` as `★ CLOSEST COMP` — these are the most defensible in a negotiation because the insurer cannot discount them on mileage grounds.
+
+**CPO flag:** Mark any CPO listing with `★ CPO`. If your vehicle had CPO status at purchase, cite CPO comps preferentially.
+
+---
+
+### Step IC-4: Build the Comp Package
+
+Present the full deliverable — a package the user can email to their insurance adjuster.
+
+```
+═══════════════════════════════════════════════════════════════════
+  INSURANCE COMP PACKAGE — {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_TRIM}
+  Your Vehicle: {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_TRIM} | {COMP_DRIVETRAIN} | {COMP_MILEAGE} mi
+  Search Criteria: ±1 year ({SEARCH_YEAR_MIN}–{SEARCH_YEAR_MAX}) | {COMP_DRIVETRAIN} only | {SEARCH_MILE_MIN}–{SEARCH_MILE_MAX} mi
+  Scope: Dealer listings only · National · Sold ≤12 months included
+  Generated: {date}
+═══════════════════════════════════════════════════════════════════
+
+📊 COMP SUMMARY:
+  Dealer comps found:     {n} listings ({n_avail} available, {n_sold} sold)
+  Highest comp:           ${max_price} — {year} {make} {model} {trim}, {miles} mi, {dealer}, {state}
+  Median comp price:      ${median_price}
+  Top-quartile price:     ${p75_price}  ← recommended minimum ACV to accept
+  KBB Dealer Retail:      ${kbb_low}–${kbb_high}  (if found; mileage basis: {kbb_miles})
+  Edmunds TMV:            ${edmunds_tmv}  (if found)
+
+💡 RECOMMENDED MINIMUM ACV: ${recommended_acv}
+  Based on the top-quartile comp price. The bottom half of comps are pulled down by
+  higher-mileage or lower-trim variants. Your insurer must explain why your vehicle
+  falls below this number.
+
+─── COMP LISTINGS (highest price first) ────────────────────────
+
+| # | Yr | Trim | DT | Miles | Δ Miles | Price | Status | Source | Dealer | State | Notes | Link |
+|---|----|------|----|-------|---------|-------|--------|--------|--------|-------|-------|------|
+| 1 | 2022 | EX-L | AWD | 48,200 | +1,200 | $32,500 | Available | AutoTrader | Honda of Seattle | WA | ★ CPO | [link] |
+| 2 | 2021 | EX | AWD | 55,100 | +8,100 | $30,900 | Available | CarMax | CarMax Charlotte | NC | — | [link] |
+| 3 | 2021 | EX | AWD | 47,000 | −5,000 | $30,500 | SOLD | CarGurus | Penske Honda | TX | ★ CLOSEST COMP | [link] |
+...
+
+⚠️  EXCLUDED — DRIVETRAIN MISMATCH (FWD listings — do not cite as comps for an AWD vehicle):
+  {list any excluded listings with reason}
+
+📋 HOW TO USE THIS PACKAGE:
+  1. Email your adjuster: "I have researched comparable vehicles. Attached are {n} dealer
+     listings for {SEARCH_YEAR_MIN}–{SEARCH_YEAR_MAX} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
+     with {SEARCH_MILE_MIN}–{SEARCH_MILE_MAX} miles, all from franchised or used-car dealers,
+     priced between ${min_comp} and ${max_comp}."
+  2. Lead with SOLD comps first — actual transactions are harder for adjusters to dispute
+     than asking prices.
+  3. Cite the top-quartile price as your floor: "Based on current market comparables, I
+     expect an ACV of at least ${p75_price}."
+  4. If the adjuster uses their own software (CCC ONE, Mitchell, Audatex), you have the
+     right to request the full comp report they generated and dispute any comps that are
+     lower-trim, higher-mileage, or in worse condition than yours.
+  5. ★ CLOSEST COMP listings are your strongest evidence — same drivetrain, closest in
+     mileage. The adjuster cannot discount these on spec mismatch grounds.
+```
+
+---
+
+### Step IC-5: Negotiation Strategy Brief
+
+After the comp package, always emit this strategy brief:
+
+```
+🧮 NEGOTIATION PLAYBOOK — {COMP_YEAR} {COMP_MAKE} {COMP_MODEL}
+
+KNOW YOUR NUMBERS:
+  Comp range:             ${min_comp} – ${max_comp}
+  Median comp:            ${median_comp}
+  Top quartile (floor):   ${p75_comp}
+  KBB Dealer Retail mid:  ${kbb_mid}  (if available)
+
+IF THE INSURER'S OFFER IS BELOW ${p75_comp}:
+
+  Step 1 — Request the comp report
+  "Please send me the vehicle condition report and the comparable vehicles your
+   system used to calculate this ACV."
+   Insurers are required to provide this in most states. Errors to look for:
+   lower-trim comps, higher-mileage comps, incorrect drivetrain, out-of-market comps.
+
+  Step 2 — Counter with your comps
+  "I've identified {n} dealer-listed comparables nationally priced ${min_comp}–${max_comp}.
+   {n_sold} of these have sold at the prices shown, confirming actual market value.
+   I'm attaching the listings."
+
+  Step 3 — Request a condition adjustment
+  If your vehicle was in above-average condition (recent service, no accidents, low
+  mileage for its year), ask: "My vehicle had {condition_factors} — I'd like to
+  discuss a positive condition adjustment."
+
+  Step 4 — Escalate if needed
+  Adjuster won't budge: request their supervisor → file a complaint with your state's
+  Department of Insurance (15 min online) → hire a public adjuster (typically 10% of
+  settlement; worth it on vehicles over $15K).
+
+WATCH FOR THESE ADJUSTER TACTICS:
+  ∙ "Our software shows $X" → Ask which software and request the exact comps it used.
+  ∙ Comps with higher mileage → Lower value; not valid apples-to-apples.
+  ∙ Comps with lower trim → An EX comp is not comparable to your EX-L.
+  ∙ Comps from depressed markets → Regional market differences can be disputed.
+  ∙ Fast-offer push ("accept in 72 hours") → You have time; don't accept under pressure.
+```
+
+---
+
+### Step IC-6: Export to Google Sheet (optional)
+
+After presenting results, offer:
+> "Want me to export these comps to a Google Sheet for easy sharing with your adjuster?"
+
+If yes, use the same Sheet export process as Step 6 (Standard Hunt), with columns:
+```
+Year | Trim | Drivetrain | Miles | Δ Miles | Price | Status | Source | Dealer | State | CPO | Link | Notes
+```
+
+Sort price descending. Title the sheet: `Insurance Comps — {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} — {date}`.
 
 ---
 

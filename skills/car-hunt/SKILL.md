@@ -1389,8 +1389,6 @@ Replace `[FIRST_NAME]` with the seller's actual first name extracted from the li
 
 ---
 
----
-
 ## Insurance Claim Comp Mode
 
 **Purpose:** Find the highest-priced comparable dealer listings (and recently-sold dealer comps) for a vehicle being totalled by insurance. The goal is to arm the user with evidence to extract the **maximum actual cash value (ACV)** from their insurer.
@@ -1476,14 +1474,18 @@ Target CPO (certified pre-owned) listings specifically — they carry a premium 
 
 CarGurus is valuable because it includes **sold listings** and its "Instant Market Value" (IMV) is accepted by some insurers as a third-party valuation reference. If a CarGurus IMV appears on any result page, capture and cite it.
 
-**Regional cycling strategy (critical for old/high-mileage vehicles):** CarGurus national search pages sort by proximity and show ~15–24 results before truncating. High-mileage listings are often buried. Cycle through multiple regional pages to surface them — each regional page shows a different slice of inventory:
+**Regional cycling strategy (critical for old/high-mileage vehicles):** CarGurus national search pages sort by proximity and show ~15–24 results before truncating. High-mileage listings are often buried. Cycle through multiple regional pages to surface them — each regional page shows a different slice of inventory.
 
+**Step 1 — Find the correct CarGurus URL via WebSearch** (CarGurus uses internal model/state IDs that can't be constructed; always discover URLs through search):
 ```
-WebFetch: https://www.cargurus.com/Cars/l-Used-{COMP_YEAR}-{COMP_MAKE}-{COMP_MODEL}-{CG_MODEL_ID}
-WebFetch: https://www.cargurus.com/Cars/l-Used-{COMP_YEAR}-{COMP_MAKE}-{COMP_MODEL}-{STATE_CODE}-{CG_MODEL_ID}_L{STATE_ID}
+WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL}
+WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} Florida
+WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} California
+WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} "New York"
+WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} Texas
 ```
 
-Cycle through at minimum: national page + Florida + California + New York + Texas + the user's home state. Each page may reveal listings not visible on others.
+**Step 2 — WebFetch each discovered URL.** Cycle through at minimum: national + Florida + California + New York + Texas + the user's home state. Each page may reveal listings not visible on others.
 
 **CarGurus direct listing URL format:** Individual listing pages are at `https://www.cargurus.com/details/{listingId}`. When WebFetch returns a listing ID (e.g., `/details/448199099`), construct the full URL as `https://www.cargurus.com/details/448199099`. Always provide full URLs, not relative paths.
 
@@ -1494,12 +1496,17 @@ Cycle through at minimum: national page + Florida + California + New York + Texa
 Cars.com shows the dealer's actual asking price without delivery-fee inflation. Use it as the **price authority** when CarGurus and Cars.com disagree.
 
 ```
-WebFetch: https://www.cars.com/shopping/results/?makes[]=honda&models[]=accord&year_min={YEAR_MIN}&year_max={YEAR_MAX}&mileage_min={MILE_MIN}&mileage_max={MILE_MAX}&sort=list_price_desc&stock_type=used&page_size=20
+WebFetch: https://www.cars.com/shopping/results/?makes[]={COMP_MAKE_LOWERCASE}&models[]={COMP_MODEL_LOWERCASE}&year_min={SEARCH_YEAR_MIN}&year_max={SEARCH_YEAR_MAX}&mileage_min={SEARCH_MILE_MIN}&mileage_max={SEARCH_MILE_MAX}&sort=list_price_desc&stock_type=used&page_size=20
 ```
 
-If the filtered URL times out (common), fall back to the trim-specific shopping page and browse listings:
+Example for 2002–2004 Honda Accord, 198K–238K miles:
 ```
-WebFetch: https://www.cars.com/shopping/{make}-{model}-{year}-{trim}/
+https://www.cars.com/shopping/results/?makes[]=honda&models[]=accord&year_min=2002&year_max=2004&mileage_min=198000&mileage_max=238000&sort=list_price_desc&stock_type=used&page_size=20
+```
+
+**⚠️ This URL frequently times out.** If it does, fall back to the trim-specific shopping page (faster, no mileage filter — scan results manually):
+```
+WebFetch: https://www.cars.com/shopping/{COMP_MAKE_LOWERCASE}-{COMP_MODEL_LOWERCASE}-{COMP_YEAR}-{COMP_TRIM_LOWERCASE}/
 ```
 
 **Cars.com direct listing URL format:** Individual listing pages are at `https://www.cars.com/vehicledetail/{UUID}/`. These URLs are stable and suitable for adjuster email attachments.
@@ -1542,7 +1549,7 @@ Capture the range (low / mid / high) and the mileage basis from the search resul
 #### Sold comps (CarGurus + search)
 
 ```
-WebSearch: "{COMP_YEAR} {COMP_MAKE} {COMP_MODEL}" sold dealer {COMP_DRIVETRAIN} 2025 OR 2026
+WebSearch: "{COMP_YEAR} {COMP_MAKE} {COMP_MODEL}" sold dealer {COMP_DRIVETRAIN} {CURRENT_YEAR-1} OR {CURRENT_YEAR}
 WebSearch: site:cargurus.com sold {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
 ```
 
@@ -1757,10 +1764,10 @@ Use these to verify the mode behaves correctly. Each test describes the input, w
 **Verified comps from reference run (as of 2026-05-16):**
 | Year | Trim | Miles | Price | Dealer | State | URL |
 |------|------|-------|-------|--------|-------|-----|
-| 2004 | LX FWD | 214,461 | $7,000 | AutoNation Honda Columbus | GA | cars.com/vehicledetail/192ba0ea-f664-44ad-8524-4393734e45d3/ |
-| 2003 | LX FWD | 180,990 | $6,920 | Used Imports Auto | GA | cars.com/vehicledetail/384c184f-7f60-4dd8-9310-180c89882534/ |
-| 2003 | LX FWD | 177,562 | $6,868 | Markquart Motors ★ FRANCHISE | WI | autolist.com/honda-accord#vin=1HGCM56323A089022 |
-| 2003 | LX FWD | 242,525 | $4,795 | Zaza Moto | VA | cargurus.com/details/441399699 |
+| 2004 | LX FWD | 214,461 | $7,000 | AutoNation Honda Columbus | GA | https://www.cars.com/vehicledetail/192ba0ea-f664-44ad-8524-4393734e45d3/ |
+| 2003 | LX FWD | 180,990 | $6,920 | Used Imports Auto | GA | https://www.cars.com/vehicledetail/384c184f-7f60-4dd8-9310-180c89882534/ |
+| 2003 | LX FWD | 177,562 | $6,868 | Markquart Motors ★ FRANCHISE | WI | https://www.autolist.com/honda-accord#vin=1HGCM56323A089022 |
+| 2003 | LX FWD | 242,525 | $4,795 | Zaza Moto | VA | https://www.cargurus.com/details/441399699 |
 
 **Red flags in output:** If the skill returns only 1–2 comps and stops, the mileage expansion rule did not trigger — it should have. If the highest comp is below $3,000, the drivetrain filter likely let V6 variants through (V6 Accords depreciate faster; exclude them).
 

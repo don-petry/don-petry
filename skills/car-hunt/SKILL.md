@@ -27,6 +27,53 @@ Car Hunt has two modes. Detect from `$0` keywords or ask if ambiguous:
 
 ---
 
+## Tool Prerequisites
+
+Check these before running. Tell the user upfront what's available and what will be degraded.
+
+| Tool | How to check | Required for | Degraded without |
+|---|---|---|---|
+| **Auto.dev CLI** | `npx @auto.dev/sdk whoami` | Standard Hunt Step 2, IC Step IC-2, VIN recalls/TCO | Falls back to web scraping; national structured search unavailable |
+| **Chrome MCP** (Claude in Chrome extension) | Look for `mcp__chrome__*` tools in allowed-tools | Standard Hunt Step 2 (FB Marketplace Option C), Step 5.5 (NHTSA VIN browser fallback), Step 7 (outreach) | Facebook Marketplace degrades to ~30% coverage (Google-indexed listings only); VIN recall check requires manual browser fallback |
+| **Google Drive MCP** | Look for `mcp__af7feda1-*` tools in allowed-tools | Standard Hunt Step 6 (Sheet export), IC Step IC-6 | Sheet export unavailable; results exist only in chat |
+
+### Auto.dev CLI — Login
+
+```bash
+npx @auto.dev/sdk login      # opens browser → sign in → CLI authorized
+npx @auto.dev/sdk whoami     # verify auth status
+```
+
+**Tier capability:**
+- **Starter (free):** `listings` — dealer inventory search. All Standard Hunt and IC search steps work at this tier.
+- **Growth:** `tco` — 5-year total cost of ownership by VIN (Step 5E).
+- **Scale:** `open-recalls`, `taxes` — per-VIN recall status and tax/fee estimate (Steps 5F2, 5.5B, 5.5E).
+
+**Failure codes:**
+- `"You need to log in first."` → run `npx @auto.dev/sdk login`
+- `"402: Payment Required … requires a Growth plan"` → TCO unavailable; skip silently
+- `"402: Payment Required … requires a Scale plan"` → use NHTSA browser fallback for recalls; skip taxes
+
+### Chrome MCP (Claude in Chrome extension) — Facebook Marketplace
+
+The Chrome MCP is what makes Facebook Marketplace actually work. Without it, FB is limited to whatever listings Google has indexed (typically 20–40% of active inventory).
+
+**What it unlocks:**
+- Full FB Marketplace search with logged-in session — all active listings visible
+- Seller profile extraction (for Seller Trust Score — Step 3)
+- Inline message composer for Step 7 outreach
+- NHTSA VIN recall browser automation fallback (Step 5.5B)
+
+**If Chrome MCP is not connected:**
+- Standard Hunt: note "Facebook Marketplace: limited coverage (Chrome MCP not connected)" in Step 2 summary. Use Option A (Google-indexed listings) and Option B (manual search URL). Do NOT silently skip FB — always report the gap.
+- Insurance Claim Comp mode: no impact (IC mode is dealer-only; FB Marketplace is not searched).
+
+### Google Drive MCP — Sheet Export
+
+The Drive MCP tool ID used in this skill is `mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file`. If this tool is not in the allowed-tools list, Sheet export (Step 6 / IC Step IC-6) is unavailable. Note this to the user when they ask to export — don't attempt the call and fail silently.
+
+---
+
 ## Core Formula
 
 ```

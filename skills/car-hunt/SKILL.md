@@ -1416,6 +1416,8 @@ Post-filter results to drivetrain match: keep only listings where the drivetrain
 
 #### AutoTrader (national dealer search)
 
+**⚠️ AutoTrader is frequently blocked or returns 503 during automated fetches.** Attempt it but do not spend more than one retry — if unavailable, skip and note "AutoTrader: unavailable" in the source summary. Do NOT let AutoTrader failure stall the run; other sources are sufficient.
+
 ```
 WebSearch: site:autotrader.com dealer {COMP_YEAR-1} OR {COMP_YEAR} OR {COMP_YEAR+1} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
 WebSearch: site:autotrader.com certified {COMP_MAKE} {COMP_MODEL} {COMP_YEAR} {COMP_DRIVETRAIN}
@@ -1425,17 +1427,35 @@ Target CPO (certified pre-owned) listings specifically — they carry a premium 
 
 #### CarGurus (national — includes sold data and Instant Market Value)
 
-```
-WebSearch: site:cargurus.com {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN} dealer
-```
-
 CarGurus is valuable because it includes **sold listings** and its "Instant Market Value" (IMV) is accepted by some insurers as a third-party valuation reference. If a CarGurus IMV appears on any result page, capture and cite it.
 
-#### Cars.com (national dealer inventory)
+**Regional cycling strategy (critical for old/high-mileage vehicles):** CarGurus national search pages sort by proximity and show ~15–24 results before truncating. High-mileage listings are often buried. Cycle through multiple regional pages to surface them — each regional page shows a different slice of inventory:
 
 ```
-WebSearch: site:cars.com {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN} dealer
+WebFetch: https://www.cargurus.com/Cars/l-Used-{COMP_YEAR}-{COMP_MAKE}-{COMP_MODEL}-{CG_MODEL_ID}
+WebFetch: https://www.cargurus.com/Cars/l-Used-{COMP_YEAR}-{COMP_MAKE}-{COMP_MODEL}-{STATE_CODE}-{CG_MODEL_ID}_L{STATE_ID}
 ```
+
+Cycle through at minimum: national page + Florida + California + New York + Texas + the user's home state. Each page may reveal listings not visible on others.
+
+**CarGurus direct listing URL format:** Individual listing pages are at `https://www.cargurus.com/details/{listingId}`. When WebFetch returns a listing ID (e.g., `/details/448199099`), construct the full URL as `https://www.cargurus.com/details/448199099`. Always provide full URLs, not relative paths.
+
+**⚠️ CarGurus price varies by regional page:** The same listing may show a different price on different regional pages because CarGurus adds estimated delivery fees based on the viewer's inferred location. **Always cross-reference against Cars.com to get the dealer's base asking price.** When prices differ, cite the lower (Cars.com) figure as the base price and note the discrepancy.
+
+#### Cars.com (national dealer inventory — authoritative price source)
+
+Cars.com shows the dealer's actual asking price without delivery-fee inflation. Use it as the **price authority** when CarGurus and Cars.com disagree.
+
+```
+WebFetch: https://www.cars.com/shopping/results/?makes[]=honda&models[]=accord&year_min={YEAR_MIN}&year_max={YEAR_MAX}&mileage_min={MILE_MIN}&mileage_max={MILE_MAX}&sort=list_price_desc&stock_type=used&page_size=20
+```
+
+If the filtered URL times out (common), fall back to the trim-specific shopping page and browse listings:
+```
+WebFetch: https://www.cars.com/shopping/{make}-{model}-{year}-{trim}/
+```
+
+**Cars.com direct listing URL format:** Individual listing pages are at `https://www.cars.com/vehicledetail/{UUID}/`. These URLs are stable and suitable for adjuster email attachments.
 
 #### CarMax (national — fixed no-haggle prices, strongest comp credibility)
 
@@ -1447,16 +1467,30 @@ WebSearch: site:carmax.com {COMP_YEAR} {COMP_MAKE} {COMP_MODEL}
 
 Verify drivetrain from the listing page.
 
+#### AutoList (national aggregator — useful for franchise dealer listings)
+
+AutoList aggregates listings from multiple sources and surfaces franchise dealer inventory that may not appear prominently on CarGurus or Cars.com searches.
+
+```
+WebFetch: https://www.autolist.com/{make-lowercase}-{model-lowercase}-{year}
+```
+
+Example: `https://www.autolist.com/honda-accord-2003`
+
+Look for franchise dealer listings specifically (e.g., Toyota/Chevy dealers selling off-brand used inventory) — these carry high credibility with adjusters because the dealership's reputation is on the line. **Direct listing URLs** on AutoList use the format `https://autolist.com/{make-model}#vin={VIN}`.
+
 #### KBB / Edmunds (dealer retail reference values)
 
 Even without a specific listing, KBB Dealer Retail and Edmunds True Market Value (TMV) for dealer retail are accepted reference points in insurance negotiations.
+
+**⚠️ KBB and Edmunds block direct WebFetch (HTTP 403).** Do NOT attempt to WebFetch kbb.com or edmunds.com pages directly — they will fail. Instead, use WebSearch and extract values from the search result snippets:
 
 ```
 WebSearch: KBB {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_TRIM} {COMP_MILEAGE} miles dealer retail value
 WebSearch: Edmunds {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} True Market Value dealer retail
 ```
 
-Capture the range (low / mid / high) and the mileage basis from any KBB or Edmunds page found. These become reference anchors even if no matching listing is found.
+Capture the range (low / mid / high) and the mileage basis from the search result snippets. Note that KBB/Edmunds values are based on typical mileage for the vehicle's age — for high-mileage vehicles, actual dealer asking prices often exceed these reference values. When this happens, lead with the actual listings and cite KBB/Edmunds only for context.
 
 #### Sold comps (CarGurus + search)
 
@@ -1495,6 +1529,16 @@ For each listing, record:
 **Mileage proximity flag:** Mark listings within ±5,000 miles of `COMP_MILEAGE` as `★ CLOSEST COMP` — these are the most defensible in a negotiation because the insurer cannot discount them on mileage grounds.
 
 **CPO flag:** Mark any CPO listing with `★ CPO`. If your vehicle had CPO status at purchase, cite CPO comps preferentially.
+
+**Franchise dealer flag:** Mark any listing from a franchise dealership (e.g., a Toyota/Chevy/Ford dealer selling a used Honda off their lot) with `★ FRANCHISE`. Franchise dealers carry more adjuster credibility than independent used-car lots because their published prices represent the retail market, not distressed/wholesale sales.
+
+**Unpriced listings:** Do not discard listings that show no asking price. Include them in a separate "Unpriced — verify manually" section with the listing URL and note "Call to confirm price." An unpriced listing with very close mileage is worth a phone call — it may be the strongest comp once priced.
+
+**Mileage range expansion rule:** If fewer than 5 priced dealer comps are found within the initial ±20,000-mile range, automatically expand the search:
+- First expansion: ±40,000 miles — rerun searches, note "expanded to ±40K mi (thin market)"
+- Second expansion: ±60,000 miles — rerun if still <5 comps, note "expanded to ±60K mi"
+- Always cite the actual mileage delta in the comp table so the adjuster can see the spread
+- For vehicles older than ~15 years or with >150K miles, the market is often thin enough to require expansion on the first run — anticipate this and run the broader search in parallel with the narrow one rather than sequentially
 
 ---
 
@@ -1550,6 +1594,15 @@ Present the full deliverable — a package the user can email to their insurance
      lower-trim, higher-mileage, or in worse condition than yours.
   5. ★ CLOSEST COMP listings are your strongest evidence — same drivetrain, closest in
      mileage. The adjuster cannot discount these on spec mismatch grounds.
+  6. ★ FRANCHISE dealer listings are your most credible comps. A franchise Toyota or Chevy
+     dealer pricing a used Honda at $X is harder to dismiss than an independent lot.
+  7. **National vs. local scope:** Insurance software (CCC/Mitchell/Audatex) defaults to
+     local/regional comps within 30–60 days. For old or high-mileage vehicles where the
+     local market is thin, national comps are appropriate and defensible — preempt the
+     adjuster by stating: "Local market inventory for this vehicle is insufficient for
+     accurate valuation; I've used a national comp basis consistent with standard practice
+     for low-volume models." If even national comps are thin (fewer than 5), say so and
+     use the comps you have alongside KBB/Edmunds reference values.
 ```
 
 ---
@@ -1607,10 +1660,96 @@ After presenting results, offer:
 
 If yes, use the same Sheet export process as Step 6 (Standard Hunt), with columns:
 ```
-Year | Trim | Drivetrain | Miles | Δ Miles | Price | Status | Source | Dealer | State | CPO | Link | Notes
+Year | Trim | Drivetrain | Miles | Δ Miles | Price | Status | Source | Dealer | State | CPO | Franchise | Link | Notes
 ```
 
 Sort price descending. Title the sheet: `Insurance Comps — {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} — {date}`.
+
+---
+
+## Insurance Claim Comp — Test Cases
+
+Use these to verify the mode behaves correctly. Each test describes the input, what should happen, and what a correct output looks like.
+
+---
+
+### IC-TC-1: Modern vehicle, healthy comp market
+
+**Input:** "My 2021 Honda CR-V EX AWD was totalled, 47,000 miles"
+
+**Expected behavior:**
+- `SEARCH_YEAR_MIN=2020`, `SEARCH_YEAR_MAX=2022`, `SEARCH_MILE_MIN=27000`, `SEARCH_MILE_MAX=67000`, `COMP_DRIVETRAIN=AWD`
+- Auto.dev + CarGurus + Cars.com + AutoTrader should return 20+ in-range dealer listings
+- No mileage range expansion needed (market is liquid for recent CRV)
+- Highest comp should be in the $28,000–$35,000 range
+- Multiple ★ CLOSEST COMP listings expected (many 40K–55K-mile CRVs on the market)
+- KBB/Edmunds values obtainable via WebSearch snippets; should broadly align with dealer listings
+- Comp package should cite top-quartile price as recommended minimum ACV
+- No need for national-scope justification (local market is adequate)
+
+**Red flags in output:** If highest comp is below $20,000 for a 2021 CRV EX AWD, the drivetrain filter may have allowed FWD comps through — recheck.
+
+---
+
+### IC-TC-2: Old high-mileage vehicle, thin comp market
+
+**Reference run:** 2003 Honda Accord LX 4-cyl FWD sedan, 218,000 miles (tested 2026-05-16)
+
+**Expected behavior:**
+- `SEARCH_YEAR_MIN=2002`, `SEARCH_YEAR_MAX=2004`, `SEARCH_MILE_MIN=198000`, `SEARCH_MILE_MAX=238000`, `COMP_DRIVETRAIN=FWD`
+- Initial ±20K search returns fewer than 5 priced dealer comps → **mileage range expansion triggers automatically to ±40K**
+- AutoTrader likely unavailable → note and skip
+- KBB/Edmunds direct WebFetch returns 403 → use WebSearch snippets only
+- CarGurus regional cycling required (FL, CA, NY pages) to surface high-mileage listings buried in pagination
+- CarGurus and Cars.com may show different prices for the same listing (delivery fee inflation on CarGurus) → use Cars.com as authoritative price
+- AutoList surfaces franchise dealer listings not prominent on CarGurus/Cars.com
+- Realistic highest comp: $6,500–$8,500 for the mileage range (market data from reference run)
+- National scope justification required in comp package (local market too thin for 22-year-old vehicle)
+- Recommended minimum ACV: top-quartile of confirmed dealer comps; expect adjuster software to open below this
+
+**Verified comps from reference run (as of 2026-05-16):**
+| Year | Trim | Miles | Price | Dealer | State | URL |
+|------|------|-------|-------|--------|-------|-----|
+| 2004 | LX FWD | 214,461 | $7,000 | AutoNation Honda Columbus | GA | cars.com/vehicledetail/192ba0ea-f664-44ad-8524-4393734e45d3/ |
+| 2003 | LX FWD | 180,990 | $6,920 | Used Imports Auto | GA | cars.com/vehicledetail/384c184f-7f60-4dd8-9310-180c89882534/ |
+| 2003 | LX FWD | 177,562 | $6,868 | Markquart Motors ★ FRANCHISE | WI | autolist.com/honda-accord#vin=1HGCM56323A089022 |
+| 2003 | LX FWD | 242,525 | $4,795 | Zaza Moto | VA | cargurus.com/details/441399699 |
+
+**Red flags in output:** If the skill returns only 1–2 comps and stops, the mileage expansion rule did not trigger — it should have. If the highest comp is below $3,000, the drivetrain filter likely let V6 variants through (V6 Accords depreciate faster; exclude them).
+
+---
+
+### IC-TC-3: Mileage range expansion trigger verification
+
+**Input:** Any vehicle where model year > 15 years ago OR odometer > 150,000 miles
+
+**Expected behavior:**
+- Run initial search at ±20K miles
+- If <5 priced dealer comps found: log "Thin market — expanding to ±40K miles" and rerun
+- If still <5: log "Expanding to ±60K miles" and rerun
+- Final comp table shows actual `Δ Miles` column so adjuster can see the range used
+- Comp package header clearly states the actual mileage range searched (not just ±20K)
+
+**Failure mode to catch:** Skill reports "3 comps found" without expansion, or expands silently without noting it in the output. Both are wrong — expansion must be logged visibly.
+
+---
+
+### IC-TC-4: Mode detection
+
+**Inputs that must trigger Insurance Claim Comp mode (not Standard Hunt):**
+- "My car got totalled, I need comps"
+- "Insurance wants to total my RAV4 — what's it worth?"
+- "Help me fight my total loss settlement"
+- "What's the ACV for my 2019 Camry?"
+- "I need insurance comparable vehicles for my Civic"
+- `/car-hunt --mode insurance-comp 2021 Honda CRV EX AWD 47000`
+
+**Inputs that must NOT trigger Insurance Claim Comp mode:**
+- "Find me a used Accord under $8,000"
+- "Show me Civics near Birmingham"
+- `/car-hunt Honda Accord 2015-2020 $12000 35242 100`
+
+**Failure mode to catch:** The skill runs CPM scoring and reliability research for an insurance comp request, or runs comp-finding logic when the user just wants to buy a car.
 
 ---
 

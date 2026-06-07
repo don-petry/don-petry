@@ -57,6 +57,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run }}
+          # Headless Auto.dev auth — the SDK reads this env var directly
+          # (`auto login` browser sessions don't exist in CI). NOTE: `whoami`
+          # only checks the browser-login session and says "Not logged in"
+          # even when this key is valid, so the prompt gates on a real
+          # listings probe instead of whoami.
+          AUTODEV_API_KEY: ${{ secrets.AUTODEV_API_KEY }}
         uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251 # v1.0.133
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -109,8 +115,16 @@ jobs:
             - Max odometer: 250,000 miles
 
             ## Auto.dev CLI
-            Run `npx @auto.dev/sdk whoami` first. If not authenticated, skip
-            Auto.dev entirely and note it in the summary. Do not block on it.
+            Auth is via the `AUTODEV_API_KEY` env var (already set), NOT a
+            browser login — do NOT use `whoami` as the auth gate (it only
+            checks browser-login sessions and reports "Not logged in" even
+            when the API key is valid). Instead, probe with a real call:
+            `npx @auto.dev/sdk listings --make Honda --model Civic --limit 1 --json`.
+            If it returns listing JSON, Auto.dev is available — proceed per
+            SKILL.md (this probe also satisfies its inspect-before-batch
+            rule). If it returns 401/unauthorized or the env var is empty,
+            skip Auto.dev entirely and note it in the summary. Do not block
+            on it.
 
             ## Reporting
             - Always write the end-of-run summary (below) to the step summary:

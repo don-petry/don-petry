@@ -17,6 +17,24 @@ Market links arrive from many places. **Verify the full destination URL before f
 and treat links from DMs/emails/unknown senders as suspicious.** Open URLs via the browser tool, not
 by clicking inside native apps. If a URL looks off, confirm with the user first.
 
+### Tool tactics per surface (validated against @bash_on_the_bluff, 2026)
+Each surface behaves differently — use the right reader so you don't come back empty-handed:
+- **Instagram:** `get_page_text` returns nothing (IG is canvas/JS). Use **`find`** ("follower count,
+  posts count, bio") and **`read_page`** (accessibility tree) instead — those surface the counts and
+  recent-post captions reliably. **Per-post like counts are often hidden** ("Liked by … and others" —
+  confirmed for Bash), so `avg_engagement` may be uncapturable from public view; when it is, fall back
+  to **post cadence** (`posts_last_90d`, readable from post dates in the grid) and visible **comment
+  counts** as the activity proxy. With engagement blank, the trend derives from the follower delta
+  alone — which is why a market can read `stable` even while clearly active.
+- **Facebook:** follower/like counts are frequently **login-gated or simply absent** from the tree —
+  expect to leave `fb_followers` blank and lean on IG for reach. Don't burn time forcing it.
+- **Website:** `get_page_text` works well and is the **highest-yield surface** for the catalog —
+  nonprofit/affinity status, application windows, fees, location/address, and contact email. _The
+  Bash site is where we confirmed its nonprofit status (an affluence override) and the next event
+  date — neither was visible on social._
+- **Junior-vendor / booth fees** are usually **not on any public surface** (confirmed for Bash); plan
+  to email/DM the organizer to confirm before scoring `junior_vendor = yes` or a booth fee.
+
 ## How to capture a snapshot
 
 For each market, use browser tools to open its IG, FB, and official site, then **append one row** to

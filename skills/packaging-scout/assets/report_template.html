@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!--
+  packaging-scout report template.
+  HOW TO USE:
+  1. Replace every {{PLACEHOLDER}} and the example rows/cards with real content.
+  2. Tweak the palette in :root to the brand's colors (or leave the neutral defaults).
+  3. Put downloaded product images in an images/ folder next to this file; reference as images/<name>.
+  4. Convert: bash scripts/html_to_pdf.sh report.html output.pdf
+  Matrix cell classes: td.c.y = meets (green), td.c.p = partial (yellow), td.c.n = fails (red).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Packaging Evaluation — {{PRODUCT}}</title>
+<style>
+  @page { size: Letter landscape; margin: 14mm 16mm; }
+  :root { --navy:#1F3A33; --gold:#C8973A; --green:#DCEBD8; --red:#F4D6D2; --yellow:#FBEFD0; --alt:#F5F2EC; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; color:#222; font-size:11px; line-height:1.45; margin:0; }
+  h1 { color:var(--navy); font-size:19px; border-bottom:2px solid var(--gold); padding-bottom:4px; margin:22px 0 10px; }
+  h2 { color:var(--navy); font-size:14px; margin:14px 0 6px; }
+  p { margin:0 0 8px; }
+  ul { margin:0 0 8px; padding-left:20px; } li { margin:0 0 4px; }
+  a { color:#1155cc; text-decoration:underline; word-break:break-all; }
+  .gold { color:var(--gold); font-weight:bold; }
+  table { border-collapse:collapse; width:100%; margin:8px 0; font-size:10px; }
+  th, td { border:1px solid #ccc; padding:5px 7px; text-align:left; vertical-align:middle; }
+  thead th { background:var(--navy); color:#fff; }
+  .matrix td:first-child { font-weight:bold; }
+  .matrix tr:nth-child(even) td:first-child { background:var(--alt); }
+  td.c { text-align:center; font-weight:bold; }
+  td.y { background:var(--green); } td.n { background:var(--red); } td.p { background:var(--yellow); }
+  .legend span { font-weight:bold; margin-right:14px; }
+  .opt { margin:14px 0 4px; }
+  .opt .num { color:var(--navy); font-weight:bold; font-size:15px; }
+  .opt .badge { color:var(--gold); font-weight:bold; font-size:11px; margin-left:8px; letter-spacing:.5px; }
+  .card { display:flex; gap:14px; align-items:flex-start; margin:14px 0 6px; page-break-inside:avoid; }
+  .card .thumb { flex:none; width:150px; height:150px; border:1px solid #ddd; border-radius:4px; background:#fff; object-fit:contain; padding:4px; }
+  .card .thumb.ph { display:flex; align-items:center; justify-content:center; color:#bbb; font-size:10px; text-align:center; border-style:dashed; }
+  .card .body { flex:1; min-width:0; } .card .body .opt { margin-top:0; }
+  .pricebox { background:var(--alt); border-left:4px solid var(--gold); padding:7px 10px; margin:6px 0; }
+  .cover { text-align:center; padding-top:130px; }
+  .cover .t { font-size:34px; font-weight:bold; color:var(--navy); letter-spacing:1px; }
+  .cover .s { font-size:20px; font-weight:bold; color:var(--gold); margin-top:8px; }
+  .cover .sub { font-style:italic; color:#666; font-size:13px; margin-top:8px; }
+  .cover .date { color:#888; font-size:12px; margin-top:6px; }
+  .pagebreak { page-break-before: always; }
+  .verify { background:#fff8ec; border:1px solid #e8d7af; padding:7px 10px; border-radius:3px; }
+  .os-grid { display:flex; flex-wrap:wrap; gap:12px; margin:8px 0; }
+  .os-card { width:48%; display:flex; gap:10px; align-items:center; border:1px solid #eee; border-radius:4px; padding:8px; page-break-inside:avoid; }
+  .os-card img { flex:none; width:64px; height:64px; object-fit:contain; border:1px solid #eee; border-radius:3px; background:#fff; }
+  .os-card .ph { flex:none; width:64px; height:64px; border:1px dashed #ddd; border-radius:3px; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:8px; text-align:center; }
+  .footer-note { color:#888; font-size:9px; text-align:center; margin-top:24px; border-top:1px solid #ddd; padding-top:6px; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="t">PACKAGING EVALUATION</div>
+  <div class="s">{{PRODUCT}}</div>
+  <div class="sub">Research, comparison &amp; sourcing recommendation</div>
+  <div class="date">Prepared {{DATE}}</div>
+</div>
+
+<!-- PRODUCT & REQUIREMENTS -->
+<div class="pagebreak"></div>
+<h1>Product &amp; Requirements</h1>
+<p><b>Product:</b> {{PRODUCT_DESCRIPTION}}</p>
+<h2>Requirement profile</h2>
+<ul>
+  <li><b>Visibility:</b> {{...}}</li>
+  <li><b>Material:</b> {{...}}</li>
+  <li><b>Format:</b> {{...}}</li>
+  <li><b>Branding:</b> {{...}}</li>
+  <li><b>Channels:</b> {{...}}</li>
+  <li><b>Volume:</b> {{...}}</li>
+  <li><b>Target cost:</b> {{...}}</li>
+  <li><b>Origin:</b> {{...}}</li>
+</ul>
+
+<!-- METHODOLOGY -->
+<h1>How options were evaluated</h1>
+<p>{{One paragraph: how options were gathered and the three verification fronts — fit, origin, landed cost.}}</p>
+<p class="verify"><b class="gold">Verification note:</b> {{Which prices were confirmed how/when; what (if anything) is an unverified manual lookup. State that no prices are guesses.}}</p>
+
+<!-- COMPARISON MATRIX -->
+<h1>Scored comparison</h1>
+<p>Each option scored against the requirement profile. Best candidates meet every column.</p>
+<table class="matrix">
+  <thead>
+    <tr><th>Option</th><th>{{Crit 1}}</th><th>{{Crit 2}}</th><th>{{Crit 3}}</th><th>{{Crit 4}}</th><th>{{Crit 5}}</th><th>{{Crit 6}}</th></tr>
+  </thead>
+  <tbody>
+    <!-- one row per option; classes: y=meets ✓, p=partial ~, n=fails ✗ -->
+    <tr><td>{{Option A}}</td><td class="c y">&#10003;</td><td class="c y">&#10003;</td><td class="c p">~</td><td class="c y">&#10003;</td><td class="c y">&#10003;</td><td class="c y">&#10003;</td></tr>
+    <tr><td>{{Option B}}</td><td class="c y">&#10003;</td><td class="c n">&#10007;</td><td class="c y">&#10003;</td><td class="c y">&#10003;</td><td class="c y">&#10003;</td><td class="c y">&#10003;</td></tr>
+  </tbody>
+</table>
+<p class="legend"><b>Legend:</b> <span style="color:#2E7D32">&#10003; meets</span> <span style="color:#B8860B">~ partial</span> <span style="color:#B23B30">&#10007; fails</span></p>
+<p><b>Key takeaway:</b> {{One or two sentences on what the matrix shows.}}</p>
+
+<!-- RECOMMENDED OPTIONS -->
+<div class="pagebreak"></div>
+<h1>Recommended options</h1>
+<p style="font-size:9px;color:#999;">Product images below are taken from each vendor&#8217;s own online listing, shown for reference only.</p>
+
+<!-- repeat this card per recommended option.
+     With an image: <img class="thumb" src="images/{{a}}.jpg" alt="{{Option A}}">
+     Without an image: <div class="thumb ph">image<br>n/a</div> -->
+<div class="card"><img class="thumb" src="images/{{a}}.jpg" alt="{{Option A}}"><div class="body">
+  <div class="opt"><span class="num">1. {{Option A}}</span><span class="badge">{{BADGE}}</span></div>
+  <p>Link: <a href="{{url}}">{{url label}}</a></p>
+  <ul>
+    <li><b>Origin:</b> {{...}}</li>
+    <li><b>Why:</b> {{...}}</li>
+    <li><b>Trade-off:</b> {{...}}</li>
+  </ul>
+  <div class="pricebox"><b>Confirmed pricing ({{source/date}}):</b> {{tiered pricing}}.</div>
+</div></div>
+
+<!-- DECISION GUIDE -->
+<h1>Decision guide &mdash; pick by your priority</h1>
+<ul>
+  <li><b>{{priority 1}} &rarr;</b> {{Option}}.</li>
+  <li><b>{{priority 2}} &rarr;</b> {{Option}}.</li>
+  <li><b>{{priority 3}} &rarr;</b> {{Option}}.</li>
+</ul>
+
+<!-- LOWER PRIORITY / OTHER VENDORS (optional) -->
+<h1>Lower priority &mdash; {{e.g. overseas vendors}}</h1>
+<p>{{Why these rank lower.}}</p>
+<div class="os-grid">
+  <div class="os-card"><img src="images/{{v}}.jpg" alt="{{vendor}}"><div><b>{{Vendor}}</b> &mdash; {{note}}<br><a href="{{url}}">{{domain}}</a></div></div>
+  <div class="os-card"><div class="ph">image<br>n/a</div><div><b>{{Vendor}}</b> &mdash; {{note}}<br><a href="{{url}}">{{domain}}</a></div></div>
+</div>
+
+<!-- DISQUALIFIED -->
+<h1>Disqualified on fit</h1>
+<ul>
+  <li><b>{{Option}}</b> &mdash; {{why it doesn't fit}}.</li>
+</ul>
+
+<!-- NEXT STEPS -->
+<h1>Recommended next steps</h1>
+<ol>
+  <li>{{...}}</li>
+  <li>{{...}}</li>
+</ol>
+
+<div class="footer-note">{{Business}} — Packaging Evaluation &middot; {{Product}} &middot; Prepared {{DATE}}</div>
+
+</body>
+</html>

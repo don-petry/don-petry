@@ -126,12 +126,13 @@ once confirmed. _Bash on the Bluff offers one even though it isn't on the site._
 3. Present the ranked list, and **flag the limitations honestly** (estimates, apply-only fees, the
    under-rating of proven free markets).
 
-> **Planned enhancement (Evaluate v2 — not yet built):** regularly poll each market's social
-> accounts and website and catalog recent posts to detect, per year: application deadlines, location
-> changes, engagement/sentiment trends, vendor lists, and similar/competing vendors. This will feed
-> the `popularity_trend` modifier and the deadline tracker with live data instead of one-time
-> research. Leave a clear seam for it: the `popularity_trend` input and per-market source links
-> already exist.
+> **Evaluate v2 — social polling & catalog (built):** the `popularity_trend` modifier is no longer a
+> one-time guess. Run the **on-demand poll** (`references/social_polling.md` + `scripts/social_poller.py`)
+> to snapshot each market's IG/FB/website over time and catalog deadlines, location changes,
+> engagement/sentiment trends, and vendor lists. Capture is Claude + browser tools (social platforms
+> block scrapers); the script derives `popularity_trend` from the snapshots and can `--patch-input` it
+> straight back into the scorer CSV. Re-score after polling. See the **Register** and **Remember** steps
+> for how the same poll feeds the deadline tracker and the catalog.
 
 ---
 
@@ -157,9 +158,12 @@ clear pick column plus an application-deadline tracker.
 
 **Goal:** actually get the booths, on time.
 
-- Maintain a **deadline tracker** (market, open/close dates, action). Common windows: brewery/pop-up
-  apps are rolling/DM; juried shows close 4–8 weeks before; some open a fixed date (e.g., a holiday
-  market each July, a flagship farmers market each September).
+- Maintain a **deadline tracker** (`assets/deadline_tracker_template.csv`: market, open/close dates,
+  status, action, fee quote, one-day option). Common windows: brewery/pop-up apps are rolling/DM;
+  juried shows close 4–8 weeks before; some open a fixed date (e.g., a holiday market each July, a
+  flagship farmers market each September). The **social poll** (§2, Evaluate v2) populates this file
+  and `scripts/social_poller.py` ranks windows by urgency (URGENT / SOON / OPEN / NOT_OPEN / CLOSED)
+  so nothing lapses.
 - Because most fees are quote-on-acceptance, **draft a short vendor-inquiry message** when asked, and
   always confirm four things before committing: **fee, date, hours, and whether a one-day option
   exists** for a multi-day show (a single-day booth can rescue an otherwise school-blocked market).
@@ -196,7 +200,10 @@ truth the external score is validated against — so they live together here.
 **Keep these artifacts current** and reuse them every cycle:
 - **`markets_candidates_input.csv`** — the scored dataset (grows as new markets are found).
 - **Results log** — actual take-home and $/hour per market done (the validation set).
-- **Calendar** — current plan + deadline tracker.
+- **`social_catalog.csv`** — append-only poll snapshots (followers, engagement, sentiment, location,
+  vendors). This is the history `social_poller.py` derives momentum from — the more polls, the
+  sharper the `popularity_trend`.
+- **Calendar + `deadline_tracker.csv`** — current plan and application windows.
 - **Learnings** — durable notes: which markets over/under-perform their score, organizer quirks,
   confirmed fees/one-day options, **confirmed junior-vendor programs**, and any market that closed
   or moved.
@@ -210,15 +217,24 @@ note why (e.g., affluent local crowd + short hours the rubric can't fully see).
 ## Bundled resources
 
 - `scripts/market_scorer.py` — the scoring engine (stdlib Python; run on a market CSV).
+- `scripts/social_poller.py` — Evaluate v2 analyzer: turns poll snapshots into `popularity_trend` +
+  a ranked deadline tracker; can `--patch-input` the trend back into the scorer CSV.
 - `references/methodology.md` — full rubric: criteria, weights, modifiers, schedule/$-per-hour/drive,
   validation, and the score-to-calendar process.
 - `references/input_schema.md` — every CSV column, what it means, and how to fill it.
 - `references/finding_markets.md` — the discovery playbook (where/how to find markets, esp. IG-native).
-- `assets/markets_template.csv` — starter CSV with the column header and two example rows.
+- `references/social_polling.md` — the capture playbook for the on-demand social/website poll.
+- `assets/markets_template.csv` — starter scorer CSV with the column header and two example rows.
+- `assets/social_catalog_template.csv` — starter poll-snapshot log (one row per market per poll).
+- `assets/deadline_tracker_template.csv` — starter application-deadline tracker.
 
 ## Iteration roadmap
 
-This skill is meant to grow. Near-term enhancements the user has flagged:
-- **2a — Social polling:** routinely fetch each market's IG/FB and website and catalog recent posts.
-- **2b — Content retention:** extract and store current-year deadlines, location changes, engagement,
-  sentiment, vendor lists, and similar vendors — feeding `popularity_trend` and the deadline tracker.
+This skill is meant to grow. Status of flagged enhancements:
+- **2a — Social polling (shipped):** on-demand snapshot of each market's IG/FB/website via browser
+  tools into `social_catalog.csv`. See `references/social_polling.md`.
+- **2b — Content retention (shipped):** snapshots persist current-year deadlines, location changes,
+  engagement, sentiment, and vendor lists; `social_poller.py` derives `popularity_trend` and a ranked
+  deadline tracker from them, closing the loop into the scorer.
+- **Next ideas:** auto-suggest `vendor_density` from `similar_vendor_count` history; alerting when a
+  tracked deadline crosses into URGENT; multi-year trend (compare same-month snapshots across years).

@@ -31,7 +31,7 @@ One row per market. Blanks are handled gracefully (missing required fields fall 
 | `same_day_competition` | none / some / heavy | Competing markets in the same area on the same day. |
 | `maturity` | established / newish / new | New/unknown markets draw smaller crowds. |
 | `sport_conflict` | none / major / iron_bowl | Significant same-day sport event (Iron Bowl / major college football). |
-| `popularity_trend` | growing / stable / soft_decline / decline | Year-over-year momentum. Default stable; flag decline only with evidence. |
+| `popularity_trend` | growing / stable / soft_decline / decline | Year-over-year momentum. Default stable; flag decline only with evidence. **Auto-populated** by `scripts/social_poller.py --patch-input` from `social_catalog.csv` snapshots (Evaluate v2) — see `references/social_polling.md`. |
 | `junior_vendor` | none / no / yes | **Boost (>1.0):** market offers a discounted "junior artisan" / "junior vendor" youth booth so the 12-year-old seller can participate cheaply → ranks higher. Often **unadvertised** — ask the organizer before scoring "yes" (e.g., Bash on the Bluff). |
 
 ## Schedule & time inputs
@@ -52,4 +52,13 @@ One row per market. Blanks are handled gracefully (missing required fields fall 
 
 ## Output columns (`..._scored.csv`)
 `rank, name, FINAL, quality`, the seven quality sub-scores, the modifier multipliers
-(`x_fine_art_focus … x_schedule`), `x_total_drag`, and `notes`. Sorted by FINAL descending.
+(`x_fine_art_focus … x_junior_vendor … x_schedule`), `x_total_drag`, and `notes`. Sorted by FINAL
+descending.
+
+## Companion files (Evaluate v2 poll)
+Two tracker CSVs feed `popularity_trend` and the deadline tracker; their full schemas live in the
+header of `scripts/social_poller.py`, with starters in `assets/`:
+- **`social_catalog.csv`** — append-only poll snapshots (market, date_polled, ig/fb_followers,
+  posts_last_90d, avg_engagement, sentiment, location_current, similar_vendor_count, notable_vendors).
+- **`deadline_tracker.csv`** — application windows (market, app_platform, app_opens, app_closes,
+  status, action, fee_quote, one_day_option, source_url, last_checked).

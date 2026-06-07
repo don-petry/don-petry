@@ -133,26 +133,84 @@ jobs:
             skip Auto.dev entirely and note it in the summary. Do not block
             on it.
 
-            ## Reporting
-            - Always write the end-of-run summary (below) to the step summary:
-              append markdown to the file named by `$GITHUB_STEP_SUMMARY`.
-            - If `$DRY_RUN` is not "true", also post the summary as a comment
-              on the rolling run-log issue: find the open issue titled exactly
-              "Car Hunt — Run Log" via
-              `gh issue list --state open --search 'Car Hunt — Run Log in:title' --json number,title`;
-              create it if missing (`gh issue create`), then
-              `gh issue comment` with the summary.
+            ## Reporting (machine-readable contract — a later step validates this)
+            Write BOTH files below. The job FAILS if run-results.json is
+            missing or malformed, so write them even when every source fails.
 
-            ## End-of-run summary (always output)
-            1. Total listings scored and how many are new (not seen before)
-            2. Top 3 new listings by Adj.CPM: Make/Model/Year · Price · CPM ·
-               Location · Link
-            3. Any sources that failed or were skipped and why
-            4. **TRIAL DIAGNOSTICS** (for comparison against the Desktop
-               Routine): per source — number of WebSearch queries run, listing
-               URLs discovered, WebFetch attempts vs. successes vs.
-               blocked/login-walled/empty responses. Note any signs of
-               datacenter-IP blocking (403s, CAPTCHAs, empty HTML shells).
+            1. `${{ runner.temp }}/car-hunt/run-results.json` — exactly this
+               shape (no extra top-level keys; use 0/[]/null when empty):
+               {
+                 "totals": { "scored": <int>, "new": <int> },
+                 "top_new": [            // up to 3, ranked by Adj.CPM
+                   { "make": str, "model": str, "year": int, "price": int,
+                     "miles": int, "cpm": num, "adj_cpm": num,
+                     "location": str, "url": str }
+                 ],
+                 "sources": [            // one entry per source, ALWAYS all 5:
+                                         // autotrader, cargurus, craigslist,
+                                         // facebook, autodev
+                   { "name": str,
+                     "status": "ok" | "degraded" | "blocked" | "skipped",
+                     "websearch_queries": int, "urls_found": int,
+                     "fetch_attempts": int, "fetch_success": int,
+                     "fetch_blocked": int, "notes": str }
+                 ],
+                 "ip_blocking_observed": bool,
+                 "notes": str
+               }
+            2. `${{ runner.temp }}/car-hunt/run-summary.md` — the human
+               summary: totals, top 3 new listings (Make/Model/Year · Price ·
+               CPM · Location · Link), failed/skipped sources and why, and a
+               TRIAL DIAGNOSTICS section expanding on the per-source numbers.
+
+            Then append run-summary.md to the file named by
+            `$GITHUB_STEP_SUMMARY`. If `$DRY_RUN` is not "true", also post
+            run-summary.md as a comment on the rolling run-log issue: find
+            the open issue titled exactly "Car Hunt — Run Log" via
+            `gh issue list --state open --search 'Car Hunt — Run Log in:title' --json number,title`;
+            create it if missing (`gh issue create`), then
+            `gh issue comment` with the summary.
+
+      # The run's "test": success means "Claude exited 0 AND produced results
+      # matching the contract", not just that the agent didn't crash. Catches
+      # silent-failure runs (e.g. every source blocked but nothing reported).
+      - name: Validate results contract
+        run: |
+          R="$RUNNER_TEMP/car-hunt/run-results.json"
+          S="$RUNNER_TEMP/car-hunt/run-summary.md"
+          fail() { echo "::error::results contract violation: $1"; exit 1; }
+          [ -s "$R" ] || fail "run-results.json missing or empty"
+          [ -s "$S" ] || fail "run-summary.md missing or empty"
+          jq empty "$R" || fail "run-results.json is not valid JSON"
+          jq -e '
+            (.totals.scored | type == "number") and
+            (.totals.new    | type == "number") and
+            (.top_new       | type == "array") and
+            (.ip_blocking_observed | type == "boolean") and
+            (.sources | type == "array" and length == 5) and
+            ([.sources[].name] | sort ==
+              ["autodev","autotrader","cargurus","craigslist","facebook"]) and
+            (all(.sources[];
+              (.status | IN("ok","degraded","blocked","skipped")) and
+              (.websearch_queries|type=="number") and (.urls_found|type=="number") and
+              (.fetch_attempts|type=="number") and (.fetch_success|type=="number") and
+              (.fetch_blocked|type=="number")))
+          ' "$R" > /dev/null || fail "run-results.json does not match the schema"
+          # state file must still be a JSON array after Claude's rewrite
+          jq -e 'type == "array"' "$RUNNER_TEMP/car-hunt/active-listings.json" > /dev/null \
+            || fail "active-listings.json is no longer a JSON array"
+          echo "Contract OK: $(jq -r '"scored=\(.totals.scored) new=\(.totals.new) ip_blocking=\(.ip_blocking_observed)"' "$R")"
+
+      # Make results machine-fetchable (step summaries have no read API):
+      #   gh run download <run-id> -n car-hunt-results -R don-petry/don-petry
+      - name: Upload results artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: car-hunt-results
+          path: ${{ runner.temp }}/car-hunt/
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Persist dedup state
         if: ${{ github.event_name != 'pull_request' && !inputs.dry_run }}

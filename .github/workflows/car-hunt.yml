@@ -79,6 +79,34 @@ jobs:
           }
           EOF
 
+      # Optional residential egress (fixes AT/CG datacenter-IP bot walls):
+      # when the TS_OAUTH_* secrets are set, join the tailnet and route ALL
+      # runner egress through the home exit node (QNAP, hostname
+      # "qnap-exit") so WebFetch and the Playwright browser leave from a
+      # residential IP. WebSearch is unaffected (executes Anthropic-side).
+      # Both steps no-op until the secrets exist, so the workflow works
+      # before the NAS is set up.
+      - name: Connect to tailnet
+        if: ${{ secrets.TS_OAUTH_CLIENT_ID != '' }}
+        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Route egress through home exit node
+        if: ${{ secrets.TS_OAUTH_CLIENT_ID != '' }}
+        run: |
+          before=$(curl -s --max-time 10 https://api.ipify.org || echo unknown)
+          sudo tailscale set --exit-node=qnap-exit
+          sleep 3
+          after=$(curl -s --max-time 20 https://api.ipify.org || echo unknown)
+          echo "egress IP: $before -> $after"
+          if [ "$after" = "unknown" ] || [ "$before" = "$after" ]; then
+            echo "::error::exit-node routing did not take effect (egress IP unchanged)"
+            exit 1
+          fi
+
       - name: Run car hunt (Claude)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

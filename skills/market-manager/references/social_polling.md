@@ -3,8 +3,16 @@
 This is the **capture half** of the on-demand poll. It feeds two living signals — `popularity_trend`
 (momentum) and the **deadline tracker** — by snapshotting each market's Instagram, Facebook, and
 website over time. The **analysis half** is `scripts/social_poller.py`, which reads what you capture
-here and computes the signals. Run the poll whenever you're re-evaluating or planning a season
-(roughly quarterly, and again before each application window).
+here and computes the signals. Run the poll whenever you're re-evaluating or planning a season, and on
+a standing **monthly cadence** so the engagement series and deadline tracker stay fresh.
+
+> **Automated monthly poll:** a scheduled task (`market-manager-monthly-social-poll`, runs 9 AM on the
+> 1st of each month) re-runs this whole playbook across every market in the catalog: it captures IG **and**
+> FB, scrolls back for dated-post likes (engagement series), appends a fresh snapshot, flags **significant
+> posts** (new market dates / registration windows → `deadline_tracker.csv`), runs the analyzer, and
+> reports the **month-over-month delta** (follower / engagement / reach changes, trend & trajectory
+> shifts, newly urgent deadlines). It needs the Chrome extension connected to capture; if it isn't, it
+> asks. Tune cadence or scope by editing the task.
 
 ## Why it's human-in-the-loop (not a scraper)
 
@@ -60,6 +68,24 @@ trend reflects real interest, not just audience size — capture all three when 
 - **Competition** — `similar_vendor_count` (candle/honey/soap vendors in the lineup) and
   `notable_vendors` (semicolon list). Feeds your read on `vendor_density`.
 - **Source URLs** — where you looked, for audit.
+
+### Backfilling engagement history from dated posts (the honest way to "see trends going back")
+Follower *history* is gone the moment you miss it — past follower counts aren't published anywhere, and
+the Wayback Machine doesn't render Instagram's JS counts (it tends to hang). **But every post is dated
+and usually shows its like count**, so you can reconstruct a real **engagement-over-time series**
+without a time machine: scroll the profile grid backward and read each post's **date + like count**
+(and reel **view** count where shown). _Validated on @chattamarket: a June 7 graphic at 63 likes and an
+April 26 collab reel at ~1,912 likes are two real, dated engagement points; scrolling further back adds
+more._ Record the series in the snapshot's `notes` as `YYYY-MM-DD:likes` pairs
+(e.g. `2026-03-14:120; 2026-04-26:1912; 2026-06-07:63`) so the trend is auditable.
+
+Caveats — stay honest:
+- **Counts accrue over time**, so a months-old post has had longer to gather likes than a fresh one;
+  read the *shape* of the trend, not tiny differences, and compare like-for-like (graphic vs graphic,
+  reel vs reel).
+- **Engagement is often bimodal** — static graphics run low, reels/collabs spike (Chattanooga: 63 vs
+  1,912). Note both so a single sample doesn't distort the read.
+- IG **hides some like counts** ("Liked by … and others") — record what's visible, blank the rest.
 
 ### The full catalog also looks for (record in `notes` or the deadline tracker):
 - **Application deadlines / windows** → add/update a row in `deadline_tracker.csv` (open + close

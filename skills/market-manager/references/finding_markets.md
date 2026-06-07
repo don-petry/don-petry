@@ -26,7 +26,13 @@ below; expect to find different markets in each.
 
 Scout the home metro thoroughly, then nearby drivable cities. Out-of-town markets only earn a slot
 when the data justifies the drive (they pay a round-trip-hours penalty in the score). For Birmingham:
-Huntsville, Chattanooga, Atlanta, Nashville/Franklin.
+Tuscaloosa, Huntsville, Auburn, Chattanooga, Atlanta, Nashville/Franklin.
+
+**College towns are a priority lane.** Tuscaloosa (University of Alabama) and Auburn (Auburn
+University) are affluent, expendable-income markets that skew eco-friendly / farm-friendly and buy
+candles — a strong fit. Scout their game-day markets, downtown merchant associations, and campus-area
+pop-ups, but watch the `sport_conflict` flag: home football Saturdays swamp lodging/parking and (for
+Auburn) the Iron Bowl already carries the heaviest penalty.
 
 ## What to capture per market (so it's ready to Evaluate)
 
@@ -36,7 +42,9 @@ Minimum to add a row: `name`, city, venue, type, and a **source link**. Then, as
 - booth fee (or "apply-only"), free vs ticketed admission;
 - dates (mark announced vs estimated), days, hours/day, one-day option?;
 - drive time from home base;
-- non-profit/affinity tie; same-day competition; year-over-year momentum signals.
+- non-profit/affinity tie; same-day competition; year-over-year momentum signals;
+- **junior-vendor / "junior artisan" youth-booth option** — a kid-friendly perk that often isn't
+  published; ask the organizer or check vendor groups / prior-year flyers (Bash on the Bluff has one).
 
 ## Watch-outs
 

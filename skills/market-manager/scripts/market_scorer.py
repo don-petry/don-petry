@@ -5,9 +5,10 @@ HoneyBeeham Market Scorer  (v6)
 Ranks farmers / artisan / holiday / pop-up markets for a PREMIUM handmade beeswax-candle
 + local-honey seller, using only externally observable signals (no internal sales data).
 
-    FINAL = QUALITY (7 weighted criteria, 0-5)  ×  MODIFIERS (each 0-1)
+    FINAL = QUALITY (7 weighted criteria, 0-5)  ×  MODIFIERS (mostly 0-1)
 
-Quality is the market's intrinsic draw/fit; modifiers are penalties that suppress it.
+Quality is the market's intrinsic draw/fit; modifiers are penalties that suppress it — except
+the junior_vendor BOOST, which can exceed 1.0 to reward kid-friendly markets.
 
 Run:
     python3 market_scorer.py markets_input.csv markets_scored.csv
@@ -36,6 +37,10 @@ INPUT CSV COLUMNS (one row per market; blanks are handled gracefully)
     same_day_competition none / some / heavy        (competing markets same area + day)
     maturity            established / newish / new   (new/unknown market draws a smaller crowd)
     sport_conflict      none / major / iron_bowl     (significant same-day sport event in area)
+    junior_vendor       none / no / yes  (BOOST: market offers a discounted "junior artisan" /
+                        "junior vendor" youth spot — often unadvertised, ask the organizer. The one
+                        modifier allowed to exceed 1.0, because a kid-friendly market lets the
+                        12-year-old seller participate cheaply and is worth ranking higher.)
     day_window          weekend | evening_ok | mixed_partial | weekday_daytime  (school fit)
     min_days            min days vendor MUST attend (use the 1-day option if offered)
     hours_per_day       shopper hours per day (e.g. Sat 11a-5p = 6). total hours = hours_per_day x
@@ -43,8 +48,9 @@ INPUT CSV COLUMNS (one row per market; blanks are handled gracefully)
                         better (a 6-hr single day beats a 3-day, 24-hr show). Falls back to a
                         days-only penalty if hours_per_day is blank.
     drive_rt_hrs        round-trip drive hours from home base (Birmingham, AL). Added to on-site
-                        hours so out-of-town markets (Chattanooga ~4, Nashville ~6, Atlanta ~5,
-                        Huntsville ~3) cost more time and dilute $/hour. Birmingham metro = 0.
+                        hours so out-of-town markets (Tuscaloosa ~2, Huntsville ~3, Auburn ~4,
+                        Chattanooga ~4, Atlanta ~5, Nashville ~6) cost more time and dilute $/hour.
+                        Birmingham metro = 0.
     notes / fee_note    free text (ignored by scoring)
 
 ------------------------------------------------------------------------------
@@ -108,9 +114,14 @@ MODIFIERS = {
     # (year-over-year attendance/vendor drop, scaled-back footprint, negative coverage). Reliable
     # per-year social data is scarce; see methodology doc for what's actually obtainable.
     "popularity_trend":     {"growing": 1.00, "stable": 1.00, "soft_decline": 0.93, "decline": 0.85},
+    # BOOST (the one modifier allowed to exceed 1.0): a market that offers a discounted "junior
+    # artisan" / "junior vendor" youth spot lets the 12-year-old seller participate cheaply, so it
+    # is worth ranking higher. Often unadvertised — confirm with the organizer before scoring "yes".
+    "junior_vendor":        {"none": 1.00, "no": 1.00, "yes": 1.10},
 }
 MODIFIER_DEFAULT = {"fine_art_focus": "none", "same_day_competition": "none",
-                    "maturity": "established", "sport_conflict": "none", "popularity_trend": "stable"}
+                    "maturity": "established", "sport_conflict": "none", "popularity_trend": "stable",
+                    "junior_vendor": "none"}
 
 # Schedule fit (computed, not a simple lookup).
 DAY_WINDOW = {"weekend": 1.00, "evening_ok": 1.00, "mixed_partial": 0.85, "weekday_daytime": 0.45}
@@ -240,7 +251,8 @@ def schedule_mult(m):
 
 
 def modifier_multipliers(m):
-    """All 0-1 modifiers (fine-art, competition, maturity, sport, schedule) and their product."""
+    """All modifiers (fine-art, competition, maturity, sport, popularity, junior-vendor boost,
+    schedule) and their product. Most are 0-1 penalties; junior_vendor can exceed 1.0 as a boost."""
     mults = {}
     for factor, table in MODIFIERS.items():
         key = str(m.get(factor, "")).strip().lower() or MODIFIER_DEFAULT[factor]

@@ -32,6 +32,7 @@ One row per market. Blanks are handled gracefully (missing required fields fall 
 | `maturity` | established / newish / new | New/unknown markets draw smaller crowds. |
 | `sport_conflict` | none / major / iron_bowl | Significant same-day sport event (Iron Bowl / major college football). |
 | `popularity_trend` | growing / stable / soft_decline / decline | Year-over-year momentum. Default stable; flag decline only with evidence. |
+| `junior_vendor` | none / no / yes | **Boost (>1.0):** market offers a discounted "junior artisan" / "junior vendor" youth booth so the 12-year-old seller can participate cheaply → ranks higher. Often **unadvertised** — ask the organizer before scoring "yes" (e.g., Bash on the Bluff). |
 
 ## Schedule & time inputs
 
@@ -40,7 +41,7 @@ One row per market. Blanks are handled gracefully (missing required fields fall 
 | `day_window` | weekend / evening_ok / mixed_partial / weekday_daytime | weekend = Fri/Sat/Sun; evening_ok = weekday after 3 p.m.; mixed_partial = multi-day spanning a school day; weekday_daytime = school-hours weekday (near-disqualifying). |
 | `min_days` | integer | Minimum days the vendor must attend. **Use the one-day option** if the market offers one. |
 | `hours_per_day` | number | Shopper hours per day (e.g. Sat 11–5 = 6). |
-| `drive_rt_hrs` | number | Round-trip drive hours from home base (Birmingham = 0; Huntsville ~3; Chattanooga ~4; Atlanta ~5; Nashville ~6; Franklin ~6.5). Added to on-site hours for $/hour. |
+| `drive_rt_hrs` | number | Round-trip drive hours from home base (Birmingham = 0; Tuscaloosa ~2; Huntsville ~3; Auburn ~4; Chattanooga ~4; Atlanta ~5; Nashville ~6; Franklin ~6.5). Added to on-site hours for $/hour. |
 
 ## Notes columns (ignored by scoring, used in the sheet)
 

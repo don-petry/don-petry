@@ -27,8 +27,8 @@ results come in.
 2. **Evaluate** — score each market for fit, cost, time, and audience.
 3. **Plan** — turn scores into a bookable, conflict-free calendar.
 4. **Register** — apply to the chosen markets and track deadlines/status.
-5. **Participate** — show up prepared and capture what actually happened.
-6. **Remember** — persist data, results, and learnings so next season starts smarter.
+5. **Participate** — show up prepared for each market.
+6. **Remember** — log what actually happened, persist data, and distill learnings so next season starts smarter.
 
 Work through them in order for a full season plan, or jump to one (e.g., "is this market worth it?"
 is just **Evaluate**; "what's on the calendar?" is **Plan**). Always tell the user which capability
@@ -39,12 +39,16 @@ you're operating in so the workflow stays legible.
 These parameters drive every capability. For a new user, confirm them up front; for HoneyBeeham
 they are already set:
 
-- **Home base:** Birmingham, AL. **Travel range:** Huntsville (~3h round trip), Chattanooga (~4h),
-  Atlanta (~5h), Nashville (~6h), Franklin (~6.5h).
+- **Home base:** Birmingham, AL. **Travel range:** Tuscaloosa (~2h round trip), Huntsville (~3h),
+  Auburn (~4h), Chattanooga (~4h), Atlanta (~5h), Nashville (~6h), Franklin (~6.5h). **Tuscaloosa
+  and Auburn are priority college towns** (Univ. of Alabama / Auburn Univ.) — affluent, expendable
+  income that skews eco-friendly, farm-friendly, and buys candles; scout them, but watch home
+  football Saturdays (`sport_conflict`).
 - **Products:** premium handmade beeswax candles ($15–25) + local raw honey ($20/jar). Honey profit
   is markets-only (storefront honey revenue goes to the family supplier, not the business).
 - **Seller constraint:** Charley Ann is 12 and in school → markets must be Fri/Sat/Sun, or a weekday
-  after 3 p.m.; multi-day shows are costly.
+  after 3 p.m.; multi-day shows are costly. Because she sells, **kid-friendly markets that offer a
+  discounted "junior artisan" / "junior vendor" youth booth rank higher** (see Evaluate).
 - **Capacity:** ~2 markets/month, up to 4 in Nov–Dec.
 - **Best-fit audience:** curated artisan / holiday markets; NOT fine-art-only or produce-only shows.
 
@@ -96,9 +100,17 @@ FINAL = QUALITY (7 weighted criteria, 0–5)  ×  MODIFIERS (each 0–1)
 
 Quality = premium positioning, local affluence, foot traffic, social reach, vendor density, scale,
 entry-fee drag. Modifiers = fine-art-focus, same-day competition, maturity, sport conflict,
-popularity trend, and schedule fit (school days + total hours on-site **including round-trip drive**
-— the $/hour lever). The full rubric, bands, and rationale are in `references/methodology.md`; the
-exact input columns and how to fill them are in `references/input_schema.md`.
+popularity trend, the **junior-vendor boost**, and schedule fit (school days + total hours on-site
+**including round-trip drive** — the $/hour lever). The full rubric, bands, and rationale are in
+`references/methodology.md`; the exact input columns and how to fill them are in
+`references/input_schema.md`.
+
+**Kid-friendly markets rank higher.** Because the seller is 12, a market that offers a discounted
+**"junior artisan" / "junior vendor"** youth booth earns a ×1.10 boost (`junior_vendor = yes`) — it
+lets Charley Ann participate cheaply and makes the day a family activity. These programs are
+**frequently unadvertised**: don't assume the absence of a web mention means it's missing. Actively
+look — DM the organizer, check vendor Facebook groups and prior-year flyers — and only score `yes`
+once confirmed. _Bash on the Bluff offers one even though it isn't on the site._
 
 **Process:**
 1. For each candidate, research the inputs and record them in the CSV (`assets/markets_template.csv`
@@ -157,32 +169,41 @@ clear pick column plus an application-deadline tracker.
 
 ## 5. PARTICIPATE
 
-**Goal:** show up prepared, and capture what actually happened (this is what makes the model smarter).
+**Goal:** show up prepared for each market.
 
 - **Pre-market:** confirm inventory (candles by SKU; honey jars sourced from the supplier), booth
   kit, payment method, load-in time, and the day's hours.
-- **Post-market — log the result:** date, market, entry fee paid, total sales, honey vs candle split,
-  hours worked, and qualitative notes (crowd size, weather, competing vendors, what sold). Compute
-  **take-home** = sales − entry fee − honey cost, and **$/hour** = take-home ÷ (hours + drive).
+- If Charley Ann is working a **junior-vendor booth**, prep her setup and confirm the youth-booth
+  terms with the organizer.
 
-This results log is the ground truth that the external score is validated against.
+Logging what happened afterward belongs with persistence — see **Remember** (§6).
 
 ---
 
 ## 6. REMEMBER
 
-**Goal:** persist everything so each season compounds.
+**Goal:** capture what actually happened and persist everything so each season compounds. Logging a
+result and reconciling it against the score are the same job — the results log **is** the ground
+truth the external score is validated against — so they live together here.
 
-Keep these artifacts current and reuse them every cycle:
+**Log the result (right after each market):**
+- Record: date, market, entry fee paid, total sales, honey vs candle split, hours worked, and
+  qualitative notes (crowd size, weather, competing vendors, what sold, and whether the
+  junior-vendor booth helped).
+- Compute **take-home** = sales − entry fee − honey cost, and **$/hour** = take-home ÷ (hours +
+  drive). Append the row to the results log.
+
+**Keep these artifacts current** and reuse them every cycle:
 - **`markets_candidates_input.csv`** — the scored dataset (grows as new markets are found).
 - **Results log** — actual take-home and $/hour per market done (the validation set).
 - **Calendar** — current plan + deadline tracker.
 - **Learnings** — durable notes: which markets over/under-perform their score, organizer quirks,
-  confirmed fees/one-day options, and any market that closed or moved.
+  confirmed fees/one-day options, **confirmed junior-vendor programs**, and any market that closed
+  or moved.
 
-Re-run the scorer whenever inputs change. When recommending, **reconcile score vs. actual take-home**
-— if a proven market keeps beating its score, trust the results and note why (e.g., affluent local
-crowd + short hours the rubric can't fully see).
+**Reconcile score vs. actual.** Re-run the scorer whenever inputs change. When recommending, weigh
+the score against real take-home — if a proven market keeps beating its score, trust the results and
+note why (e.g., affluent local crowd + short hours the rubric can't fully see).
 
 ---
 

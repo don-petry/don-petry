@@ -1,0 +1,154 @@
+# Car Hunt — scheduled used-car search (trial)
+#
+# Runs the skills/car-hunt skill in automated scheduled mode via
+# anthropics/claude-code-action. Replaces the Claude Desktop Routine.
+#
+# TRIAL PHASE: workflow_dispatch only. Once a manual run shows acceptable
+# source coverage (compare TRIAL DIAGNOSTICS in the run summary against a
+# recent Desktop Routine run), add the cron triggers:
+#
+#   schedule:
+#     - cron: '0 13 * * *'   # ~7:00 AM Central (morning run)
+#     - cron: '0 21 * * *'   # ~3:00 PM Central (afternoon run)
+#
+# Persistence: dedup state lives on the orphan branch `car-hunt-state` as
+# active-listings.json — main is never written by this workflow. Run
+# summaries are posted as comments on the rolling issue "Car Hunt — Run Log".
+
+name: Car Hunt
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: report to step summary only (no issue comment, no state update)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # push dedup state to the car-hunt-state branch
+  issues: write     # comment on the run-log issue
+  id-token: write
+
+concurrency:
+  group: car-hunt
+  cancel-in-progress: false
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Load dedup state
+        run: |
+          mkdir -p "$RUNNER_TEMP/car-hunt"
+          if git fetch origin car-hunt-state 2>/dev/null && \
+             git show FETCH_HEAD:active-listings.json > "$RUNNER_TEMP/car-hunt/active-listings.json" 2>/dev/null; then
+            echo "Loaded prior state: $(jq length "$RUNNER_TEMP/car-hunt/active-listings.json") listings"
+          else
+            echo '[]' > "$RUNNER_TEMP/car-hunt/active-listings.json"
+            echo "No prior state — treating all results as new"
+          fi
+
+      - name: Run car hunt (Claude)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251 # v1.0.133
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Pass the workflow's GITHUB_TOKEN explicitly so the job-level
+          # `permissions: issues: write` grant applies (see feature-ideation
+          # workflow for why the default app token silently fails mutations).
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --allowedTools Bash,Read,Write,Glob,Grep,WebSearch,WebFetch
+          prompt: |
+            You are running the car-hunt skill in automated scheduled mode
+            (TRIAL RUN in GitHub Actions). Your goal is to find new high-value
+            used cars, deduplicate against prior runs, and report.
+
+            ## Step 0: Read the full skill instructions
+            Read `skills/car-hunt/SKILL.md` in this checkout. It contains the
+            complete specification for every step. Follow it exactly, subject
+            to the scheduled-mode overrides below.
+
+            ## Scheduled mode rules (override interactive defaults)
+
+            1. **Skip Step 1 (reliability research)** — use only the static
+               reference table in SKILL.md.
+            2. **Run Step 2 (listing search)** across AutoTrader, CarGurus,
+               Craigslist, and Auto.dev. The Chrome MCP is NOT available — for
+               Facebook Marketplace use Option A only (WebSearch for
+               `site:facebook.com/marketplace/item ...`). If no FB item URLs
+               surface, include the manual-search row as the skill specifies.
+            3. **Run Steps 3 and 4** — CPM scoring and ranked output.
+            4. **Deduplicate against prior runs:** the state file is at
+               `${{ runner.temp }}/car-hunt/active-listings.json` — a JSON
+               array of objects with keys `url`, `make`, `model`, `year`,
+               `price`, `miles`, `cpm`, `source`, `first_seen`. Compare link
+               URLs and surface ONLY listings not present. An empty array
+               means first run — treat all results as new.
+            5. **Update state:** after scoring, rewrite that same file in
+               place — keep all prior entries and append each new listing
+               (set `first_seen` to today's date from `date -u +%F`). A later
+               workflow step commits it; do NOT run git yourself.
+            6. **No Google Drive / no MCP tools** — they are not available in
+               this environment. Persistence is the state file only.
+            7. **Skip Step 7 (outreach)** — requires Chrome MCP.
+
+            ## Search parameters
+            - Makes/models: Honda Civic, Honda Accord, Toyota Camry
+            - ZIP: 35243 (Birmingham, AL area)
+            - Radius: 200 miles
+            - Max price: $6,000
+            - Year range: 2002 – current year
+            - Max odometer: 250,000 miles
+
+            ## Auto.dev CLI
+            Run `npx @auto.dev/sdk whoami` first. If not authenticated, skip
+            Auto.dev entirely and note it in the summary. Do not block on it.
+
+            ## Reporting
+            - Always write the end-of-run summary (below) to the step summary:
+              append markdown to the file named by `$GITHUB_STEP_SUMMARY`.
+            - If `$DRY_RUN` is not "true", also post the summary as a comment
+              on the rolling run-log issue: find the open issue titled exactly
+              "Car Hunt — Run Log" via
+              `gh issue list --state open --search 'Car Hunt — Run Log in:title' --json number,title`;
+              create it if missing (`gh issue create`), then
+              `gh issue comment` with the summary.
+
+            ## End-of-run summary (always output)
+            1. Total listings scored and how many are new (not seen before)
+            2. Top 3 new listings by Adj.CPM: Make/Model/Year · Price · CPM ·
+               Location · Link
+            3. Any sources that failed or were skipped and why
+            4. **TRIAL DIAGNOSTICS** (for comparison against the Desktop
+               Routine): per source — number of WebSearch queries run, listing
+               URLs discovered, WebFetch attempts vs. successes vs.
+               blocked/login-walled/empty responses. Note any signs of
+               datacenter-IP blocking (403s, CAPTCHAs, empty HTML shells).
+
+      - name: Persist dedup state
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git fetch origin car-hunt-state 2>/dev/null; then
+            git checkout -B car-hunt-state FETCH_HEAD
+          else
+            git checkout --orphan car-hunt-state
+            git rm -rfq . 2>/dev/null || true
+          fi
+          cp "$RUNNER_TEMP/car-hunt/active-listings.json" active-listings.json
+          git add active-listings.json
+          if git diff --cached --quiet; then
+            echo "State unchanged — nothing to push"
+          else
+            git commit -m "car-hunt: state update $(date -u +%FT%TZ) (run ${{ github.run_id }})"
+            git push origin car-hunt-state
+          fi

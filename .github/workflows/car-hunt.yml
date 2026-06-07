@@ -18,6 +18,12 @@
 name: Car Hunt
 
 on:
+  # TEMPORARY (remove before merge): lets the trial run from this branch,
+  # since workflow_dispatch only registers once the file is on the default
+  # branch. Push events always run as dry-run (see DRY_RUN below).
+  push:
+    branches: [car-hunt-action-trial]
+    paths: ['.github/workflows/car-hunt.yml']
   workflow_dispatch:
     inputs:
       dry_run:
@@ -56,7 +62,7 @@ jobs:
       - name: Run car hunt (Claude)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DRY_RUN: ${{ inputs.dry_run }}
+          DRY_RUN: ${{ github.event_name == 'push' && true || inputs.dry_run }}
           # Headless Auto.dev auth — the SDK reads this env var directly
           # (`auto login` browser sessions don't exist in CI). NOTE: `whoami`
           # only checks the browser-login session and says "Not logged in"
@@ -148,7 +154,7 @@ jobs:
                datacenter-IP blocking (403s, CAPTCHAs, empty HTML shells).
 
       - name: Persist dedup state
-        if: ${{ !inputs.dry_run }}
+        if: ${{ github.event_name != 'push' && !inputs.dry_run }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

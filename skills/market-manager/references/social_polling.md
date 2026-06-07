@@ -22,12 +22,16 @@ Each surface behaves differently — use the right reader so you don't come back
 - **Instagram:** `get_page_text` returns nothing (IG is canvas/JS). Use **`find`** ("follower count,
   posts count, bio") and **`read_page`** (accessibility tree) instead — those surface the counts and
   recent-post captions reliably. **Per-post like counts are often hidden** ("Liked by … and others" —
-  confirmed for Bash), so `avg_engagement` may be uncapturable from public view; when it is, fall back
-  to **post cadence** (`posts_last_90d`, readable from post dates in the grid) and visible **comment
-  counts** as the activity proxy. With engagement blank, the trend derives from the follower delta
-  alone — which is why a market can read `stable` even while clearly active.
-- **Facebook:** follower/like counts are frequently **login-gated or simply absent** from the tree —
-  expect to leave `fb_followers` blank and lean on IG for reach. Don't burn time forcing it.
+  confirmed for Bash), so capture what's visible and lean on Facebook for the interaction numbers.
+  When IG engagement is blank, still record `ig_followers` (the reach signal) and **post cadence**
+  (`posts_last_90d`, readable from post dates in the grid).
+- **Facebook — the richer interaction source.** FB public posts usually expose
+  **likes/reactions, comments, shares, AND video VIEWS** even when the page-level follower count is
+  login-gated. _Confirmed on Bash 2026: 1.6K followers, most-recent post 14 likes / 5 shares /
+  2.8K views._ Capture those into `recent_post_likes / _comments / _shares / _views`; this is what
+  feeds the engagement-rate and reach signals. The follower count may still be absent — record it
+  when shown, otherwise leave `fb_followers` blank (the analyzer takes `max(ig, fb)` as the audience).
+  Don't force the page-level count, but **do** harvest the per-post interactions.
 - **Website:** `get_page_text` works well and is the **highest-yield surface** for the catalog —
   nonprofit/affinity status, application windows, fees, location/address, and contact email. _The
   Bash site is where we confirmed its nonprofit status (an affluence override) and the next event
@@ -41,10 +45,15 @@ For each market, use browser tools to open its IG, FB, and official site, then *
 `social_catalog.csv` (schema in `scripts/social_poller.py` header). Record what you can actually see;
 leave a field blank rather than guessing.
 
-Capture per market, per poll date:
-- **Followers** — IG and FB counts (the reach signal; IG weighted higher downstream).
-- **Activity** — `posts_last_90d` (how alive the account is) and `avg_engagement` (avg likes +
-  comments on recent posts — the momentum signal).
+Capture per market, per poll date. The analyzer blends **three weighted interest signals** so the
+trend reflects real interest, not just audience size — capture all three when you can:
+- **FOLLOWING** — `ig_followers` and `fb_followers` (the audience; analyzer uses `max` of the two).
+- **ENGAGEMENT** — per-post interactions: `recent_post_likes`, `recent_post_comments`,
+  `recent_post_shares`. Downstream this becomes **interactions ÷ followers** (engagement rate), so a
+  small market with loyal fans isn't buried by a big sleepy one. (Facebook is the best source here —
+  see tactics above. Legacy `avg_engagement` is still read as a fallback if these are blank.)
+- **REACH** — `recent_post_views` (video/reel views — how far a post travels beyond followers).
+- **Activity** — `posts_last_90d` (how alive the account is).
 - **Sentiment** — tone of recent posts and visible comments: `positive` / `neutral` / `negative`.
 - **Location** — the current venue string, so the analyzer can detect a **move** (a relocation can
   tank turnout — it surfaces as a `LOCATION MOVED` flag).
@@ -56,7 +65,8 @@ Capture per market, per poll date:
 - **Application deadlines / windows** → add/update a row in `deadline_tracker.csv` (open + close
   dates, platform, fee quote, one-day option, action). This is what drives the Register tracker.
 - **Location changes** → already captured via `location_current`; call it out in `notes` too.
-- **Engagement / sentiment trend** → captured via `avg_engagement` + `sentiment` across snapshots.
+- **Engagement / reach / sentiment trend** → captured via `recent_post_likes/_comments/_shares/_views`
+  + `sentiment` across snapshots (the engagement-rate and reach signals).
 - **Vendor lists / similar vendors** → `similar_vendor_count` + `notable_vendors`.
 - **Junior-vendor / youth-booth mentions** → note any "junior artisan" program seen (often only in
   stories or vendor packets); confirm before setting `junior_vendor = yes` in the scorer input.
@@ -75,14 +85,23 @@ next `market_scorer.py` run reflects live momentum. Then re-score.
 
 ## How the trend is derived (so you can trust/override it)
 
-Across a market's snapshots, the script compares the **earliest vs latest** and scores momentum:
-- follower change ≥ +10% → +1, ≤ −10% → −1 (else 0);
-- engagement change ≥ +10% → +1, ≤ −10% → −1 (else 0);
-- `negative` sentiment → −1 (positive never inflates — downside caution, per methodology).
+Across a market's snapshots, the script compares the **earliest vs latest** and blends the percent
+change in each of the three signals, using the weights at the top of the script:
+- **FOLLOWING** (weight 0.34) — change in follower count.
+- **ENGAGEMENT** (weight 0.40, highest) — change in interactions-per-follower (engagement rate).
+- **REACH** (weight 0.26) — change in post views.
+- Each change is clamped to ±100% before weighting; **missing signals drop out and the remaining
+  weights re-normalize**, so a FB-only or IG-only capture still produces an honest blend.
+- `negative` recent sentiment subtracts a flat penalty from the blend (positive never inflates —
+  downside caution, per methodology).
 
-Net points map to `growing` (≥+1) · `stable` (0) · `soft_decline` (−1) · `decline` (≤−2). A market
-with a **single snapshot** stays `stable` ("insufficient history") — momentum needs at least two polls
-over time, so the value compounds the more you poll. Tune the thresholds at the top of the script.
+The blended change maps to `popularity_trend`: `growing` (≥ +0.10) · `stable` (≥ −0.05) ·
+`soft_decline` (≥ −0.15) · `decline` (below). Separately, when there are **≥ 1.5 years** of history
+the script also emits a **5-year trajectory** — `GAINING` / `HOLDING` / `WANING` — the "is this market
+on the way up or waxing down?" call; thinner history reads `BUILDING`. A **single snapshot** stays
+`stable` / `BUILDING` ("insufficient history"). The signals CSV also carries a short-term
+`recent_follower_change` (prev → latest) so you can see the delta since the last poll. The more years
+you keep, the sharper the trajectory.
 
 > Stay honest: per the methodology, only let real evidence move a market off `stable`. If the data is
-> thin, leave it `stable` and say so.
+> thin, leave it `stable` and say so. Illustrative/back-filled history rows should say so in `notes`.

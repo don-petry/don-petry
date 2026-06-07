@@ -126,13 +126,16 @@ once confirmed. _Bash on the Bluff offers one even though it isn't on the site._
 3. Present the ranked list, and **flag the limitations honestly** (estimates, apply-only fees, the
    under-rating of proven free markets).
 
-> **Evaluate v2 — social polling & catalog (built):** the `popularity_trend` modifier is no longer a
+> **Evaluate v2.1 — social polling & catalog (built):** the `popularity_trend` modifier is no longer a
 > one-time guess. Run the **on-demand poll** (`references/social_polling.md` + `scripts/social_poller.py`)
-> to snapshot each market's IG/FB/website over time and catalog deadlines, location changes,
-> engagement/sentiment trends, and vendor lists. Capture is Claude + browser tools (social platforms
-> block scrapers); the script derives `popularity_trend` from the snapshots and can `--patch-input` it
-> straight back into the scorer CSV. Re-score after polling. See the **Register** and **Remember** steps
-> for how the same poll feeds the deadline tracker and the catalog.
+> to snapshot each market's IG/FB/website over time and catalog deadlines, location changes, interaction
+> trends, and vendor lists. Capture is Claude + browser tools (social platforms block scrapers). The
+> script blends **three weighted interest signals — FOLLOWING (followers), ENGAGEMENT (interactions ÷
+> followers), REACH (post views)** — into `popularity_trend` plus a multi-year **GAINING/HOLDING/WANING
+> trajectory** ("is this market on the way up or waxing down?"), and can `--patch-input` the trend
+> straight back into the scorer CSV. Facebook is the richest interaction source (per-post likes /
+> comments / shares / views). Re-score after polling. See the **Register** and **Remember** steps for how
+> the same poll feeds the deadline tracker and the catalog.
 
 ---
 
@@ -200,9 +203,9 @@ truth the external score is validated against — so they live together here.
 **Keep these artifacts current** and reuse them every cycle:
 - **`markets_candidates_input.csv`** — the scored dataset (grows as new markets are found).
 - **Results log** — actual take-home and $/hour per market done (the validation set).
-- **`social_catalog.csv`** — append-only poll snapshots (followers, engagement, sentiment, location,
-  vendors). This is the history `social_poller.py` derives momentum from — the more polls, the
-  sharper the `popularity_trend`.
+- **`social_catalog.csv`** — append-only poll snapshots (followers, per-post likes/comments/shares/
+  views, sentiment, location, vendors). This is the history `social_poller.py` derives momentum and the
+  5-year trajectory from — the more polls, the sharper the `popularity_trend`.
 - **Calendar + `deadline_tracker.csv`** — current plan and application windows.
 - **Learnings** — durable notes: which markets over/under-perform their score, organizer quirks,
   confirmed fees/one-day options, **confirmed junior-vendor programs**, and any market that closed
@@ -217,8 +220,9 @@ note why (e.g., affluent local crowd + short hours the rubric can't fully see).
 ## Bundled resources
 
 - `scripts/market_scorer.py` — the scoring engine (stdlib Python; run on a market CSV).
-- `scripts/social_poller.py` — Evaluate v2 analyzer: turns poll snapshots into `popularity_trend` +
-  a ranked deadline tracker; can `--patch-input` the trend back into the scorer CSV.
+- `scripts/social_poller.py` — Evaluate v2.1 analyzer: blends weighted following/engagement/reach
+  snapshots into `popularity_trend` + a 5-year GAINING/HOLDING/WANING trajectory + a ranked deadline
+  tracker; can `--patch-input` the trend back into the scorer CSV.
 - `references/methodology.md` — full rubric: criteria, weights, modifiers, schedule/$-per-hour/drive,
   validation, and the score-to-calendar process.
 - `references/input_schema.md` — every CSV column, what it means, and how to fill it.
@@ -234,7 +238,10 @@ This skill is meant to grow. Status of flagged enhancements:
 - **2a — Social polling (shipped):** on-demand snapshot of each market's IG/FB/website via browser
   tools into `social_catalog.csv`. See `references/social_polling.md`.
 - **2b — Content retention (shipped):** snapshots persist current-year deadlines, location changes,
-  engagement, sentiment, and vendor lists; `social_poller.py` derives `popularity_trend` and a ranked
-  deadline tracker from them, closing the loop into the scorer.
+  per-post engagement/reach, sentiment, and vendor lists; `social_poller.py` derives `popularity_trend`
+  and a ranked deadline tracker from them, closing the loop into the scorer.
+- **2c — Multi-year interest trajectory (shipped):** weighted FOLLOWING/ENGAGEMENT/REACH signals across
+  up to 5 years of snapshots yield a GAINING/HOLDING/WANING trajectory plus a short-term delta since the
+  last poll — so a market's rise or wane is evidence-backed, not vibes.
 - **Next ideas:** auto-suggest `vendor_density` from `similar_vendor_count` history; alerting when a
-  tracked deadline crosses into URGENT; multi-year trend (compare same-month snapshots across years).
+  tracked deadline crosses into URGENT.

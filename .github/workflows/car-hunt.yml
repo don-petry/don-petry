@@ -60,6 +60,25 @@ jobs:
             echo "No prior state — treating all results as new"
           fi
 
+      # Headless browser for JS-rendered listing-search pages (AutoTrader,
+      # CarGurus) — trial run showed WebSearch surfaces no individual listing
+      # URLs for those sources. Install the MCP package and the chromium
+      # build matching its bundled playwright version.
+      - name: Set up Playwright MCP
+        run: |
+          npm install --no-fund --no-audit --prefix "$RUNNER_TEMP/pwmcp" @playwright/mcp@0.0.75
+          "$RUNNER_TEMP/pwmcp/node_modules/.bin/playwright" install --with-deps chromium
+          cat > "$RUNNER_TEMP/mcp-config.json" <<EOF
+          {
+            "mcpServers": {
+              "playwright": {
+                "command": "$RUNNER_TEMP/pwmcp/node_modules/.bin/playwright-mcp",
+                "args": ["--headless", "--isolated"]
+              }
+            }
+          }
+          EOF
+
       - name: Run car hunt (Claude)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,7 +97,8 @@ jobs:
           # workflow for why the default app token silently fails mutations).
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: |
-            --allowedTools Bash,Read,Write,Glob,Grep,WebSearch,WebFetch
+            --mcp-config ${{ runner.temp }}/mcp-config.json
+            --allowedTools Bash,Read,Write,Glob,Grep,WebSearch,WebFetch,mcp__playwright
           prompt: |
             You are running the car-hunt skill in automated scheduled mode
             (TRIAL RUN in GitHub Actions). Your goal is to find new high-value
@@ -98,6 +118,21 @@ jobs:
                Facebook Marketplace use Option A only (WebSearch for
                `site:facebook.com/marketplace/item ...`). If no FB item URLs
                surface, include the manual-search row as the skill specifies.
+
+               **Playwright MCP override for AutoTrader and CarGurus:** a
+               headless browser is available via the `playwright` MCP server.
+               For these two sources, OVERRIDE the skill's WebSearch-first
+               approach: navigate the browser directly to the search-results
+               URL (e.g. autotrader.com/cars-for-sale with make/model/zip/
+               price filters; cargurus.com inventory search), wait for
+               listings to render, and extract listing URL, price, mileage,
+               year, trim, and dealer from the rendered page. Paginate up to
+               3 pages per model. Fall back to the WebSearch approach only if
+               the browser pages fail to render listings.
+               Browser guardrails: NEVER navigate to facebook.com or any
+               login-gated site with the browser, never enter credentials,
+               and never submit forms other than search filters. The browser
+               is for rendering public listing-search pages only.
             3. **Run Steps 3 and 4** — CPM scoring and ranked output.
             4. **Deduplicate against prior runs:** the state file is at
                `${{ runner.temp }}/car-hunt/active-listings.json` — a JSON

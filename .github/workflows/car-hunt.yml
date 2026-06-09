@@ -63,26 +63,35 @@ jobs:
             echo "No prior state — treating all results as new"
           fi
 
-      # Headless browser for JS-rendered listing-search pages (AutoTrader,
-      # CarGurus) — trial run showed WebSearch surfaces no individual listing
-      # URLs for those sources. Install the MCP package and the chromium
-      # build matching its bundled playwright version.
+      # Browser for JS-rendered listing-search pages (CarGurus). Runs HEADFUL
+      # under a virtual display (xvfb) rather than --headless: old headless
+      # mode is trivially bot-detected (HeadlessChrome UA, navigator.webdriver,
+      # no plugins). Headful + a realistic UA/viewport, combined with the
+      # residential exit-node IP, is the least-detectable legitimate config.
+      # Install the MCP package, the matching chromium, and xvfb.
       - name: Set up Playwright MCP
         run: |
           npm install --no-fund --no-audit --prefix "$RUNNER_TEMP/pwmcp" @playwright/mcp@0.0.75
           "$RUNNER_TEMP/pwmcp/node_modules/.bin/playwright" install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y xvfb
           cat > "$RUNNER_TEMP/mcp-config.json" <<EOF
           {
             "mcpServers": {
               "playwright": {
-                "command": "$RUNNER_TEMP/pwmcp/node_modules/.bin/playwright-mcp",
-                "args": ["--headless", "--isolated"]
+                "command": "xvfb-run",
+                "args": [
+                  "-a",
+                  "$RUNNER_TEMP/pwmcp/node_modules/.bin/playwright-mcp",
+                  "--isolated",
+                  "--user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                  "--viewport-size", "1366,768"
+                ]
               }
             }
           }
           EOF
 
-      # Optional residential egress (fixes AT/CG datacenter-IP bot walls):
+      # Optional residential egress (fixes CarGurus datacenter-IP bot walls):
       # when the TS_OAUTH_* secrets are set, join the tailnet and route ALL
       # runner egress through the home exit node (QNAP, hostname
       # "qnap-exit") so WebFetch and the Playwright browser leave from a
@@ -144,18 +153,20 @@ jobs:
 
             1. **Skip Step 1 (reliability research)** — use only the static
                reference table in SKILL.md.
-            2. **Run Step 2 (listing search)** across AutoTrader, CarGurus,
-               Craigslist, and Auto.dev. The Chrome MCP is NOT available — for
+            2. **Run Step 2 (listing search)** across CarGurus, Craigslist,
+               and Auto.dev. AutoTrader is DEPRECATED as a source (its
+               DataDome bot-wall blocks headless and residential-IP access
+               alike, and Auto.dev already covers the same dealer inventory)
+               — do NOT search it. The Chrome MCP is NOT available — for
                Facebook Marketplace use Option A only (WebSearch for
                `site:facebook.com/marketplace/item ...`). If no FB item URLs
                surface, include the manual-search row as the skill specifies.
 
-               **Playwright MCP override for AutoTrader and CarGurus:** a
-               headless browser is available via the `playwright` MCP server.
-               For these two sources, OVERRIDE the skill's WebSearch-first
-               approach: navigate the browser directly to the search-results
-               URL (e.g. autotrader.com/cars-for-sale with make/model/zip/
-               price filters; cargurus.com inventory search), wait for
+               **Playwright MCP override for CarGurus:** a headful browser
+               (via xvfb) is available via the `playwright` MCP server. For
+               CarGurus, OVERRIDE the skill's WebSearch-first approach:
+               navigate the browser directly to the cargurus.com inventory
+               search URL with make/model/zip/price filters, wait for
                listings to render, and extract listing URL, price, mileage,
                year, trim, and dealer from the rendered page. Paginate up to
                3 pages per model. Fall back to the WebSearch approach only if
@@ -212,9 +223,9 @@ jobs:
                      "miles": int, "cpm": num, "adj_cpm": num,
                      "location": str, "url": str }
                  ],
-                 "sources": [            // one entry per source, ALWAYS all 5:
-                                         // autotrader, cargurus, craigslist,
-                                         // facebook, autodev
+                 "sources": [            // one entry per source, ALWAYS all 4:
+                                         // cargurus, craigslist, facebook,
+                                         // autodev
                    { "name": str,
                      "status": "ok" | "degraded" | "blocked" | "skipped",
                      "websearch_queries": int, "urls_found": int,
@@ -253,9 +264,9 @@ jobs:
             (.totals.new    | type == "number") and
             (.top_new       | type == "array") and
             (.ip_blocking_observed | type == "boolean") and
-            (.sources | type == "array" and length == 5) and
+            (.sources | type == "array" and length == 4) and
             ([.sources[].name] | sort ==
-              ["autodev","autotrader","cargurus","craigslist","facebook"]) and
+              ["autodev","cargurus","craigslist","facebook"]) and
             (all(.sources[];
               (.status | IN("ok","degraded","blocked","skipped")) and
               (.websearch_queries|type=="number") and (.urls_found|type=="number") and

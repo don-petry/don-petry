@@ -31,6 +31,10 @@ on:
         description: "Dry run: report to step summary only (no issue comment, no state update)"
         type: boolean
         default: false
+      fb_autosend:
+        description: "Send Facebook outreach messages to sellers (needs FB session secret; ignored on dry-run). Off = draft only."
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # push dedup state to the car-hunt-state branch
@@ -48,6 +52,7 @@ jobs:
     env:
       # secrets context is unavailable in step-level `if`; evaluate here
       TS_ENABLED: ${{ secrets.TS_OAUTH_CLIENT_ID != '' }}
+      FB_LOGGED_IN: ${{ secrets.FB_STORAGE_STATE != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -63,17 +68,36 @@ jobs:
             echo "No prior state — treating all results as new"
           fi
 
-      # Browser for JS-rendered listing-search pages (CarGurus). Runs HEADFUL
+      # Browser for JS-rendered + login-gated listing pages (CarGurus, and —
+      # when an FB session is provided — Facebook Marketplace). Runs HEADFUL
       # under a virtual display (xvfb) rather than --headless: old headless
       # mode is trivially bot-detected (HeadlessChrome UA, navigator.webdriver,
-      # no plugins). Headful + a realistic UA/viewport, combined with the
-      # residential exit-node IP, is the least-detectable legitimate config.
-      # Install the MCP package, the matching chromium, and xvfb.
+      # no plugins). Headful + realistic UA/viewport + the residential
+      # exit-node IP (which is the home's own public IP) is the least-
+      # detectable legitimate config.
+      #
+      # When the FB_STORAGE_STATE secret is set, it is a Playwright
+      # storageState JSON for the user's personal FB account. We write it to a
+      # tempfile (never printed; chmod 600; outside the repo) and load it via
+      # --storage-state so Marketplace is fully visible AND the Step 7 outreach
+      # composer works, logged in as the user. Empty secret => FB falls back to
+      # Option A (Google index) and outreach is disabled.
       - name: Set up Playwright MCP
+        env:
+          FB_STORAGE_STATE: ${{ secrets.FB_STORAGE_STATE }}
         run: |
           npm install --no-fund --no-audit --prefix "$RUNNER_TEMP/pwmcp" @playwright/mcp@0.0.75
           "$RUNNER_TEMP/pwmcp/node_modules/.bin/playwright" install --with-deps chromium
           sudo apt-get update && sudo apt-get install -y xvfb
+          STORAGE_ARG=""
+          if [ -n "$FB_STORAGE_STATE" ]; then
+            printf '%s' "$FB_STORAGE_STATE" > "$RUNNER_TEMP/fb-state.json"
+            chmod 600 "$RUNNER_TEMP/fb-state.json"
+            STORAGE_ARG="\"--storage-state=$RUNNER_TEMP/fb-state.json\","
+            echo "FB session: loaded (logged-in Marketplace + outreach enabled)"
+          else
+            echo "FB session: not set (Marketplace falls back to Option A; no outreach)"
+          fi
           cat > "$RUNNER_TEMP/mcp-config.json" <<EOF
           {
             "mcpServers": {
@@ -83,15 +107,17 @@ jobs:
                   "-a",
                   "$RUNNER_TEMP/pwmcp/node_modules/.bin/playwright-mcp",
                   "--isolated",
+                  $STORAGE_ARG
                   "--user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                  "--viewport-size", "1366,768"
+                  "--viewport-size", "1366x768"
                 ]
               }
             }
           }
           EOF
 
-      # Optional residential egress (fixes CarGurus datacenter-IP bot walls):
+      # Optional residential egress (fixes CarGurus + Facebook datacenter-IP
+      # bot walls; its egress IP is the home's own public IP):
       # when the TS_OAUTH_* secrets are set, join the tailnet and route ALL
       # runner egress through the home exit node (QNAP, hostname
       # "qnap-exit") so WebFetch and the Playwright browser leave from a
@@ -129,6 +155,12 @@ jobs:
           # even when this key is valid, so the prompt gates on a real
           # listings probe instead of whoami.
           AUTODEV_API_KEY: ${{ secrets.AUTODEV_API_KEY }}
+          # Is the browser logged into Facebook? (drives Option C vs Option A)
+          FB_LOGGED_IN: ${{ secrets.FB_STORAGE_STATE != '' }}
+          # Outreach SEND gate: only true on an explicit workflow_dispatch with
+          # fb_autosend=true that is NOT a dry-run and has an FB session. PR,
+          # dry-run, and scheduled runs are always false (draft-only).
+          FB_AUTOSEND: ${{ github.event_name == 'workflow_dispatch' && inputs.fb_autosend && !inputs.dry_run && secrets.FB_STORAGE_STATE != '' }}
         uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251 # v1.0.133
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -153,28 +185,37 @@ jobs:
 
             1. **Skip Step 1 (reliability research)** — use only the static
                reference table in SKILL.md.
-            2. **Run Step 2 (listing search)** across CarGurus, Craigslist,
-               and Auto.dev. AutoTrader is DEPRECATED as a source (its
-               DataDome bot-wall blocks headless and residential-IP access
-               alike, and Auto.dev already covers the same dealer inventory)
-               — do NOT search it. The Chrome MCP is NOT available — for
-               Facebook Marketplace use Option A only (WebSearch for
-               `site:facebook.com/marketplace/item ...`). If no FB item URLs
-               surface, include the manual-search row as the skill specifies.
+            2. **Run Step 2 (listing search)** across Facebook Marketplace,
+               CarGurus, Craigslist, and Auto.dev. AutoTrader is DEPRECATED
+               (its DataDome bot-wall blocks residential-IP headless access
+               alike, and Auto.dev covers the same dealer inventory) — do NOT
+               search it.
 
-               **Playwright MCP override for CarGurus:** a headful browser
-               (via xvfb) is available via the `playwright` MCP server. For
-               CarGurus, OVERRIDE the skill's WebSearch-first approach:
-               navigate the browser directly to the cargurus.com inventory
-               search URL with make/model/zip/price filters, wait for
-               listings to render, and extract listing URL, price, mileage,
-               year, trim, and dealer from the rendered page. Paginate up to
-               3 pages per model. Fall back to the WebSearch approach only if
-               the browser pages fail to render listings.
-               Browser guardrails: NEVER navigate to facebook.com or any
-               login-gated site with the browser, never enter credentials,
-               and never submit forms other than search filters. The browser
-               is for rendering public listing-search pages only.
+               **The `playwright` MCP browser is HEADFUL (xvfb).**
+               - **Facebook Marketplace** — when the `FB_LOGGED_IN` env is
+                 "true", the browser is logged into the user's personal FB
+                 account (session loaded via --storage-state). Use the skill's
+                 **Option C** logged-in flow exactly: navigate
+                 `/marketplace/107739635926718/search?query={make}+{model}&...`
+                 (Birmingham AL numeric city ID 107739635926718 — NEVER the
+                 slug, which resolves to Birmingham UK), scroll to load cards,
+                 extract `/marketplace/item/{id}/` URLs + preview text, and
+                 read the Seller-details sidebar for the Seller Trust Score.
+                 When `FB_LOGGED_IN` is not "true", fall back to Option A
+                 (WebSearch `site:facebook.com/marketplace/item ...`) and the
+                 manual-search row.
+               - **CarGurus** — OVERRIDE the skill's WebSearch-first approach:
+                 navigate directly to the cargurus.com inventory search URL
+                 with make/model/zip/price filters, wait for render, and
+                 extract listing URL, price, mileage, year, trim, dealer.
+                 Paginate up to 3 pages per model; fall back to WebSearch only
+                 if pages don't render.
+
+               Browser guardrails: the browser may carry a real logged-in FB
+               session — NEVER enter or change credentials, NEVER open account
+               settings, and submit ONLY (a) Marketplace/CarGurus search
+               filters and (b) the Step 7 message composer (subject to the
+               outreach gate in rule 7). Do not navigate to unrelated sites.
             3. **Run Steps 3 and 4** — CPM scoring and ranked output.
             4. **Deduplicate against prior runs:** the state file is at
                `${{ runner.temp }}/car-hunt/active-listings.json` — a JSON
@@ -188,7 +229,23 @@ jobs:
                workflow step commits it; do NOT run git yourself.
             6. **No Google Drive / no MCP tools** — they are not available in
                this environment. Persistence is the state file only.
-            7. **Skip Step 7 (outreach)** — requires Chrome MCP.
+            7. **Step 7 (outreach) — GATED on the `FB_AUTOSEND` env.**
+               - When `FB_AUTOSEND` is "true": for up to the top 3 NEW
+                 private-party Facebook Marketplace listings (best Adj.CPM, not
+                 previously contacted), run the skill's inline-composer outreach
+                 EXACTLY. Before opening each composer, check for "Message
+                 again" on the listing and SKIP if present (never message the
+                 same seller twice). Honor every scam-signal skip in SKILL.md,
+                 personalize with the seller's first name, send the skill's
+                 standard opener, and confirm the send. HARD CAP: 3 messages
+                 per run.
+               - When `FB_AUTOSEND` is NOT "true" (the default — ALL pull_request,
+                 dry-run, and scheduled runs): DRAFT the same messages but send
+                 NOTHING. List them in run-summary.md under "Outreach drafts
+                 (not sent)".
+               - Either way, record an `outreach` array in run-results.json:
+                 one object per listing acted on `{ "url", "seller", "sent" }`
+                 (`sent:true` only when actually sent).
 
             ## Search parameters
             - Makes/models: Honda Civic, Honda Accord, Toyota Camry
@@ -231,6 +288,9 @@ jobs:
                      "websearch_queries": int, "urls_found": int,
                      "fetch_attempts": int, "fetch_success": int,
                      "fetch_blocked": int, "notes": str }
+                 ],
+                 "outreach": [           // FB messages sent or drafted this run
+                   { "url": str, "seller": str, "sent": bool }
                  ],
                  "ip_blocking_observed": bool,
                  "notes": str

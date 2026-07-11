@@ -1,0 +1,537 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><title>Coach Joel Claudio · AYOP 2026 Binder</title>
+<style>
+:root{
+ --bg:#FBF6F3;--panel:#FFFFFF;--ink:#2A1A2E;--muted:#6E5C71;--hair:#E7DAD9;
+ --gold:#A9791F;--gold-soft:#C9A24B;--rose:#C21F5B;--rose-soft:#F4DCE5;--spot:#FFF6E4;
+ --warn:#B5471B;--warn-bg:#FBE7DC;
+ --shadow:0 1px 0 rgba(42,26,46,.04),0 10px 30px -18px rgba(42,26,46,.30);
+ --serif:"Hoefler Text","Big Caslon",Georgia,"Times New Roman",serif;
+ --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+ --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;}
+@media (prefers-color-scheme:dark){:root{
+ --bg:#171019;--panel:#201723;--ink:#F3E9EE;--muted:#B79FB9;--hair:#3A2C3E;
+ --gold:#E6C065;--gold-soft:#C9A24B;--rose:#F0568C;--rose-soft:#3A1E2C;--spot:#241826;
+ --warn:#F2946A;--warn-bg:#3A2015;--shadow:0 1px 0 rgba(0,0,0,.3),0 14px 34px -20px rgba(0,0,0,.7);}}
+:root[data-theme="dark"]{
+ --bg:#171019;--panel:#201723;--ink:#F3E9EE;--muted:#B79FB9;--hair:#3A2C3E;
+ --gold:#E6C065;--gold-soft:#C9A24B;--rose:#F0568C;--rose-soft:#3A1E2C;--spot:#241826;
+ --warn:#F2946A;--warn-bg:#3A2015;--shadow:0 1px 0 rgba(0,0,0,.3),0 14px 34px -20px rgba(0,0,0,.7);}
+:root[data-theme="light"]{
+ --bg:#FBF6F3;--panel:#FFFFFF;--ink:#2A1A2E;--muted:#6E5C71;--hair:#E7DAD9;
+ --gold:#A9791F;--gold-soft:#C9A24B;--rose:#C21F5B;--rose-soft:#F4DCE5;--spot:#FFF6E4;
+ --warn:#B5471B;--warn-bg:#FBE7DC;--shadow:0 1px 0 rgba(42,26,46,.04),0 10px 30px -18px rgba(42,26,46,.30);}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 20px 80px}
+nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+ backdrop-filter:blur(8px);border-bottom:1px solid var(--hair);margin:0 -20px 20px;padding:9px 20px;
+ display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;letter-spacing:.04em}
+nav b{color:var(--gold);text-transform:uppercase;letter-spacing:.14em;margin-right:6px}
+.tabbtn{color:var(--muted);background:none;border:1px solid transparent;font:inherit;cursor:pointer;
+ padding:5px 11px;border-radius:7px;letter-spacing:.08em;text-transform:uppercase}
+.tabbtn:hover{color:var(--ink);border-color:var(--hair)}
+.app.v-schedule [data-tab="schedule"],.app.v-roster [data-tab="roster"],
+.app.v-athletes [data-tab="athletes"],.app.v-runsheet [data-tab="runsheet"]{
+ color:var(--ink);background:var(--rose-soft);border-color:transparent;font-weight:600}
+.mast{border-top:2px solid var(--ink);padding-top:14px;margin-bottom:8px}
+.kicker{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.kicker b{color:var(--gold);font-weight:600}
+h1{font-family:var(--serif);font-weight:600;margin:.28em 0 .05em;font-size:clamp(30px,6vw,50px);line-height:1.02;text-wrap:balance}
+h1 .star{color:var(--rose);font-style:italic}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+/* tabs */
+.view{display:none}
+.app.v-schedule #view-schedule,.app.v-roster #view-roster,.app.v-athletes #view-athletes,.app.v-runsheet #view-runsheet{display:block}
+.app.show-all .view{display:block}
+.app.show-all .view+.view{margin-top:8px}
+.lab{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+ margin:30px 0 14px;display:flex;align-items:center;gap:12px}
+.lab::after{content:"";flex:1;height:1px;background:var(--hair)}
+.lab .n{color:var(--gold);font-weight:600}
+.twrap{overflow-x:auto;border:1px solid var(--hair);border-radius:12px;box-shadow:var(--shadow);background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--hair);vertical-align:top}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:none}
+td.t{font-family:var(--mono);white-space:nowrap;color:var(--ink);font-variant-numeric:tabular-nums}
+td.who{font-weight:600}
+.pill{font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--hair);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill.lane{background:var(--rose-soft);color:var(--ink);border-color:transparent;font-weight:600}
+.pill.arena{background:var(--spot);color:var(--gold)}
+.dayhdr td{background:color-mix(in srgb,var(--gold-soft) 16%,transparent);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;font-size:11px;color:var(--gold);font-weight:600}
+.warnrow td{background:var(--warn-bg)}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted);margin:12px 2px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+.stu{margin-top:14px;scroll-margin-top:64px}
+.stu+.stu{margin-top:30px}
+.stu h2{font-family:var(--serif);font-weight:600;font-size:26px;margin:0 0 2px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.stu h2 .lvl{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink);background:var(--rose-soft);padding:3px 9px;border-radius:999px;font-weight:400}
+.cards{display:grid;gap:12px;grid-template-columns:1fr;margin-top:14px}
+@media(min-width:620px){.cards{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.cards{grid-template-columns:1fr 1fr 1fr}}
+.card{background:var(--panel);border:1px solid var(--hair);border-radius:13px;box-shadow:var(--shadow);padding:15px 15px 13px;display:flex;flex-direction:column;gap:9px;position:relative;overflow:hidden;break-inside:avoid}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--gold-soft),var(--rose))}
+.card.arena::before{background:linear-gradient(90deg,var(--gold-soft),var(--gold))}
+.ev{font-family:var(--serif);font-size:19px;line-height:1.05;font-weight:600}
+.ev small{display:block;font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+.slot{display:flex;align-items:baseline;gap:8px;font-size:13px;border-top:1px dashed var(--hair);padding-top:8px}
+.slot .d{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:600;white-space:nowrap;min-width:78px}
+.slot .body{flex:1}
+.slot .time{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.slot .lane{color:var(--rose);font-weight:600}
+.slot .meta{color:var(--muted);font-size:12px}
+.watch{margin-top:12px;border-left:3px solid var(--warn);background:var(--warn-bg);border-radius:0 9px 9px 0;padding:9px 12px;font-size:12.5px;break-inside:avoid}
+.watch b{color:var(--warn)}
+.note{margin-top:30px;padding:13px 15px;border-left:3px solid var(--gold-soft);background:var(--spot);border-radius:0 10px 10px 0;font-size:12.5px;color:var(--muted)}
+.note b{color:var(--ink)}
+footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+/* runsheet */
+.day{margin-top:20px;background:var(--panel);border:1px solid var(--hair);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.dayhead{padding:14px 18px;border-bottom:1px solid var(--hair);display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;background:linear-gradient(90deg,color-mix(in srgb,var(--gold-soft) 14%,transparent),transparent)}
+.dayhead .dow{font-family:var(--serif);font-size:24px;font-weight:600}
+.dayhead .dow span{color:var(--muted);font-family:var(--mono);font-size:13px;font-weight:400;margin-left:8px}
+.dayhead .lod{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--rose);font-weight:600;text-align:right}
+.dayhead .lod small{display:block;color:var(--muted);font-weight:400;letter-spacing:0;max-width:340px;margin-top:3px;line-height:1.3}
+.tblk{display:flex;align-items:center;gap:10px;padding:10px 18px 4px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.tblk::after{content:"";flex:1;height:1px;background:var(--hair)}
+.rrow{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:7px 18px;border-top:1px solid color-mix(in srgb,var(--hair) 55%,transparent)}
+.rrow.warn{background:var(--warn-bg)}
+.chk{width:15px;height:15px;border:1.5px solid var(--gold);border-radius:4px}
+.rwho{font-weight:600;font-size:15px}
+.rwho .rev{font-weight:400;color:var(--muted);font-size:13px}
+.rwho .rmeta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:1px}
+.rwho .warnt{color:var(--warn);font-weight:600}
+.rlane{justify-self:end;text-align:center;min-width:64px}
+.rlane .n{font-family:var(--serif);font-weight:600;font-size:26px;line-height:.9;color:var(--rose)}
+.rlane .v{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;margin-top:2px;white-space:nowrap}
+.rlane .half{font-family:var(--mono);font-size:10px;color:var(--gold)}
+.rlane.session .n{font-size:14px;font-family:var(--mono);color:var(--gold);padding-top:6px}
+@media print{
+ :root{--bg:#fff;--panel:#fff;--ink:#000;--muted:#444;--hair:#ccc;--shadow:none}
+ *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+ nav{display:none}.view{display:block!important}.twrap{box-shadow:none}
+ .card{box-shadow:none}.day{break-inside:avoid;box-shadow:none}
+ .view+.view{break-before:page}.stu{break-inside:avoid}
+}
+</style></head><body>
+<div class="app v-schedule" id="app"><nav role="tablist" aria-label="Binder sections"><b role="presentation">AYOP&nbsp;’26</b><button class="tabbtn" role="tab" id="tab-schedule" aria-controls="view-schedule" aria-selected="true" tabindex="0" data-tab="schedule">Schedule</button><button class="tabbtn" role="tab" id="tab-roster" aria-controls="view-roster" aria-selected="false" tabindex="-1" data-tab="roster">Roster</button><button class="tabbtn" role="tab" id="tab-athletes" aria-controls="view-athletes" aria-selected="false" tabindex="-1" data-tab="athletes">Athletes</button><button class="tabbtn" role="tab" id="tab-runsheet" aria-controls="view-runsheet" aria-selected="false" tabindex="-1" data-tab="runsheet">Runsheet</button></nav><div class="wrap"><header class="mast">
+ <div class="kicker"><span>Coaching Binder · <b>Coach Joel Claudio</b></span><span>AYOP 2026 · Notre Dame, South Bend IN</span></div>
+ <h1>The <span class="star">Call Board</span></h1>
+ <div class="sub">8 athletes · July 14–18, 2026 · lanes verified against NBTA Schedule (7/9), Splits (7/10) &amp; Rhythmic (7/9). All times South Bend / Eastern.</div>
+</header><div class="view" id="view-schedule" role="tabpanel" aria-labelledby="tab-schedule" tabindex="0">
+<div class="lab"><span class="n">01</span>&nbsp;Master schedule — everyone, in order</div>
+<div class="twrap"><table><tr><th>Time</th><th>Athlete</th><th>Event</th><th>Division</th><th>Where</th><th>Lane</th></tr>
+<tr class="dayhdr"><td colspan="6">Tue · Jul 14</td></tr>
+<tr class=""><td class="t">9:00 AM</td><td class="who">Addisyn Salo</td><td>Rhythmic Twirl<div class="tag">start #25 · Top 5 twirl-off</div></td><td>Age 13-15</td><td class="t">IU South Bend</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">9:00 AM</td><td class="who">Caden Woloski</td><td>Rhythmic Twirl<div class="tag">start #74 · Top 5 twirl-off</div></td><td>Men&#x27;s 16+</td><td class="t">IU South Bend</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">9:00 AM</td><td class="who">Christiana Selby</td><td>Rhythmic Twirl<div class="tag">start #110 · Top 5 twirl-off</div></td><td>Age 20+</td><td class="t">IU South Bend</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">9:00 AM</td><td class="who">Lea Mitchell</td><td>Rhythmic Twirl<div class="tag">start #104 · Top 5 twirl-off</div></td><td>Age 20+</td><td class="t">IU South Bend</td><td><span class="pill arena">—</span></td></tr>
+<tr class="dayhdr"><td colspan="6">Wed · Jul 15</td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Addisyn Salo</td><td>Nat&#x27;l Majorette Contest<div class="tag">prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></td><td>Advanced 13-15</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Caden Woloski</td><td>Nat&#x27;l Men&#x27;s Solo<div class="tag">prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></td><td>Men&#x27;s 16+ (Men&#x27;s Nationals)</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Charley Ann Petry</td><td>Solo<div class="tag">letter R → P near end</div></td><td>Novice 11</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 5</span> <span class="tag">2nd Half</span></td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Maylee Nord</td><td>Nat&#x27;l Majorette Contest<div class="tag">prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></td><td>Advanced 13-15</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Addisyn Salo</td><td>Two-Baton<div class="tag">letter R order</div></td><td>Advanced 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 2</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Caden Woloski</td><td>Two-Baton<div class="tag">shares lane: Adv 2B 19 + Men</div></td><td>Men&#x27;s Advanced 16+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 8</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Christiana Selby</td><td>Two-Baton<div class="tag">letter R order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 9</span></td></tr>
+<tr class="warnrow"><td class="t">11:00 AM</td><td class="who">Lea Mitchell</td><td>Two-Baton<div class="tag">letter R order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 9</span></td></tr>
+<tr class="warnrow"><td class="t">11:00 AM</td><td class="who">Lea Mitchell</td><td>Three-Baton<div class="tag">same slot as her 2-Baton</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 13</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Maylee Nord</td><td>Two-Baton<div class="tag">letter R order</div></td><td>Advanced 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 2</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Tiahna Selby</td><td>Three-Baton<div class="tag">letter R order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 13</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Addisyn Salo</td><td>Three-Baton<div class="tag">letter R → Salo runs first</div></td><td>Beginner 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 9</span> <span class="tag">1st Half</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Ava Joy Rubery</td><td>Two-Baton<div class="tag">letter R order</div></td><td>Intermediate 16</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 5</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Caden Woloski</td><td>Three-Baton<div class="tag">letter R order</div></td><td>Beginner 16</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 15</span> <span class="tag">1st Half</span></td></tr>
+<tr class=""><td class="t">6:00 PM</td><td class="who">Addisyn Salo</td><td>Junior Miss Majorette<div class="tag">Model</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">6:00 PM</td><td class="who">Ava Joy Rubery</td><td>Intermediate Pageant<div class="tag">Model</div></td><td>Int 16+ — 3 phases</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 13</span></td></tr>
+<tr class="warnrow"><td class="t">6:00 PM</td><td class="who">Lea Mitchell</td><td>All-American Model<div class="tag">modeling — starts w/ R</div></td><td>All 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 25</span></td></tr>
+<tr class="warnrow"><td class="t">6:00 PM</td><td class="who">Lea Mitchell</td><td>College Miss Majorette<div class="tag">Model</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class="warnrow"><td class="t">6:00 PM</td><td class="who">Maylee Nord</td><td>All-American Model<div class="tag">modeling — starts w/ R</div></td><td>All 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 21</span></td></tr>
+<tr class="warnrow"><td class="t">6:00 PM</td><td class="who">Maylee Nord</td><td>Junior Miss Majorette<div class="tag">Model</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class="dayhdr"><td colspan="6">Thu · Jul 16</td></tr>
+<tr class="warnrow"><td class="t">8:00 AM</td><td class="who">Addisyn Salo</td><td>X-Strut<div class="tag">letter Y order</div></td><td>Advanced 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 17</span></td></tr>
+<tr class="warnrow"><td class="t">8:00 AM</td><td class="who">Addisyn Salo</td><td>Junior Miss Majorette<div class="tag">X-Strut</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Ava Joy Rubery</td><td>Intermediate Pageant<div class="tag">X-Strut</div></td><td>Int 16+ — 3 phases</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 36</span></td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Charley Ann Petry</td><td>X-Strut<div class="tag">letter Y → P near end</div></td><td>Novice 11</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 5</span> <span class="tag">2nd Half</span></td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Christiana Selby</td><td>X-Strut<div class="tag">letter Y order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 26</span></td></tr>
+<tr class="warnrow"><td class="t">8:00 AM</td><td class="who">Lea Mitchell</td><td>X-Strut<div class="tag">letter Y order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 26</span></td></tr>
+<tr class="warnrow"><td class="t">8:00 AM</td><td class="who">Lea Mitchell</td><td>College Miss Majorette<div class="tag">X-Strut</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class="warnrow"><td class="t">8:00 AM</td><td class="who">Maylee Nord</td><td>X-Strut<div class="tag">letter Y order</div></td><td>Advanced 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 17</span></td></tr>
+<tr class="warnrow"><td class="t">8:00 AM</td><td class="who">Maylee Nord</td><td>Junior Miss Majorette<div class="tag">X-Strut</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Ava Joy Rubery</td><td>X-Strut<div class="tag">letter Y order</div></td><td>Intermediate 16</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 22</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Caden Woloski</td><td>X-Strut<div class="tag">All Men X-Strut</div></td><td>Men&#x27;s 16+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 26</span></td></tr>
+<tr class=""><td class="t">11:00 AM</td><td class="who">Tiahna Selby</td><td>X-Strut<div class="tag">lane: Int 19,20</div></td><td>Intermediate 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 26</span></td></tr>
+<tr class=""><td class="t">12:00 PM</td><td class="who">Ava Joy Rubery</td><td>Intermediate Pageant<div class="tag">Solo</div></td><td>Int 16+ — 3 phases</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 36</span></td></tr>
+<tr class=""><td class="t">1:00 PM</td><td class="who">Addisyn Salo</td><td>Junior Miss Majorette<div class="tag">Solo</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">1:00 PM</td><td class="who">Lea Mitchell</td><td>College Miss Majorette<div class="tag">Solo · Collegiate Finals Sat 2 PM</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">1:00 PM</td><td class="who">Maylee Nord</td><td>Junior Miss Majorette<div class="tag">Solo</div></td><td>title — 3 phases</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Addisyn Salo</td><td>Solo<div class="tag">letter Y order</div></td><td>Advanced 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 5</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Ava Joy Rubery</td><td>Solo<div class="tag">letter Y order</div></td><td>Intermediate 16</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 24</span> <span class="tag">2nd Half</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Caden Woloski</td><td>Solo<div class="tag">shares lane: Adv Solo 11 + Men</div></td><td>Men&#x27;s Advanced 16+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 3</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Christiana Selby</td><td>Solo<div class="tag">letter Y order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 12</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Lea Mitchell</td><td>Solo<div class="tag">letter Y order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 12</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Maylee Nord</td><td>Solo<div class="tag">letter Y order</div></td><td>Advanced 13</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 5</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Tiahna Selby</td><td>Solo<div class="tag">letter Y order</div></td><td>Advanced 20+</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 12</span></td></tr>
+<tr class=""><td class="t">6:00 PM</td><td class="who">Addisyn Salo</td><td>Duet — Adv (25-30)<div class="tag"></div></td><td>w/ Maylee Nord</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 13</span></td></tr>
+<tr class=""><td class="t">6:00 PM</td><td class="who">Christiana Selby</td><td>Duet — Adv (31+)<div class="tag"></div></td><td>w/ Tiahna Selby</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 14</span></td></tr>
+<tr class=""><td class="t">6:00 PM</td><td class="who">Lea Mitchell</td><td>Duet — Adv (31+)<div class="tag"></div></td><td>w/ Delaney Ochs</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 14</span></td></tr>
+<tr class=""><td class="t">6:00 PM</td><td class="who">Maylee Nord</td><td>Duet — Adv (25-30)<div class="tag"></div></td><td>w/ Addisyn Salo</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 13</span></td></tr>
+<tr class=""><td class="t">6:00 PM</td><td class="who">Tiahna Selby</td><td>Duet — Adv (31+)<div class="tag"></div></td><td>w/ Christiana Selby</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 14</span></td></tr>
+<tr class="dayhdr"><td colspan="6">Fri · Jul 17</td></tr>
+<tr class=""><td class="t">8:00 AM</td><td class="who">Lea Mitchell</td><td>Show Twirl<div class="tag">16/17+ group</div></td><td>All 20+</td><td class="t">The Pit</td><td><span class="pill arena">—</span></td></tr>
+<tr class=""><td class="t">2:00 PM</td><td class="who">Charley Ann Petry</td><td>Two-Baton<div class="tag">letter F → P mid-late</div></td><td>Novice 11</td><td class="t">FH · Wood</td><td><span class="pill lane">Lane 16</span> <span class="tag">1st Half</span></td></tr>
+<tr class="warnrow"><td class="t">3:00 PM</td><td class="who">Lea Mitchell</td><td>Collegiate Solo<div class="tag">prelims · Finals Sat 2 PM</div></td><td>Collegiate</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+<tr class="warnrow"><td class="t">3:00 PM</td><td class="who">Lea Mitchell</td><td>Collegiate Down Field<div class="tag">prelims · Finals Sat 2 PM</div></td><td>Collegiate</td><td class="t">Arena</td><td><span class="pill arena">—</span></td></tr>
+</table></div>
+<div class="legend"><span><span class="dot" style="background:var(--rose)"></span>Fieldhouse lane (confirmed time+lane)</span><span><span class="dot" style="background:var(--gold)"></span>Arena / gym title event (session time)</span><span><span class="dot" style="background:var(--warn)"></span>Athlete has two things at once — coordinate</span></div>
+</div><div class="view" id="view-roster" role="tabpanel" aria-labelledby="tab-roster" tabindex="0">
+<div class="lab"><span class="n">02</span>&nbsp;Roster grid — who’s in what</div>
+<div class="twrap"><table><tr><th>Athlete</th><th>Solo</th><th>X-Strut</th><th>Two-Baton</th><th>Three-Baton</th><th>Duet</th><th>Rhythmic</th><th>Title / Pageant</th></tr>
+<tr><td class="who">Maylee Nord<div class="tag">Advanced · Age 13</div></td><td>L5</td><td>L17</td><td>L2</td><td><span class=tag>—</span></td><td>L13</td><td><span class=tag>—</span></td><td>L21 · • · •</td></tr>
+<tr><td class="who">Addisyn Salo<div class="tag">Advanced · Age 13</div></td><td>L5</td><td>L17</td><td>L2</td><td>L9</td><td>L13</td><td>Tue</td><td>• · •</td></tr>
+<tr><td class="who">Caden Woloski<div class="tag">Men&#x27;s Advanced · Age 16+</div></td><td>L3</td><td>L26</td><td>L8</td><td>L15</td><td><span class=tag>—</span></td><td>Tue</td><td>•</td></tr>
+<tr><td class="who">Christiana Selby<div class="tag">Advanced · Age 20+</div></td><td>L12</td><td>L26</td><td>L9</td><td><span class=tag>—</span></td><td>L14</td><td>Tue</td><td><span class=tag>—</span></td></tr>
+<tr><td class="who">Tiahna Selby<div class="tag">Advanced/Int · Age 20+</div></td><td>L12</td><td>L26</td><td><span class=tag>—</span></td><td>L13</td><td>L14</td><td><span class=tag>—</span></td><td><span class=tag>—</span></td></tr>
+<tr><td class="who">Lea Mitchell<div class="tag">Advanced / Collegiate · Age 20+</div></td><td>L12</td><td>L26</td><td>L9</td><td>L13</td><td>L14</td><td>Tue</td><td>L25 · • · • · • · •</td></tr>
+<tr><td class="who">Ava Joy Rubery<div class="tag">Intermediate · Age 16</div></td><td>L24</td><td>L22</td><td>L5</td><td><span class=tag>—</span></td><td><span class=tag>—</span></td><td><span class=tag>—</span></td><td>L13</td></tr>
+<tr><td class="who">Charley Ann Petry<div class="tag">Novice · Age 11</div></td><td>L5</td><td>L5</td><td>L16</td><td><span class=tag>—</span></td><td><span class=tag>—</span></td><td><span class=tag>—</span></td><td><span class=tag>—</span></td></tr>
+</table></div><div class="legend"><span>“L5” = Fieldhouse lane number · “•” = entered (session-timed) · “Tue” = Rhythmic on Tuesday</span></div>
+</div><div class="view" id="view-athletes" role="tabpanel" aria-labelledby="tab-athletes" tabindex="0">
+<div class="lab"><span class="n">03</span>&nbsp;Individual call sheets</div>
+<section class="stu" id="s-maylee-nord"><h2>Maylee Nord <span class="lvl">Advanced · Age 13</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Advanced 13 · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 5</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Two-Baton<small>Advanced 13 · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 2</span> · letter R order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Advanced 13 · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 17</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">All-American Model<small>All 13 · Pageant</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 21</span> · modeling — starts w/ R</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Duet — Adv (25-30)<small>w/ Addisyn Salo · Duet</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 13</span> · </div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Nat&#x27;l Majorette Contest<small>Advanced 13-15 · Title event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">8:00 AM</span> · Arena<div class="meta">prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Junior Miss Majorette<small>title — 3 phases · Title event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">6:00 PM</span> · Arena<div class="meta">Model</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · Arena<div class="meta">X-Strut</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">1:00 PM</span> · Arena<div class="meta">Solo</div></span></div>
+</article>
+</div>
+<div class="watch"><b>⚠ Same-time overlaps to coordinate:</b><br>Wed · Jul 15 @ 6:00 PM — <b>All-American Model + Junior Miss Majorette</b><br>Thu · Jul 16 @ 8:00 AM — <b>Junior Miss Majorette + X-Strut</b><br><span class="tag">Arena title phases and open Fieldhouse events can land in the same slot; the meet staggers them, but plan a runner / warm-up order.</span></div>
+</section>
+<section class="stu" id="s-addisyn-salo"><h2>Addisyn Salo <span class="lvl">Advanced · Age 13</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Advanced 13 · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 5</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Two-Baton<small>Advanced 13 · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 2</span> · letter R order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Advanced 13 · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 17</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Three-Baton<small>Beginner 13 · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 9 · 1st Half</span> · letter R → Salo runs first</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Duet — Adv (25-30)<small>w/ Maylee Nord · Duet</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 13</span> · </div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Rhythmic Twirl<small>Age 13-15 · Rhythmic</small></div>
+<div class="slot"><span class="d">Tue · Jul 14</span><span class="body"><span class="time">9:00 AM</span> · IU South Bend<div class="meta">start #25 · Top 5 twirl-off</div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Nat&#x27;l Majorette Contest<small>Advanced 13-15 · Title event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">8:00 AM</span> · Arena<div class="meta">prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Junior Miss Majorette<small>title — 3 phases · Title event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">6:00 PM</span> · Arena<div class="meta">Model</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · Arena<div class="meta">X-Strut</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">1:00 PM</span> · Arena<div class="meta">Solo</div></span></div>
+</article>
+</div>
+<div class="watch"><b>⚠ Same-time overlaps to coordinate:</b><br>Thu · Jul 16 @ 8:00 AM — <b>Junior Miss Majorette + X-Strut</b><br><span class="tag">Arena title phases and open Fieldhouse events can land in the same slot; the meet staggers them, but plan a runner / warm-up order.</span></div>
+</section>
+<section class="stu" id="s-caden-woloski"><h2>Caden Woloski <span class="lvl">Men&#x27;s Advanced · Age 16+</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Men&#x27;s Advanced 16+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 3</span> · shares lane: Adv Solo 11 + Men</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Two-Baton<small>Men&#x27;s Advanced 16+ · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 8</span> · shares lane: Adv 2B 19 + Men</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Men&#x27;s 16+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 26</span> · All Men X-Strut</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Three-Baton<small>Beginner 16 · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 15 · 1st Half</span> · letter R order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Rhythmic Twirl<small>Men&#x27;s 16+ · Rhythmic</small></div>
+<div class="slot"><span class="d">Tue · Jul 14</span><span class="body"><span class="time">9:00 AM</span> · IU South Bend<div class="meta">start #74 · Top 5 twirl-off</div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Nat&#x27;l Men&#x27;s Solo<small>Men&#x27;s 16+ (Men&#x27;s Nationals) · Title event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">8:00 AM</span> · Arena<div class="meta">prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></span></div>
+</article>
+</div>
+</section>
+<section class="stu" id="s-christiana-selby"><h2>Christiana Selby <span class="lvl">Advanced · Age 20+</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 12</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Two-Baton<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 9</span> · letter R order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 26</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Duet — Adv (31+)<small>w/ Tiahna Selby · Duet</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 14</span> · </div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Rhythmic Twirl<small>Age 20+ · Rhythmic</small></div>
+<div class="slot"><span class="d">Tue · Jul 14</span><span class="body"><span class="time">9:00 AM</span> · IU South Bend<div class="meta">start #110 · Top 5 twirl-off</div></span></div>
+</article>
+</div>
+</section>
+<section class="stu" id="s-tiahna-selby"><h2>Tiahna Selby <span class="lvl">Advanced/Int · Age 20+</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 12</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Three-Baton<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 13</span> · letter R order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Intermediate 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 26</span> · lane: Int 19,20</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Duet — Adv (31+)<small>w/ Christiana Selby · Duet</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 14</span> · </div></span></div>
+</article>
+</div>
+</section>
+<section class="stu" id="s-lea-mitchell"><h2>Lea Mitchell <span class="lvl">Advanced / Collegiate · Age 20+</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 12</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Two-Baton<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 9</span> · letter R order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Three-Baton<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 13</span> · same slot as her 2-Baton</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Advanced 20+ · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 26</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">All-American Model<small>All 20+ · Pageant</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 25</span> · modeling — starts w/ R</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Duet — Adv (31+)<small>w/ Delaney Ochs · Duet</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 14</span> · </div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Show Twirl<small>All 20+ · Show Twirl</small></div>
+<div class="slot"><span class="d">Fri · Jul 17</span><span class="body"><span class="time">8:00 AM</span> · The Pit<div class="meta">16/17+ group</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Rhythmic Twirl<small>Age 20+ · Rhythmic</small></div>
+<div class="slot"><span class="d">Tue · Jul 14</span><span class="body"><span class="time">9:00 AM</span> · IU South Bend<div class="meta">start #104 · Top 5 twirl-off</div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">College Miss Majorette<small>title — 3 phases · Title event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">6:00 PM</span> · Arena<div class="meta">Model</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · Arena<div class="meta">X-Strut</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">1:00 PM</span> · Arena<div class="meta">Solo · Collegiate Finals Sat 2 PM</div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Collegiate Solo<small>Collegiate · Title event</small></div>
+<div class="slot"><span class="d">Fri · Jul 17</span><span class="body"><span class="time">3:00 PM</span> · Arena<div class="meta">prelims · Finals Sat 2 PM</div></span></div>
+</article>
+<article class="card arena">
+<div class="ev">Collegiate Down Field<small>Collegiate · Title event</small></div>
+<div class="slot"><span class="d">Fri · Jul 17</span><span class="body"><span class="time">3:00 PM</span> · Arena<div class="meta">prelims · Finals Sat 2 PM</div></span></div>
+</article>
+</div>
+<div class="watch"><b>⚠ Same-time overlaps to coordinate:</b><br>Wed · Jul 15 @ 11:00 AM — <b>Three-Baton + Two-Baton</b><br>Wed · Jul 15 @ 6:00 PM — <b>All-American Model + College Miss Majorette</b><br>Thu · Jul 16 @ 8:00 AM — <b>College Miss Majorette + X-Strut</b><br>Fri · Jul 17 @ 3:00 PM — <b>Collegiate Down Field + Collegiate Solo</b><br><span class="tag">Arena title phases and open Fieldhouse events can land in the same slot; the meet staggers them, but plan a runner / warm-up order.</span></div>
+</section>
+<section class="stu" id="s-ava-joy-rubery"><h2>Ava Joy Rubery <span class="lvl">Intermediate · Age 16</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Intermediate 16 · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 24 · 2nd Half</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Two-Baton<small>Intermediate 16 · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 5</span> · letter R order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Intermediate 16 · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">11:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 22</span> · letter Y order</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Intermediate Pageant<small>Int 16+ — 3 phases · Pageant</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 13</span> · Model</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 36</span> · X-Strut</div></span></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">12:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 36</span> · Solo</div></span></div>
+</article>
+</div>
+</section>
+<section class="stu" id="s-charley-ann-petry"><h2>Charley Ann Petry <span class="lvl">Novice · Age 11</span></h2>
+<div class="cards">
+<article class="card ">
+<div class="ev">Solo<small>Novice 11 · Lane event</small></div>
+<div class="slot"><span class="d">Wed · Jul 15</span><span class="body"><span class="time">8:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 5 · 2nd Half</span> · letter R → P near end</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">X-Strut<small>Novice 11 · Lane event</small></div>
+<div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">8:00 AM</span> · FH · Wood<div class="meta"><span class="lane">Lane 5 · 2nd Half</span> · letter Y → P near end</div></span></div>
+</article>
+<article class="card ">
+<div class="ev">Two-Baton<small>Novice 11 · Lane event</small></div>
+<div class="slot"><span class="d">Fri · Jul 17</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 16 · 1st Half</span> · letter F → P mid-late</div></span></div>
+</article>
+</div>
+</section>
+</div><div class="view" id="view-runsheet" role="tabpanel" aria-labelledby="tab-runsheet" tabindex="0">
+<div class="lab"><span class="n">04</span>&nbsp;Day-of floor runsheets — tick each kid off</div>
+<section class="day"><div class="dayhead"><div class="dow">Tuesday <span>Jul 14</span></div><div class="lod">Rhythmic day<small>National Rhythmic Championships · IU South Bend · doors 8 AM, contest 9 AM. Runs by printed start number (not letter of the day).</small></div></div><div>
+<div class="tblk">9:00 AM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Rhythmic Twirl</span><div class="rmeta">Age 13-15 · start #25 · Top 5 twirl-off</div></div><div class="rlane session"><div class="n">IU South Bend</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Caden Woloski <span class="rev">— Rhythmic Twirl</span><div class="rmeta">Men&#x27;s 16+ · start #74 · Top 5 twirl-off</div></div><div class="rlane session"><div class="n">IU South Bend</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Christiana Selby <span class="rev">— Rhythmic Twirl</span><div class="rmeta">Age 20+ · start #110 · Top 5 twirl-off</div></div><div class="rlane session"><div class="n">IU South Bend</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Rhythmic Twirl</span><div class="rmeta">Age 20+ · start #104 · Top 5 twirl-off</div></div><div class="rlane session"><div class="n">IU South Bend</div><div class="v">by order</div></div></div>
+</div></section>
+<section class="day"><div class="dayhead"><div class="dow">Wednesday <span>Jul 15</span></div><div class="lod">Letter of the day: R<small>Fieldhouse (Wood Floor) + Arena both live. Doors 8 AM. Order runs R→S→T… within each lane.</small></div></div><div>
+<div class="tblk">8:00 AM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Nat&#x27;l Majorette Contest</span><div class="rmeta">Advanced 13-15 · prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Caden Woloski <span class="rev">— Nat&#x27;l Men&#x27;s Solo</span><div class="rmeta">Men&#x27;s 16+ (Men&#x27;s Nationals) · prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Charley Ann Petry <span class="rev">— Solo</span><div class="rmeta">Novice 11 · letter R → P near end</div></div><div class="rlane"><div class="n">5</div><div class="v">FH · Wood</div><div class=half>2nd Half</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— Nat&#x27;l Majorette Contest</span><div class="rmeta">Advanced 13-15 · prelims · Top 20 Wed 3 PM · Finals Sat 4:30 PM</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="tblk">11:00 AM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Two-Baton</span><div class="rmeta">Advanced 13 · letter R order</div></div><div class="rlane"><div class="n">2</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Caden Woloski <span class="rev">— Two-Baton</span><div class="rmeta">Men&#x27;s Advanced 16+ · shares lane: Adv 2B 19 + Men</div></div><div class="rlane"><div class="n">8</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Christiana Selby <span class="rev">— Two-Baton</span><div class="rmeta">Advanced 20+ · letter R order</div></div><div class="rlane"><div class="n">9</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Two-Baton</span><div class="rmeta">Advanced 20+ · letter R order · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane"><div class="n">9</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Three-Baton</span><div class="rmeta">Advanced 20+ · same slot as her 2-Baton · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane"><div class="n">13</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— Two-Baton</span><div class="rmeta">Advanced 13 · letter R order</div></div><div class="rlane"><div class="n">2</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Tiahna Selby <span class="rev">— Three-Baton</span><div class="rmeta">Advanced 20+ · letter R order</div></div><div class="rlane"><div class="n">13</div><div class="v">FH · Wood</div></div></div>
+<div class="tblk">2:00 PM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Three-Baton</span><div class="rmeta">Beginner 13 · letter R → Salo runs first</div></div><div class="rlane"><div class="n">9</div><div class="v">FH · Wood</div><div class=half>1st Half</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Ava Joy Rubery <span class="rev">— Two-Baton</span><div class="rmeta">Intermediate 16 · letter R order</div></div><div class="rlane"><div class="n">5</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Caden Woloski <span class="rev">— Three-Baton</span><div class="rmeta">Beginner 16 · letter R order</div></div><div class="rlane"><div class="n">15</div><div class="v">FH · Wood</div><div class=half>1st Half</div></div></div>
+<div class="tblk">6:00 PM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Junior Miss Majorette</span><div class="rmeta">title — 3 phases · Model</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Ava Joy Rubery <span class="rev">— Intermediate Pageant</span><div class="rmeta">Int 16+ — 3 phases · Model</div></div><div class="rlane"><div class="n">13</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— All-American Model</span><div class="rmeta">All 20+ · modeling — starts w/ R · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane"><div class="n">25</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— College Miss Majorette</span><div class="rmeta">title — 3 phases · Model · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— All-American Model</span><div class="rmeta">All 13 · modeling — starts w/ R · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane"><div class="n">21</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— Junior Miss Majorette</span><div class="rmeta">title — 3 phases · Model · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+</div></section>
+<section class="day"><div class="dayhead"><div class="dow">Thursday <span>Jul 16</span></div><div class="lod">Letter of the day: Y<small>Fieldhouse + Arena both live. Doors 8 AM. Order runs Y→Z→A… within each lane.</small></div></div><div>
+<div class="tblk">8:00 AM</div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— X-Strut</span><div class="rmeta">Advanced 13 · letter Y order · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane"><div class="n">17</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Junior Miss Majorette</span><div class="rmeta">title — 3 phases · X-Strut · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Ava Joy Rubery <span class="rev">— Intermediate Pageant</span><div class="rmeta">Int 16+ — 3 phases · X-Strut</div></div><div class="rlane"><div class="n">36</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Charley Ann Petry <span class="rev">— X-Strut</span><div class="rmeta">Novice 11 · letter Y → P near end</div></div><div class="rlane"><div class="n">5</div><div class="v">FH · Wood</div><div class=half>2nd Half</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Christiana Selby <span class="rev">— X-Strut</span><div class="rmeta">Advanced 20+ · letter Y order</div></div><div class="rlane"><div class="n">26</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— X-Strut</span><div class="rmeta">Advanced 20+ · letter Y order · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane"><div class="n">26</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— College Miss Majorette</span><div class="rmeta">title — 3 phases · X-Strut · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— X-Strut</span><div class="rmeta">Advanced 13 · letter Y order · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane"><div class="n">17</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— Junior Miss Majorette</span><div class="rmeta">title — 3 phases · X-Strut · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="tblk">11:00 AM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Ava Joy Rubery <span class="rev">— X-Strut</span><div class="rmeta">Intermediate 16 · letter Y order</div></div><div class="rlane"><div class="n">22</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Caden Woloski <span class="rev">— X-Strut</span><div class="rmeta">Men&#x27;s 16+ · All Men X-Strut</div></div><div class="rlane"><div class="n">26</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Tiahna Selby <span class="rev">— X-Strut</span><div class="rmeta">Intermediate 20+ · lane: Int 19,20</div></div><div class="rlane"><div class="n">26</div><div class="v">FH · Wood</div></div></div>
+<div class="tblk">12:00 PM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Ava Joy Rubery <span class="rev">— Intermediate Pageant</span><div class="rmeta">Int 16+ — 3 phases · Solo</div></div><div class="rlane"><div class="n">36</div><div class="v">FH · Wood</div></div></div>
+<div class="tblk">1:00 PM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Junior Miss Majorette</span><div class="rmeta">title — 3 phases · Solo</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— College Miss Majorette</span><div class="rmeta">title — 3 phases · Solo · Collegiate Finals Sat 2 PM</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— Junior Miss Majorette</span><div class="rmeta">title — 3 phases · Solo</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="tblk">2:00 PM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Solo</span><div class="rmeta">Advanced 13 · letter Y order</div></div><div class="rlane"><div class="n">5</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Ava Joy Rubery <span class="rev">— Solo</span><div class="rmeta">Intermediate 16 · letter Y order</div></div><div class="rlane"><div class="n">24</div><div class="v">FH · Wood</div><div class=half>2nd Half</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Caden Woloski <span class="rev">— Solo</span><div class="rmeta">Men&#x27;s Advanced 16+ · shares lane: Adv Solo 11 + Men</div></div><div class="rlane"><div class="n">3</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Christiana Selby <span class="rev">— Solo</span><div class="rmeta">Advanced 20+ · letter Y order</div></div><div class="rlane"><div class="n">12</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Solo</span><div class="rmeta">Advanced 20+ · letter Y order</div></div><div class="rlane"><div class="n">12</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— Solo</span><div class="rmeta">Advanced 13 · letter Y order</div></div><div class="rlane"><div class="n">5</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Tiahna Selby <span class="rev">— Solo</span><div class="rmeta">Advanced 20+ · letter Y order</div></div><div class="rlane"><div class="n">12</div><div class="v">FH · Wood</div></div></div>
+<div class="tblk">6:00 PM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Addisyn Salo <span class="rev">— Duet — Adv (25-30)</span><div class="rmeta">w/ Maylee Nord</div></div><div class="rlane"><div class="n">13</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Christiana Selby <span class="rev">— Duet — Adv (31+)</span><div class="rmeta">w/ Tiahna Selby</div></div><div class="rlane"><div class="n">14</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Duet — Adv (31+)</span><div class="rmeta">w/ Delaney Ochs</div></div><div class="rlane"><div class="n">14</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Maylee Nord <span class="rev">— Duet — Adv (25-30)</span><div class="rmeta">w/ Addisyn Salo</div></div><div class="rlane"><div class="n">13</div><div class="v">FH · Wood</div></div></div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Tiahna Selby <span class="rev">— Duet — Adv (31+)</span><div class="rmeta">w/ Christiana Selby</div></div><div class="rlane"><div class="n">14</div><div class="v">FH · Wood</div></div></div>
+</div></section>
+<section class="day"><div class="dayhead"><div class="dow">Friday <span>Jul 17</span></div><div class="lod">Letter of the day: F<small>Fieldhouse, Arena &amp; The Pit live. Order runs F→G→H… within each lane.</small></div></div><div>
+<div class="tblk">8:00 AM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Show Twirl</span><div class="rmeta">All 20+ · 16/17+ group</div></div><div class="rlane session"><div class="n">The Pit</div><div class="v">by order</div></div></div>
+<div class="tblk">2:00 PM</div>
+<div class="rrow "><div class="chk"></div><div class="rwho">Charley Ann Petry <span class="rev">— Two-Baton</span><div class="rmeta">Novice 11 · letter F → P mid-late</div></div><div class="rlane"><div class="n">16</div><div class="v">FH · Wood</div><div class=half>1st Half</div></div></div>
+<div class="tblk">3:00 PM</div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Collegiate Solo</span><div class="rmeta">Collegiate · prelims · Finals Sat 2 PM · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+<div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Collegiate Down Field</span><div class="rmeta">Collegiate · prelims · Finals Sat 2 PM · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
+</div></section>
+<section class="day"><div class="dayhead"><div class="dow">Saturday <span>Jul 18</span></div><div class="lod">Finals &amp; awards<small>No letter of the day — all finals. Slots below are contingent on advancing; confirm on the board.</small></div></div><div>
+<div class="tblk">2:00 PM</div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Collegiate Day Finals Show<div class="rmeta">Lea Mitchell (if advanced)</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="tblk">4:30 PM</div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Nat&#x27;l Majorette / Men&#x27;s FINALS<div class="rmeta">Maylee Nord; Addisyn Salo; Caden Woloski (Men&#x27;s)</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="tblk">5:30 PM</div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Awards — World Twirl-Offs, Rhythmic, etc.<div class="rmeta">Rhythmic Top-5: Salo, Woloski, Mitchell, C. Selby (if placed)</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="tblk">7:30 PM</div>
+<div class="rrow"><div class="chk"></div><div class="rwho">AYOP Big Show<div class="rmeta">All — closing show</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+</div></section>
+</div><div class="note"><b>How to read this:</b> Fieldhouse events show an exact <b>lane</b>, split into halves by the day’s rotating “letter of the day” (Wed = R · Thu = Y · Fri = F). Arena / gym <b>title events</b> (Miss Majorette, Nat’l Majorette, Men’s Nationals, Collegiate, Show Twirl) run by starting order, so only the session window is fixed. Rhythmic is <b>Tuesday at IU South Bend</b> by printed start number. Re-pull the Splits sheet each morning — NBTA notes scratches &amp; corrections will occur.</div><footer><span>Prepared for Coach Joel Claudio · 8 athletes</span><span>Source: NBTA AYOP 2026 · Schedule 7/9 · Splits 7/10 · Rhythmic 7/9</span></footer></div></div>
+<script>
+(function(){var app=document.getElementById('app');var tabs=document.querySelectorAll('.tabbtn');
+ var views=['schedule','roster','athletes','runsheet'];
+ tabs.forEach(function(b){b.addEventListener('click',function(){
+   views.forEach(function(v){app.classList.remove('v-'+v);});
+   app.classList.add('v-'+b.dataset.tab);
+   tabs.forEach(function(x){var on=x===b;x.setAttribute('aria-selected',on?'true':'false');x.tabIndex=on?0:-1;});
+   window.scrollTo(0,0);});});})();
+</script></body></html>

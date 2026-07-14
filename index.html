@@ -69,6 +69,26 @@ td.who{font-weight:600}
 .stu+.stu{margin-top:30px}
 .stu h2{font-family:var(--serif);font-weight:600;font-size:26px;margin:0 0 2px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .stu h2 .lvl{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink);background:var(--rose-soft);padding:3px 9px;border-radius:999px;font-weight:400}
+/* jump-to nav + accordion (interactive only; hidden in print/show-all) */
+.stunav{position:sticky;top:44px;z-index:15;display:none;flex-wrap:wrap;gap:6px;align-items:center;
+ background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);
+ border:1px solid var(--hair);border-radius:10px;padding:8px 10px;margin:0 0 16px}
+.stunav .jl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-right:2px}
+.stunav a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--muted);padding:4px 9px;border-radius:7px;border:1px solid transparent}
+.stunav a:hover{color:var(--ink);border-color:var(--hair);background:var(--panel)}
+.stunav .allbtn{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);background:none;border:1px solid var(--hair);border-radius:7px;padding:4px 9px;cursor:pointer}
+.stunav .allbtn:hover{color:var(--ink)}
+.caret{display:none}
+.app.acc .stunav{display:flex}
+.app.acc #view-athletes .stu{border:1px solid var(--hair);border-radius:12px;margin:0 0 10px;background:var(--panel);box-shadow:var(--shadow);scroll-margin-top:96px}
+.app.acc #view-athletes .stuhead{cursor:pointer;margin:0;padding:13px 16px;user-select:none;display:flex;align-items:center;gap:12px;font-size:22px}
+.app.acc #view-athletes .stuhead:hover{color:var(--rose)}
+.app.acc #view-athletes .caret{display:inline-block;margin-left:auto;color:var(--gold);transition:transform .15s;font-size:13px}
+.app.acc #view-athletes .caret::before{content:"▾"}
+.app.acc #view-athletes .stu.collapsed .caret{transform:rotate(-90deg)}
+.app.acc #view-athletes .stubody{padding:0 16px 14px}
+.app.acc #view-athletes .stu.collapsed .stubody{display:none}
+.app.acc #view-athletes .stuhead:focus-visible{outline:2px solid var(--rose);outline-offset:2px;border-radius:8px}
 .cards{display:grid;gap:12px;grid-template-columns:1fr;margin-top:14px}
 @media(min-width:620px){.cards{grid-template-columns:1fr 1fr}}
 @media(min-width:900px){.cards{grid-template-columns:1fr 1fr 1fr}}
@@ -206,7 +226,9 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 </table></div><div class="legend"><span>“L5” = Fieldhouse lane number · “•” = entered (session-timed) · “Tue” = Rhythmic on Tuesday</span></div>
 </div><div class="view" id="view-athletes" role="tabpanel" aria-labelledby="tab-athletes" tabindex="0">
 <div class="lab"><span class="n">03</span>&nbsp;Individual call sheets</div>
-<section class="stu" id="s-maylee-nord"><h2>Maylee Nord <span class="lvl">Advanced · Age 13</span></h2>
+<nav class="stunav" aria-label="Jump to athlete"><span class="jl">Jump to</span><a href="#s-maylee-nord">Maylee</a><a href="#s-addisyn-salo">Addisyn</a><a href="#s-caden-woloski">Caden</a><a href="#s-christiana-selby">Christiana</a><a href="#s-tiahna-selby">Tiahna</a><a href="#s-lea-mitchell">Lea</a><a href="#s-ava-joy-rubery">Ava</a><a href="#s-charley-ann-petry">Charley</a><button class="allbtn" data-act="collapse">Collapse all</button></nav>
+<section class="stu" id="s-maylee-nord"><h2 class="stuhead">Maylee Nord <span class="lvl">Advanced · Age 13</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card arena">
 <div class="ev">Nat&#x27;l Majorette Contest<small>Advanced 13-15 · Title event</small></div>
@@ -243,8 +265,10 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 </article>
 </div>
 <div class="watch"><b>⚠ Same-time overlaps to coordinate:</b><br>Wed · Jul 15 @ 6:00 PM — <b>All-American Model + Junior Miss Majorette</b><br>Thu · Jul 16 @ 8:00 AM — <b>Junior Miss Majorette + X-Strut</b><br><span class="tag">Arena title phases and open Fieldhouse events can land in the same slot; the meet staggers them, but plan a runner / warm-up order.</span></div>
+</div>
 </section>
-<section class="stu" id="s-addisyn-salo"><h2>Addisyn Salo <span class="lvl">Advanced · Age 13</span></h2>
+<section class="stu" id="s-addisyn-salo"><h2 class="stuhead">Addisyn Salo <span class="lvl">Advanced · Age 13</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card ">
 <div class="ev">Rhythmic Twirl<small>Age 13-15 · Rhythmic</small></div>
@@ -286,8 +310,10 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 </article>
 </div>
 <div class="watch"><b>⚠ Same-time overlaps to coordinate:</b><br>Thu · Jul 16 @ 8:00 AM — <b>Junior Miss Majorette + X-Strut</b><br><span class="tag">Arena title phases and open Fieldhouse events can land in the same slot; the meet staggers them, but plan a runner / warm-up order.</span></div>
+</div>
 </section>
-<section class="stu" id="s-caden-woloski"><h2>Caden Woloski <span class="lvl">Men&#x27;s Advanced · Age 16+</span></h2>
+<section class="stu" id="s-caden-woloski"><h2 class="stuhead">Caden Woloski <span class="lvl">Men&#x27;s Advanced · Age 16+</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card ">
 <div class="ev">Rhythmic Twirl<small>Men&#x27;s 16+ · Rhythmic</small></div>
@@ -318,8 +344,10 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 <div class="ondeck">Running order: <b>#6 of 6</b> in the lane <span class="men">(order among men · lane shared)</span><div class="deck">On deck after: <b>Simon Breeding</b> · <b>Allen Johnson</b> · <b>Marc Subies Nadal</b></div></div>
 </article>
 </div>
+</div>
 </section>
-<section class="stu" id="s-christiana-selby"><h2>Christiana Selby <span class="lvl">Advanced · Age 20+</span></h2>
+<section class="stu" id="s-christiana-selby"><h2 class="stuhead">Christiana Selby <span class="lvl">Advanced · Age 20+</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card ">
 <div class="ev">Rhythmic Twirl<small>Age 20+ · Rhythmic</small></div>
@@ -345,8 +373,10 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 <div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 14</span> · </div></span></div>
 </article>
 </div>
+</div>
 </section>
-<section class="stu" id="s-tiahna-selby"><h2>Tiahna Selby <span class="lvl">Advanced/Int · Age 20+</span></h2>
+<section class="stu" id="s-tiahna-selby"><h2 class="stuhead">Tiahna Selby <span class="lvl">Advanced/Int · Age 20+</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card ">
 <div class="ev">Three-Baton<small>Advanced 20+ · Lane event</small></div>
@@ -368,8 +398,10 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 <div class="slot"><span class="d">Thu · Jul 16</span><span class="body"><span class="time">6:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 14</span> · </div></span></div>
 </article>
 </div>
+</div>
 </section>
-<section class="stu" id="s-lea-mitchell"><h2>Lea Mitchell <span class="lvl">Advanced / Collegiate · Age 20+</span></h2>
+<section class="stu" id="s-lea-mitchell"><h2 class="stuhead">Lea Mitchell <span class="lvl">Advanced / Collegiate · Age 20+</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card ">
 <div class="ev">Rhythmic Twirl<small>Age 20+ · Rhythmic</small></div>
@@ -423,8 +455,10 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 </article>
 </div>
 <div class="watch"><b>⚠ Same-time overlaps to coordinate:</b><br>Wed · Jul 15 @ 11:00 AM — <b>Three-Baton + Two-Baton</b><br>Wed · Jul 15 @ 6:00 PM — <b>All-American Model + College Miss Majorette</b><br>Thu · Jul 16 @ 8:00 AM — <b>College Miss Majorette + X-Strut</b><br>Fri · Jul 17 @ 3:00 PM — <b>Collegiate Down Field + Collegiate Solo</b><br><span class="tag">Arena title phases and open Fieldhouse events can land in the same slot; the meet staggers them, but plan a runner / warm-up order.</span></div>
+</div>
 </section>
-<section class="stu" id="s-ava-joy-rubery"><h2>Ava Joy Rubery <span class="lvl">Intermediate · Age 16</span></h2>
+<section class="stu" id="s-ava-joy-rubery"><h2 class="stuhead">Ava Joy Rubery <span class="lvl">Intermediate · Age 16</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card ">
 <div class="ev">Two-Baton<small>Intermediate 16 · Lane event</small></div>
@@ -448,8 +482,10 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 <div class="ondeck">Running order: <b>#9 of 15</b> in the lane<div class="deck">On deck after: <b>Loren Parks</b> · <b>Tia Price</b> · <b>Alexandra Roberson</b></div></div>
 </article>
 </div>
+</div>
 </section>
-<section class="stu" id="s-charley-ann-petry"><h2>Charley Ann Petry <span class="lvl">Novice · Age 11</span></h2>
+<section class="stu" id="s-charley-ann-petry"><h2 class="stuhead">Charley Ann Petry <span class="lvl">Novice · Age 11</span><span class="caret" aria-hidden="true"></span></h2>
+<div class="stubody">
 <div class="cards">
 <article class="card ">
 <div class="ev">Solo<small>Novice 11 · Lane event</small></div>
@@ -466,6 +502,7 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 <div class="slot"><span class="d">Fri · Jul 17</span><span class="body"><span class="time">2:00 PM</span> · FH · Wood<div class="meta"><span class="lane">Lane 16 · 1st Half</span> · letter F → P mid-late</div></span></div>
 <div class="ondeck">Running order: <b>#20 of 24</b> in the lane<div class="deck">On deck after: <b>Charlotte Miller</b> · <b>Victoria Noble</b> · <b>Brianna Ortiz</b></div></div>
 </article>
+</div>
 </div>
 </section>
 </div><div class="view" id="view-runsheet" role="tabpanel" aria-labelledby="tab-runsheet" tabindex="0">
@@ -566,5 +603,32 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
    views.forEach(function(v){app.classList.remove('v-'+v);});
    app.classList.add('v-'+b.dataset.tab);
    tabs.forEach(function(x){var on=x===b;x.setAttribute('aria-selected',on?'true':'false');x.tabIndex=on?0:-1;});
-   window.scrollTo(0,0);});});})();
+   window.scrollTo(0,0);});});
+ // Accordion for the Athletes view: collapse each athlete; click name (or jump chip) to expand.
+ var av=document.getElementById('view-athletes');
+ if(av){
+   app.classList.add('acc');
+   var stus=[].slice.call(av.querySelectorAll('.stu'));
+   stus.forEach(function(st){
+     st.classList.add('collapsed');
+     var h=st.querySelector('.stuhead'); if(!h) return;
+     h.setAttribute('role','button'); h.tabIndex=0;
+     h.setAttribute('aria-expanded','false');
+     function toggle(){var c=st.classList.toggle('collapsed');h.setAttribute('aria-expanded',c?'false':'true');}
+     h.addEventListener('click',toggle);
+     h.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}});
+   });
+   av.querySelectorAll('.stunav a').forEach(function(a){
+     a.addEventListener('click',function(){
+       var st=document.getElementById(a.getAttribute('href').slice(1));
+       if(st){st.classList.remove('collapsed');var h=st.querySelector('.stuhead');if(h)h.setAttribute('aria-expanded','true');}
+     });
+   });
+   var allb=av.querySelector('.allbtn');
+   if(allb){allb.addEventListener('click',function(){
+     var anyOpen=stus.some(function(st){return !st.classList.contains('collapsed');});
+     stus.forEach(function(st){st.classList.toggle('collapsed',anyOpen);var h=st.querySelector('.stuhead');if(h)h.setAttribute('aria-expanded',anyOpen?'false':'true');});
+     allb.dataset.act=anyOpen?'expand':'collapse'; allb.textContent=anyOpen?'Expand all':'Collapse all';
+   });}
+ }})();
 </script></body></html>

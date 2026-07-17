@@ -1,5 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><title>Coach Joel Claudio · AYOP 2026 Binder</title>
-<style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><title>Coach Joel Claudio · AYOP 2026 Binder</title><style>
 :root{
  --bg:#FBF6F3;--panel:#FFFFFF;--ink:#2A1A2E;--muted:#6E5C71;--hair:#E7DAD9;
  --gold:#A9791F;--gold-soft:#C9A24B;--rose:#C21F5B;--rose-soft:#F4DCE5;--spot:#FFF6E4;
@@ -32,8 +31,11 @@ nav b{color:var(--gold);text-transform:uppercase;letter-spacing:.14em;margin-rig
  padding:5px 11px;border-radius:7px;letter-spacing:.08em;text-transform:uppercase}
 .tabbtn:hover{color:var(--ink);border-color:var(--hair)}
 .app.v-schedule [data-tab="schedule"],.app.v-roster [data-tab="roster"],
-.app.v-athletes [data-tab="athletes"],.app.v-runsheet [data-tab="runsheet"]{
+.app.v-athletes [data-tab="athletes"],.app.v-runsheet [data-tab="runsheet"],
+.app.v-saturday [data-tab="saturday"]{
  color:var(--ink);background:var(--rose-soft);border-color:transparent;font-weight:600}
+.tabbtn[data-tab="saturday"]{color:var(--rose)}
+.tabbtn[data-tab="saturday"]::before{content:"★ ";color:var(--gold)}
 .mast{border-top:2px solid var(--ink);padding-top:14px;margin-bottom:8px}
 .kicker{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .kicker b{color:var(--gold);font-weight:600}
@@ -42,7 +44,7 @@ h1 .star{color:var(--rose);font-style:italic}
 .sub{color:var(--muted);font-size:14px;margin-top:4px}
 /* tabs */
 .view{display:none}
-.app.v-schedule #view-schedule,.app.v-roster #view-roster,.app.v-athletes #view-athletes,.app.v-runsheet #view-runsheet{display:block}
+.app.v-schedule #view-schedule,.app.v-roster #view-roster,.app.v-athletes #view-athletes,.app.v-runsheet #view-runsheet,.app.v-saturday #view-saturday{display:block}
 .app.show-all .view{display:block}
 .app.show-all .view+.view{margin-top:8px}
 .lab{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
@@ -134,6 +136,13 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 .rlane .v{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;margin-top:2px;white-space:nowrap}
 .rlane .half{font-family:var(--mono);font-size:10px;color:var(--gold)}
 .rlane.session .n{font-size:14px;font-family:var(--mono);color:var(--gold);padding-top:6px}
+/* saturday */
+.satlede{font-size:14px;color:var(--muted);margin:6px 2px 2px;max-width:780px}
+.satlede b{color:var(--ink);font-weight:600}
+tr.sat-mine td{background:color-mix(in srgb,var(--rose-soft) 60%,transparent)}
+tr.sat-mine td.who{color:var(--ink)}
+.satnote{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--gold)}
+#view-saturday .card .ev small{color:var(--rose)}
 @media print{
  :root{--bg:#fff;--panel:#fff;--ink:#000;--muted:#444;--hair:#ccc;--shadow:none}
  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -142,8 +151,7 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
  .view+.view{break-before:page}
  #view-athletes .stu+.stu{break-before:page}
 }
-</style></head><body>
-<div class="app v-schedule" id="app"><nav role="tablist" aria-label="Binder sections"><b role="presentation">AYOP&nbsp;’26</b><button class="tabbtn" role="tab" id="tab-schedule" aria-controls="view-schedule" aria-selected="true" tabindex="0" data-tab="schedule">Schedule</button><button class="tabbtn" role="tab" id="tab-roster" aria-controls="view-roster" aria-selected="false" tabindex="-1" data-tab="roster">Roster</button><button class="tabbtn" role="tab" id="tab-athletes" aria-controls="view-athletes" aria-selected="false" tabindex="-1" data-tab="athletes">Athletes</button><button class="tabbtn" role="tab" id="tab-runsheet" aria-controls="view-runsheet" aria-selected="false" tabindex="-1" data-tab="runsheet">Runsheet</button></nav><div class="wrap"><header class="mast">
+</style></head><body><div class="app v-schedule" id="app"><nav role="tablist" aria-label="Binder sections"><b role="presentation">AYOP&nbsp;’26</b><button class="tabbtn" role="tab" id="tab-schedule" aria-controls="view-schedule" aria-selected="true" tabindex="0" data-tab="schedule">Schedule</button><button class="tabbtn" role="tab" id="tab-roster" aria-controls="view-roster" aria-selected="false" tabindex="-1" data-tab="roster">Roster</button><button class="tabbtn" role="tab" id="tab-athletes" aria-controls="view-athletes" aria-selected="false" tabindex="-1" data-tab="athletes">Athletes</button><button class="tabbtn" role="tab" id="tab-runsheet" aria-controls="view-runsheet" aria-selected="false" tabindex="-1" data-tab="runsheet">Runsheet</button><button class="tabbtn" role="tab" id="tab-saturday" aria-controls="view-saturday" aria-selected="false" tabindex="-1" data-tab="saturday">Saturday</button></nav><div class="wrap"><header class="mast">
  <div class="kicker"><span>Coaching Binder · <b>Coach Joel Claudio</b></span><span>AYOP 2026 · Notre Dame, South Bend IN</span></div>
  <h1>The <span class="star">Call Board</span></h1>
  <div class="sub">8 athletes · July 14–18, 2026 · lanes verified against NBTA Schedule (7/9), Splits (7/10) &amp; Rhythmic (7/9). All times South Bend / Eastern.</div>
@@ -589,19 +597,79 @@ footer{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;font-fa
 <div class="rrow warn"><div class="chk"></div><div class="rwho">Lea Mitchell <span class="rev">— Collegiate Down Field</span><div class="rmeta">Collegiate · prelims · Finals Sat 2 PM · <span class="warnt">⚠ also due elsewhere now</span></div></div><div class="rlane session"><div class="n">Arena</div><div class="v">by order</div></div></div>
 </div></section>
 <section class="day"><div class="dayhead"><div class="dow">Saturday <span>Jul 18</span></div><div class="lod">Finals &amp; awards<small>No letter of the day — all finals. Slots below are contingent on advancing; confirm on the board.</small></div></div><div>
+<div class="tblk">10:30 AM</div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Collegiate Brunch<div class="rmeta">Lea Mitchell</div></div><div class="rlane session"><div class="n">Naimoli Room</div><div class="v">final</div></div></div>
+<div class="tblk">12:00 PM</div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Miss Majorette Awards — 4 youngest divisions<div class="rmeta">Maylee Nord; Addisyn Salo</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
 <div class="tblk">2:00 PM</div>
-<div class="rrow"><div class="chk"></div><div class="rwho">Collegiate Day Finals Show<div class="rmeta">Lea Mitchell (if advanced)</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Collegiate Day Finals Show<div class="rmeta">Lea Mitchell</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="tblk">2:30 PM</div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Beg &amp; Int Pageant Awards<div class="rmeta">Ava Joy Rubery</div></div><div class="rlane session"><div class="n">FH · Bleacher</div><div class="v">final</div></div></div>
 <div class="tblk">4:30 PM</div>
-<div class="rrow"><div class="chk"></div><div class="rwho">Nat&#x27;l Majorette / Men&#x27;s FINALS<div class="rmeta">Maylee Nord; Addisyn Salo; Caden Woloski (Men&#x27;s)</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Nat&#x27;l Majorette / LBO / Men&#x27;s FINALS<div class="rmeta">Maylee Nord; Addisyn Salo; Caden Woloski</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
 <div class="tblk">5:30 PM</div>
-<div class="rrow"><div class="chk"></div><div class="rwho">Awards — World Twirl-Offs, Rhythmic, etc.<div class="rmeta">Rhythmic Top-5: Salo, Woloski, Mitchell, C. Selby (if placed)</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="rrow"><div class="chk"></div><div class="rwho">Awards — World Twirl-Offs, Rhythmic, etc.<div class="rmeta">Addisyn Salo; Caden Woloski; Christiana Selby; Lea Mitchell</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
 <div class="tblk">7:30 PM</div>
-<div class="rrow"><div class="chk"></div><div class="rwho">AYOP Big Show<div class="rmeta">All — closing show</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
+<div class="rrow"><div class="chk"></div><div class="rwho">AYOP Big Show<div class="rmeta">All athletes</div></div><div class="rlane session"><div class="n">Arena</div><div class="v">final</div></div></div>
 </div></section>
+</div><div class="view" id="view-saturday" role="tabpanel" aria-labelledby="tab-saturday" tabindex="0">
+<div class="lab"><span class="n">05</span>&nbsp;Saturday · Finals &amp; Awards</div>
+<p class="satlede"><b>Saturday, July 18 — no letter of the day; all finals.</b> Times are from the NBTA <b>FINAL</b> schedule (7/13). Everything is in the <b>Joyce Center</b> except the Collegiate Brunch (Naimoli Room). Finals appearances are <b>contingent on advancing</b> — confirm the posted boards on site.</p>
+<div class="twrap"><table><thead><tr><th>Time</th><th>Event</th><th>Where</th><th>Our athletes</th></tr></thead><tbody>
+<tr><td class="t">8:00 AM</td><td class="who">Corps Finals</td><td>Arena</td><td><span class="tag">—</span></td></tr>
+<tr><td class="t">8:30 AM</td><td class="who">Grand Team Finals &amp; Awards</td><td>FH · Bleacher</td><td><span class="tag">—</span></td></tr>
+<tr class="sat-mine"><td class="t">10:30 AM</td><td class="who">Collegiate Brunch</td><td>Naimoli Room</td><td>Lea Mitchell</td></tr>
+<tr class="sat-mine"><td class="t">12:00 PM</td><td class="who">Miss Majorette Awards — 4 youngest divisions</td><td>Arena</td><td>Maylee Nord, Addisyn Salo</td></tr>
+<tr class="sat-mine"><td class="t">2:00 PM</td><td class="who">Collegiate Day Finals Show</td><td>Arena</td><td>Lea Mitchell</td></tr>
+<tr class="sat-mine"><td class="t">2:30 PM</td><td class="who">Beg &amp; Int Pageant Awards</td><td>FH · Bleacher</td><td>Ava Joy Rubery</td></tr>
+<tr class="sat-mine"><td class="t">4:30 PM</td><td class="who">Nat&#x27;l Majorette / LBO / Men&#x27;s FINALS</td><td>Arena</td><td>Maylee Nord, Addisyn Salo, Caden Woloski</td></tr>
+<tr class="sat-mine"><td class="t">5:30 PM</td><td class="who">Awards — World Twirl-Offs, Rhythmic, etc.</td><td>Arena</td><td>Addisyn Salo, Caden Woloski, Christiana Selby, Lea Mitchell</td></tr>
+<tr class="sat-mine"><td class="t">7:30 PM</td><td class="who">AYOP Big Show</td><td>Arena</td><td>All athletes</td></tr>
+</tbody></table></div>
+<div class="lab"><span class="n">›</span>&nbsp;Where each athlete needs to be</div>
+<div class="cards">
+<article class="card"><div class="ev">Maylee Nord<small>Advanced · Age 13</small></div>
+<div class="slot"><span class="d">12:00 PM</span><span class="body">Jr Miss Majorette Awards<div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">4:30 PM</span><span class="body">Nat&#x27;l Majorette Finals <span class="satnote">(if Top 20)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+<article class="card"><div class="ev">Addisyn Salo<small>Advanced · Age 13</small></div>
+<div class="slot"><span class="d">12:00 PM</span><span class="body">Jr Miss Majorette Awards<div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">4:30 PM</span><span class="body">Nat&#x27;l Majorette Finals <span class="satnote">(if Top 20)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">5:30 PM</span><span class="body">Rhythmic Awards <span class="satnote">(if placed)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+<article class="card"><div class="ev">Caden Woloski<small>Men&#x27;s Advanced · Age 16+</small></div>
+<div class="slot"><span class="d">4:30 PM</span><span class="body">Men&#x27;s Nationals Finals <span class="satnote">(if Top 20)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">5:30 PM</span><span class="body">Rhythmic Awards <span class="satnote">(if placed)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+<article class="card"><div class="ev">Christiana Selby<small>Advanced · Age 20+</small></div>
+<div class="slot"><span class="d">5:30 PM</span><span class="body">Rhythmic Awards <span class="satnote">(if placed)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+<article class="card"><div class="ev">Tiahna Selby<small>Advanced/Int · Age 20+</small></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+<article class="card"><div class="ev">Lea Mitchell<small>Advanced / Collegiate · Age 20+</small></div>
+<div class="slot"><span class="d">10:30 AM</span><span class="body">Collegiate Brunch<div class="meta">Naimoli Room</div></span></div>
+<div class="slot"><span class="d">2:00 PM</span><span class="body">Collegiate Day Finals Show <span class="satnote">(College Miss · Solo · Down-Field)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">5:30 PM</span><span class="body">Rhythmic Awards <span class="satnote">(if placed)</span><div class="meta">Arena</div></span></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+<article class="card"><div class="ev">Ava Joy Rubery<small>Intermediate · Age 16</small></div>
+<div class="slot"><span class="d">2:30 PM</span><span class="body">Beg &amp; Int Pageant Awards<div class="meta">FH · Bleacher</div></span></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+<article class="card"><div class="ev">Charley Ann Petry<small>Novice · Age 11</small></div>
+<div class="slot"><span class="d">7:30 PM</span><span class="body">AYOP Big Show<div class="meta">Arena</div></span></div>
+</article>
+</div>
+<div class="note"><b>For parents &amp; coaches:</b><br>• <b>Individual-event awards</b> (Solo, 2-Baton, 3-Baton, X-Strut) are given at the end of each event’s session Wed–Fri — <b>not Saturday</b>. So Charley Ann &amp; Tiahna have no daytime call, just the Big Show.<br>• The <b>4:30 PM finals</b> require making <b>Top 20</b> in prelims — confirm the posted lists for Maylee, Addisyn &amp; Caden.<br>• <b>Grand National twirl-offs</b> (2-Baton — Bobby Foehlinger scholarship; Senior 3-Baton) run inside the <b>Big Show</b> for division winners.<br>• NBTA may amend times — treat the morning-of board as final.</div>
 </div><div class="note"><b>Venue:</b> <b>FH</b> = the <b>Fieldhouse</b>, one of the halls inside the <b>Edmund P. Joyce Center</b> at Notre Dame; the Arena, Aux Gym &amp; The Pit are also Joyce Center halls. Only Tuesday’s <b>Rhythmic</b> is elsewhere (IU South Bend).<br><b>How to read this:</b> Fieldhouse events show an exact <b>lane</b>, split into halves by the day’s rotating “letter of the day” (Wed = R · Thu = Y · Fri = F). Running order &amp; on-deck names are <b>estimated</b> from that letter order — no official per-competitor number was published — so re-check the morning splits. Arena / gym <b>title events</b> (Miss Majorette, Nat’l Majorette, Men’s Nationals, Collegiate, Show Twirl) run by starting order, so only the session window is fixed. Rhythmic is <b>Tuesday at IU South Bend</b> by printed start number.</div><footer><span>Prepared for Coach Joel Claudio · 8 athletes</span><span>Source: NBTA AYOP 2026 · Schedule 7/9 · Splits 7/10 · Rhythmic 7/9</span></footer></div></div>
 <script>
 (function(){var app=document.getElementById('app');var tabs=document.querySelectorAll('.tabbtn');
- var views=['schedule','roster','athletes','runsheet'];
+ var views=['schedule','roster','athletes','runsheet','saturday'];
  tabs.forEach(function(b){b.addEventListener('click',function(){
    views.forEach(function(v){app.classList.remove('v-'+v);});
    app.classList.add('v-'+b.dataset.tab);

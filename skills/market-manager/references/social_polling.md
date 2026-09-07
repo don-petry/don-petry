@@ -27,12 +27,47 @@ by clicking inside native apps. If a URL looks off, confirm with the user first.
 
 ### Tool tactics per surface (validated against @bash_on_the_bluff, 2026)
 Each surface behaves differently — use the right reader so you don't come back empty-handed:
-- **Instagram:** `get_page_text` returns nothing (IG is canvas/JS). Use **`find`** ("follower count,
-  posts count, bio") and **`read_page`** (accessibility tree) instead — those surface the counts and
-  recent-post captions reliably. **Per-post like counts are often hidden** ("Liked by … and others" —
-  confirmed for Bash), so capture what's visible and lean on Facebook for the interaction numbers.
-  When IG engagement is blank, still record `ig_followers` (the reach signal) and **post cadence**
-  (`posts_last_90d`, readable from post dates in the grid).
+- **Instagram — use the `og:description` method (fastest and richest; validated 2026-09-07).**
+  On a logged-out IG **post/reel page**, `<meta property="og:description">` carries
+  `"<likes> likes, <comments> comments - <handle> on <Month D, YYYY>: "<full caption>""` — i.e. the
+  like count, comment count, exact date, and untruncated caption, all in one string, even when the
+  rendered page hides likes behind "Liked by … and others". Because post pages are same-origin, you
+  can navigate **once** to the profile and then `fetch()` the grid's post URLs from
+  `javascript_tool`, reading every post's metrics in a **single** tool call:
+
+  ```js
+  // on https://www.instagram.com/<handle>/ — followers + bio + per-post likes/comments/date/caption
+  (async () => {
+    const t = document.body.innerText;
+    const exact = [...document.querySelectorAll('main [title]')]        // "58,989" — the ROUNDED
+      .map(e => e.getAttribute('title')).filter(Boolean)[0];            // "58.9K" is all innerText gives
+    const followers = exact || (t.match(/([\d,\.KM]+)\s*\n?followers/i) || [])[1];
+    const hrefs = [...new Set([...document.querySelectorAll('main a[href*="/p/"], main a[href*="/reel/"]')]
+      .map(a => a.getAttribute('href')))].slice(0, 9);
+    const posts = [];
+    for (const u of hrefs) {
+      const h = await (await fetch(u, {credentials: 'omit'})).text();
+      const og = (h.match(/<meta property="og:description" content="([^"]*)"/) || [])[1] || '';
+      const hd = og.match(/^([\d,]+) likes?, ([\d,]+) comments? - .*? on (\w+ \d+, \d{4}):/);
+      posts.push({date: hd && hd[3], likes: hd && hd[1], comments: hd && hd[2], caption: og});
+    }
+    return {followers, bio: t.split('\n').filter(Boolean).slice(0, 12).join(' | '), posts};
+  })()
+  ```
+
+  Gotchas, all confirmed in the field:
+  - **Trust the `og:description` date, not the grid `img` alt date** — the grid's alt text and `href`
+    are not reliably paired, so alt dates land on the wrong post. Alt dates are still fine for
+    *counting* cadence (`posts_last_90d`); they're real dates, just possibly mismatched to links.
+  - **Follower counts over ~10K render abbreviated** ("58.9K"). The exact number is in the `title`
+    attribute on the count element (`58,989`) — always prefer it.
+  - `get_page_text` **does** work on IG **post** pages (it shows "10 likes", "View 1 comment") and on
+    **profile** pages (followers + bio), just not for the post grid. `read_page` still works for
+    everything but costs far more context; reach for it only when the JS route comes back empty.
+  - Fetching a **profile** URL server-side returns no meta description — profiles must be navigated
+    to. Only **post/reel** URLs can be fetched.
+  - Reel **view** counts are *not* in `og:description`; `video_view_count` / `play_count` are usually
+    absent from the logged-out HTML too. Leave `recent_post_views` blank and get reach from Facebook.
 - **Facebook — the richer interaction source.** FB public posts usually expose
   **likes/reactions, comments, shares, AND video VIEWS** even when the page-level follower count is
   login-gated. _Confirmed on Bash 2026: 1.6K followers, most-recent post 14 likes / 5 shares /
@@ -131,3 +166,23 @@ you keep, the sharper the trajectory.
 
 > Stay honest: per the methodology, only let real evidence move a market off `stable`. If the data is
 > thin, leave it `stable` and say so. Illustrative/back-filled history rows should say so in `notes`.
+
+### Pitfall: carrying a stale `fb_followers` forward flattens the trend
+The analyzer takes **`max(ig_followers, fb_followers)`** as the audience. So if you copy an old,
+un-re-verified Facebook number into each new snapshot, then for every market where **FB > IG** the
+audience is a *constant* and `follower_change` comes out **0.0%** — the real IG growth is invisible.
+_Observed 2026-09-07: Bash on the Bluff grew 1,295 → 1,344 on IG (+3.8%) but reported `following +0%`
+because a carried-forward `fb_followers = 1600` outranked it; same for Brock's Gap, Christmas Village,
+Market Noel, Ross Bridge, Homestead Hollow, MADE SOUTH, Bluff Park and Moss Rock. Only the IG-dominant
+markets (Pepper Place, Local Love, Deck the Heights, CahaBAZAAR, Black Makers) showed a true delta._
+
+Do one of these, and say which in `notes`:
+1. **Re-verify FB** when you poll (best) — then the max is a real measurement both times; or
+2. **Leave `fb_followers` blank** when you didn't look. Careful: blanking it *after* earlier snapshots
+   carried a larger number makes the audience appear to collapse, i.e. a **false decline**. If you
+   switch to this, blank the column across the whole series for that market, not just the new row; or
+3. Keep carrying it forward but treat `follower_change` as **IG-only momentum** for those markets and
+   read the per-post engagement series in `notes` instead.
+
+Whichever you pick, never let a carried-forward figure be mistaken for a fresh reading — mark it
+(e.g. `FB 1600 carried fwd (NOT re-verified)`) in `notes`, every time.

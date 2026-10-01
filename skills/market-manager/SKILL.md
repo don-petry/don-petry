@@ -150,7 +150,12 @@ Three steps turn scores into a schedule:
 3. **Resolve same-date overlaps** — you can only be one place. When two recommended markets share a
    weekend, pick the **local / shorter-drive** option (which also wins on $/hour). Mark the winner
    **GO**, the loser **DEFER** (save for a year its weekend is open), and school conflicts **SKIP**.
-   Multi-weekend markets are the relief valve for crowded dates.
+   Multi-weekend markets are the relief valve for crowded dates. The social poller surfaces these
+   automatically: fill `event_dates` on each deadline-tracker row and the analyzer prints a
+   **`DATE CONFLICTS - NEEDS HUMAN DECISION`** section grouping overlapping markets with a ranked
+   keep-vs-decline hint. The script never auto-declines — it only flags; record your choice in the
+   row's `decision` column and the conflict stops surfacing on later runs. See
+   `references/social_polling.md` for the full behaviour.
 
 Label dates **(announced)** vs **(est.)** and verify before relying on them. Output a calendar with a
 clear pick column plus an application-deadline tracker.

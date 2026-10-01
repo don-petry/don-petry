@@ -125,12 +125,33 @@ Caveats — stay honest:
 ### The full catalog also looks for (record in `notes` or the deadline tracker):
 - **Application deadlines / windows** → add/update a row in `deadline_tracker.csv` (open + close
   dates, platform, fee quote, one-day option, action). This is what drives the Register tracker.
+- **Event dates** → when a market publishes its confirmed event day(s), record them in the deadline
+  tracker's `event_dates` column as a `;`-separated `YYYY-MM-DD` list (e.g.
+  `2026-11-13;2026-11-14;2026-11-15` for a three-day show). The analyzer uses this to detect
+  **same-day conflicts** (see below); without it, two markets on the same Saturday go unnoticed.
+- **Resolved decisions** → when the human decides a conflict (or declines/accepts a market for the
+  season), write the choice as free text into the deadline tracker's `decision` column
+  (e.g. `declined 2026-10-01: lost same-day conflict with Deck the Heights`). A non-empty
+  `decision` tells the conflict detector to **stop surfacing that row**, so a one-time decision
+  doesn't re-nag every month. Only the human sets `decision`; the script never writes it.
 - **Location changes** → already captured via `location_current`; call it out in `notes` too.
 - **Engagement / reach / sentiment trend** → captured via `recent_post_likes/_comments/_shares/_views`
   + `sentiment` across snapshots (the engagement-rate and reach signals).
 - **Vendor lists / similar vendors** → `similar_vendor_count` + `notable_vendors`.
 - **Junior-vendor / youth-booth mentions** → note any "junior artisan" program seen (often only in
   stories or vendor packets); confirm before setting `junior_vendor = yes` in the scorer input.
+
+### Date conflicts — detected but never auto-resolved
+When two or more rows in `deadline_tracker.csv` have overlapping `event_dates`, the analyzer prints
+a **`DATE CONFLICTS - NEEDS HUMAN DECISION`** section after the deadlines table, grouped by date.
+It ranks the markets in each group by `(trajectory, popularity_trend, followers)` so the
+likely-winner is at the top, but it **does not** flip any status or write back a decline — the
+rule is *flag for human review*, not *auto-decline*. Resolve each conflict by writing the choice
+into the `decision` column of the losing markets' rows: that row then drops out of the surfacing
+on later runs. If you can only be one place and the roster forces a choice, this is where it
+surfaces; if both markets allow one-day booking (`one_day_option = yes`) and you can staff both,
+the group is informational only — note that in `decision` on both rows ("split: Tide at Deck,
+Rachel at X").
 
 ## How to analyze (run the script)
 

@@ -54,7 +54,14 @@ social_catalog.csv  (append-only; one row per market per poll date)
 deadline_tracker.csv  (one row per market application window)
 ------------------------------------------------------------------------------
   market, app_platform, app_opens (YYYY-MM-DD), app_closes (YYYY-MM-DD),
-  status, action, fee_quote, one_day_option, source_url, last_checked, notes
+  status, action, fee_quote, one_day_option, source_url, last_checked, notes,
+  event_dates   -- OPTIONAL: ;-separated YYYY-MM-DD list of the actual event day(s)
+                   (NOT application dates). When present, the script groups markets
+                   whose event days overlap and prints a DATE CONFLICTS block for
+                   human review.
+  decision      -- OPTIONAL: free text (e.g. "declined 2026-10-01: lost to Deck the
+                   Heights"). The conflict detector hides a market whose decision is
+                   non-empty, so a resolved conflict stops surfacing. Never auto-set.
 """
 import csv
 import sys
@@ -232,6 +239,68 @@ def deadline_status(row, today):
         return "SOON", days
     return "OPEN", days
 
+
+def _parse_event_dates(cell):
+    """Parse a semicolon-separated list of event dates. Blank/garbage -> []."""
+    if not cell:
+        return []
+    out = []
+    for token in str(cell).replace(",", ";").split(";"):
+        d = _date(token.strip())
+        if d is not None:
+            out.append(d)
+    return out
+
+
+def detect_event_conflicts(deadlines, signals, today):
+    """Group markets whose event dates overlap on at least one calendar day.
+
+    Returns a list of {date, markets:[{name,status,trend,trajectory,followers,decision}, ...]}
+    tuples, sorted by soonest event. Rows with a non-empty `decision` cell are excluded so a
+    resolved conflict stops surfacing on later runs. The script NEVER sets `decision` itself;
+    it just flags the conflict for a human to resolve in the CSV.
+    """
+    by_date = {}
+    for d in deadlines:
+        if str(d.get("decision", "")).strip():
+            continue  # already resolved by hand
+        for ev in _parse_event_dates(d.get("event_dates")):
+            if ev < today:
+                continue  # past events can't conflict
+            by_date.setdefault(ev, []).append(d)
+
+    groups = []
+    for ev in sorted(by_date):
+        rows = by_date[ev]
+        if len(rows) < 2:
+            continue
+        enriched = []
+        for r in rows:
+            name = r.get("market", "").strip()
+            sig = signals.get(name, {})
+            enriched.append({
+                "name": name,
+                "status": r.get("_status", ""),
+                "action": r.get("action", ""),
+                "trend": sig.get("popularity_trend", "stable"),
+                "trajectory": sig.get("trajectory", "BUILDING"),
+                "followers": sig.get("followers"),
+                "engagement_rate": sig.get("engagement_rate"),
+                "decision": r.get("decision", ""),
+            })
+        # recommend by (trajectory, trend, followers) -- bigger trajectory + growing + more
+        # followers wins. The script never writes the recommendation back; the human decides.
+        traj_rank = {"GAINING": 3, "HOLDING": 2, "BUILDING": 1, "WANING": 0}
+        trend_rank = {"growing": 3, "stable": 2, "soft_decline": 1, "decline": 0}
+        enriched.sort(
+            key=lambda m: (traj_rank.get(m["trajectory"], 1),
+                           trend_rank.get(m["trend"], 2),
+                           m["followers"] or 0),
+            reverse=True,
+        )
+        groups.append({"date": ev, "markets": enriched})
+    return groups
+
 # ================================= MAIN =====================================
 
 def _arg(flag, default=None):
@@ -292,6 +361,22 @@ def main():
             dd = "" if d["_days"] is None else str(d["_days"])
             print(f"  {d['_status']:<10}{str(d.get('app_closes','')):<12}{dd:>5}  "
                   f"{d['market'][:25]:<26}{d.get('action','')}")
+
+        conflicts = detect_event_conflicts(deadlines, signals, today)
+        if conflicts:
+            print("\nDATE CONFLICTS - NEEDS HUMAN DECISION")
+            print("  Two or more markets share an event day. Decline the lower-performing ones")
+            print("  and record the choice in deadline_tracker.csv `decision` so the conflict")
+            print("  stops surfacing. Ranking below is a hint, not a decision.")
+            for g in conflicts:
+                print(f"\n  {g['date']}  ({len(g['markets'])} markets)")
+                for i, m in enumerate(g["markets"]):
+                    marker = "KEEP?" if i == 0 else "DECLINE?"
+                    foll = f"{int(m['followers']):,}" if m["followers"] else "-"
+                    er = f"{m['engagement_rate']*100:.1f}%" if m.get("engagement_rate") else "-"
+                    print(f"    {marker:<9} {m['name'][:34]:<34} "
+                          f"trend={m['trend']:<12} traj={m['trajectory']:<9} "
+                          f"foll={foll:>8}  er={er}")
 
     # --- write signals csv ---
     def _pctf(x):

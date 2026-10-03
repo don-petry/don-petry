@@ -25,6 +25,23 @@ Market links arrive from many places. **Verify the full destination URL before f
 and treat links from DMs/emails/unknown senders as suspicious.** Open URLs via the browser tool, not
 by clicking inside native apps. If a URL looks off, confirm with the user first.
 
+### Beware of wrong-channel markets (town / HOA / brewery / realty-team handles)
+Some markets have **no social presence of their own** — the event lives on a parent website's
+blog or events page, and the handle in the roster belongs to a related-but-different brand that
+posts nothing about the market. If you only read the gram, these events open and close invisibly.
+Known examples:
+- **Mt Laurel Fall Festival** (annual, Sat late-Oct) — @mtlaurel is the **ARC Realty Mt Laurel
+  sales team** feed (home listings, not events). The festival is announced only on
+  `mtlaurel.com/blog/...-fall-festival/`. **Missed in 2026**: by the time the first poll ran, the
+  vendor window had already closed. Watch the blog path starting early August each year.
+- **CahaBAZAAR** — @cahababrewing is the brewery, not the bazaar; three polls in a row surfaced
+  zero bazaar date.
+- **Deck the Heights / Mudtown Makers** — @cahaba_heights_local is the merchants-association
+  member-promo feed; market dates come via DM, not social.
+Rule: when a market's roster handle is `(town)` / `(venue)` / `(host)` / `(parent)`, ADD the
+market's own domain blog or events page to its source URLs **and read it on every poll**, not
+only the social account. If the market has no social at all, the website is the only channel.
+
 ### Tool tactics per surface (validated against @bash_on_the_bluff, 2026)
 Each surface behaves differently — use the right reader so you don't come back empty-handed:
 - **Instagram — use the `og:description` method (fastest and richest; validated 2026-09-07).**

@@ -2,7 +2,7 @@
 
 **Principal Engineer, Director, Global Tax Technology + Open Source Contributor**
 
-Birmingham, Alabama, United States · [donpetry@gmail.com](mailto:donpetry@gmail.com) · [GitHub: petry-projects](https://github.com/petry-projects) · [LinkedIn: donaldpetryiii](https://linkedin.com/in/donaldpetryiii)
+Birmingham, Alabama, United States · [donpetry@gmail.com](mailto:donpetry@gmail.com) · [GitHub: combsmith](https://github.com/combsmith) · [LinkedIn: donaldpetryiii](https://linkedin.com/in/donaldpetryiii)
 
 ---
 
@@ -32,11 +32,11 @@ If you're working on agentic delivery, engineering transformation, or building t
 
 ## Professional Experience
 
-### Creator & Maintainer — [Open Source Projects](https://github.com/petry-projects)
+### Creator & Maintainer — [Open Source Projects](https://github.com/combsmith)
 
 *Feb 2026 – Present · GitHub*
 
-Founder and sole maintainer of [petry-projects](https://github.com/petry-projects) — an 11-repo open-source org that runs like a full software company staffed by AI agents. My public proving ground for the production agentic-delivery patterns I lead at enterprise scale by day.
+Founder and sole maintainer of [combsmith](https://github.com/combsmith) — an 11-repo open-source org that runs like a full software company staffed by AI agents. My public proving ground for the production agentic-delivery patterns I lead at enterprise scale by day.
 
 **Agentic delivery**
 

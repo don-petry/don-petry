@@ -118,8 +118,8 @@ enter the code, sign in with your personal Microsoft account, and grant permissi
 
 ```bash
 cd onenote-vault
-gh repo create petry-projects/onenote-vault --private
-git remote add origin git@github.com:petry-projects/onenote-vault.git
+gh repo create combsmith/onenote-vault --private
+git remote add origin git@github.com:combsmith/onenote-vault.git
 git push -u origin main
 ```
 

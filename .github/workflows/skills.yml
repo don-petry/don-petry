@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install lint and test dependencies
-        run: pip install pyyaml pytest
+        run: pip install pyyaml pytest -r skills/car-hunt/qualification/requirements.txt
       - name: Strict no-PII check
         # Base rules are public in tools/check_no_pii.py. Household rules come from the
         # PII_CUSTOM_RULES_JSON repository secret and are never committed.

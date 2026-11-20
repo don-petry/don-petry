@@ -1,0 +1,35 @@
+# goods-hunt — household settings TEMPLATE (fictional placeholder values).
+# On first run, copy this file to config/household.yaml, ask the user for each
+# value, and write their answers there. household.yaml is personal: keep it out
+# of any public copy of this skill.
+
+location:
+  zip: "00000"                     # home ZIP — distance origin
+  city: Anytown
+  state: ST
+  state_name: Yourstate
+  metro_label: "Anytown ST metro"
+  search_terms: "Anytown Yourstate"   # appended to WebSearch site: queries
+  fb_marketplace_city_id: ""       # numeric Facebook Marketplace city ID (open the city's Marketplace page once and read it from the URL)
+  craigslist_regions: [anytown]    # Craigslist subdomains: the home region plus drivable neighbors
+
+# The persistent tracking sheet per domain (Step 6). Update after every export.
+tracking_sheets: {}                # e.g. { tractors: "<sheet id>" }
+
+packs:
+  cars:
+    # Point at car-hunt's household file (if that skill is installed beside this one)
+    # or inline the same keys here: location_tiers, outreach, scheduled_defaults, jurisdiction.
+    shared_config: ../car-hunt/config/household.yaml
+  tractors:
+    hunt:
+      makes: [John Deere, Kubota]
+      class: "Compact utility, ~25–45 hp, 4WD, with loader"
+      max_hours: 2500
+      year: any
+      max_price: 14000
+      attachments: none
+      zip: "00000"
+      radius_mi: 250
+      cadence: interactive
+      outreach: draft

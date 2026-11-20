@@ -1,0 +1,21 @@
+# Copy to config/household.yaml and fill in your own printers. That file is yours; keep it out of
+# any public repo. The diagnostic script reads `printers` from it; everything else is notes for
+# whoever runs the runbook.
+network:
+  main_lan: 192.0.2.0/24
+  guest_vlan: 198.51.100.0/24    # optional: a separate guest network that needs printer access
+  router: "UniFi / OpenWrt / ISP router at 192.0.2.1"
+  mdns_reflector: "how cross-VLAN AirPrint discovery is enabled, if it is"
+printers:
+  - name: Brother HL-L2395DW (multifunction, wireless)
+    ip: 192.0.2.200              # give each printer a fixed DHCP reservation
+    mac: "00:00:5e:00:53:01"
+    link: Main LAN, 2.4 GHz Wi-Fi
+    guest_firewall_rule: "Guest to Printer"   # optional
+    home_assistant_entity: sensor.brother_hl_l2395dw_series   # optional
+    default: true
+keepalive:
+  host: "any always-on machine (NAS, Raspberry Pi, router with cron)"
+  cron: "*/5 * * * *"
+home_assistant:
+  history_query: "optional: how to read the printer entity's history on your Home Assistant host"

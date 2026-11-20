@@ -1,9 +1,11 @@
 ---
 name: drive-ocr
-description: Find Google Drive PDFs missing an OCR text layer, OCR them with ocrmypdf, and replace in-place via the Drive API. Use when the user says "OCR my Drive PDFs", "fix scanned PDFs in Drive", "add text layer to Drive PDFs", or similar. Handles setup checks, dry runs, and full processing runs.
-argument-hint: [--dry-run] [--folder-id FOLDER_ID]
-user-invocable: true
-allowed-tools: Bash, Read, TodoWrite, AskUserQuestion
+description: Find Google Drive PDFs missing an OCR text layer, OCR them with ocrmypdf, and replace in-place
+  via the Drive API. Use when the user says "OCR my Drive PDFs", "fix scanned PDFs in Drive", "add text
+  layer to Drive PDFs", or similar. Handles setup checks, dry runs, and full processing runs.
+license: MIT
+metadata:
+  argument-hint: '[--dry-run] [--folder-id FOLDER_ID]'
 ---
 
 # Drive OCR

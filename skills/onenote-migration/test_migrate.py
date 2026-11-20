@@ -226,7 +226,7 @@ class TestResumeLogic(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             subprocess.run(["git", "init", str(tmp)], capture_output=True)
-            subprocess.run(["git", "-C", str(tmp), "config", "user.email", "t@t.com"], capture_output=True)
+            subprocess.run(["git", "-C", str(tmp), "config", "user.email", "t@example.com"], capture_output=True)
             subprocess.run(["git", "-C", str(tmp), "config", "user.name", "T"], capture_output=True)
             (tmp / "dummy.txt").write_text("x")
             subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)

@@ -1,0 +1,51 @@
+name: skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions are pinned to commit SHAs; Dependabot (.github/dependabot.yml) keeps them current.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install lint and test dependencies
+        run: pip install pyyaml pytest
+      - name: Strict no-PII check
+        # Base rules are public in tools/check_no_pii.py. Household rules come from the
+        # PII_CUSTOM_RULES_JSON repository secret and are never committed.
+        env:
+          PII_CUSTOM_RULES_JSON: ${{ secrets.PII_CUSTOM_RULES_JSON }}
+        run: python3 tools/check_no_pii.py
+      - name: Lint skills and personas (agent-neutral standard)
+        run: python3 tools/lint_skills.py
+      - name: Shell syntax
+        run: find skills tools .githooks -type f \( -name '*.sh' -o -path '.githooks/*' \) -print0 | xargs -0 -n1 bash -n
+      - name: Tests
+        run: >
+          python3 -m pytest -q -p no:cacheprovider tools skills/flight-price-optimizer
+          skills/car-hunt/qualification skills/car-hunt/sources
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        # No GITLEAKS_LICENSE needed: this repo belongs to a personal account.
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

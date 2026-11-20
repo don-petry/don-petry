@@ -1,0 +1,112 @@
+# Copy to config/household.yaml and fill in your own household. That file is yours; keep it out of
+# any public repo. SKILL.md Phase 0 reads it so nobody has to re-explain the family every trip.
+# fare_watch.py does not read it: each trip's ledger (reference/<trip>-fares.json) carries its own
+# party, origins and origin_costs, which you seed from the values here.
+#
+# Everything below is a FICTIONAL example. The airport codes HOME and HUB are placeholders —
+# replace them with real IATA codes (for instance a small regional airport near you and the big
+# hub a couple of hours away).
+
+household: Example family
+
+travelers:
+  core:                               # who flies on a normal family trip
+    - {name: Parent A, type: adult}
+    - {name: Parent B, type: adult}
+    - {name: Child 1, type: child, born: "2012-05-01"}
+    - {name: Child 2, type: child, born: "2015-09-15"}
+  sometimes:                          # ask every trip — six seats is a different problem from four
+    - {name: Older Child 3, type: adult, born: "2008-03-10"}
+  note: >
+    Record dates of birth, not school grades. A grade is a decent guess and a bad fact, and an
+    18th birthday can change who is allowed to drive or fly alone.
+
+coordinator:                          # who gets confirmations, invites and calendar reminders
+  name: Parent B
+  email: parent.b@example.com
+  calendar: parent.b@example.com      # fare-watch reminders go on this calendar
+  confirm_before_invites: true
+
+airports:
+  home:
+    code: HOME
+    name: Your nearest airport
+    origin_costs: {drive_minutes: 20, drive_miles: 24, parking_per_day: 12}
+    note: 20 minutes from home, small and fast, limited nonstops.
+  alternates:
+    - code: HUB
+      name: The big hub within driving distance
+      origin_costs:
+        drive_minutes: 150
+        drive_miles: 300              # round trip
+        parking_per_day: 10
+        prenight_hotel: 190
+        prenight_if_departs_before: "09:00"
+      routine: >
+        For an early departure, drive over the day before, stay at an airport hotel, and use an
+        off-airport parking lot (~$10/day). Price all of it into origin_costs.
+      wins_when: >
+        The fare gap is large (>$150/person for four), the home routing adds a connection on a
+        long day with kids, the trip is short, or the destination has no reasonable routing from
+        home at all.
+  always_compare: true                # price home and every alternate, always with ground costs
+
+home_nonstops:                        # re-read the source page every trip; routes change a few times a year
+  source: https://www.example.com/airlines-and-destinations/
+  read_on: "2026-01-01"
+  carriers:
+    Delta: [Atlanta, Detroit]
+    Southwest: [Denver, Orlando, Las Vegas]
+    American: [Charlotte, Dallas]
+  not_served: [Frontier, Spirit, Allegiant]     # if none serve home, a budget fare means driving to the hub
+  notes:
+    - Anything not on this list is a connection from home.
+
+carriers:
+  default: Delta                      # the carrier you prefer when nothing else decides it
+  with_children: >
+    Compare Southwest and the budget carriers too, but only on all-in cost and only on fares
+    that can seat the whole party together.
+  book_direct: true                   # airline's own site, always
+
+loyalty:
+  - program: Delta SkyMiles
+    balance: ask                      # ask for the current balance each trip; never reuse an old number
+    min_cpm: 1.3
+    card_discount: "any co-branded card award discount — check before comparing"
+
+bags:
+  checked_on_family_trip: "3–4"
+  checked_adults_only: "0–1"
+
+rules:
+  seats_together: required            # with children; most basic-economy fares fail this
+  family_stays_together: true
+  party_modes:
+    adults_only: >
+      Both adults alone — default carrier, no checked bags or one, seat fees irrelevant, basic
+      economy viable if the fare gap is real.
+    with_children: >
+      Checked bags, seats together non-negotiable, basic economy usually disqualified, a missed
+      connection is a bigger event. Change-free fare brands are worth real money.
+    six_seats: >
+      With the older children too — cheap buckets often lack six seats; log seats_left.
+
+drive:
+  cost_per_mile: 0.67                 # all-in (fuel, depreciation, tires, maintenance)
+  fuel: {mpg: 24, gas_price: 2.95}
+  home_label: Hometown
+  overnight_stops:                    # free family overnights worth pricing at $0 and showing anyway
+    - where: Grandparents
+      town: Halfway Town
+      cost: 0
+      use_for: long drives toward the coast
+
+integrations:                         # optional; leave blank if you don't have these skills installed
+  trip_planner:
+    skill: ""                         # a trip-planning skill to hand booked flights to
+    shares_phase_0: false
+    flights_handoff: ""
+  school_calendar:
+    skill: ""                         # a skill or published calendar URL holding school break dates
+  scheduler: "cron, GitHub Actions, or your agent's scheduled tasks"

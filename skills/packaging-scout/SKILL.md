@@ -1,16 +1,16 @@
 ---
 name: packaging-scout
-description: >-
-  Research, compare, and evaluate packaging for a product, then deliver a scored comparison, a ranked
-  recommendation, a sourcing list with links, and a PDF report. Use whenever the user wants to find or
-  choose packaging — boxes, cartons, sleeves, mailers, tubes, jars, tins, labels, void fill, inserts — for
-  something they make or sell. Trigger on requests like "find packaging for my candles," "what box should
-  I ship these in," "compare these mailers," "source kraft boxes under $3," or any vendor/MOQ/unit-cost
+description: 'Research, compare, and evaluate packaging for a product, then deliver a scored comparison,
+  a ranked recommendation, a sourcing list with links, and a PDF report. Use whenever the user wants to
+  find or choose packaging — boxes, cartons, sleeves, mailers, tubes, jars, tins, labels, void fill, inserts
+  — for something they make or sell. Trigger on requests like "find packaging for my candles," "what box
+  should I ship these in," "compare these mailers," "source kraft boxes under $3," or any vendor/MOQ/unit-cost
   packaging comparison — even if the user never says "packaging." Also use to build or update a saved
-  packaging spec or vendor catalog. A protective shipping box, mailer, tube, or void fill IS packaging and
-  stays in scope even when the user says "ship," "postage," or "protect" — handle the packaging; leave
+  packaging spec or vendor catalog. A protective shipping box, mailer, tube, or void fill IS packaging
+  and stays in scope even when the user says "ship," "postage," or "protect" — handle the packaging; leave
   postage math to a carrier tool. Send elsewhere only for: designing label artwork/graphics; comparing
-  carrier rates (USPS vs UPS) with no packaging choice; or software "package" management (npm, pip, apt).
+  carrier rates (USPS vs UPS) with no packaging choice; or software "package" management (npm, pip, apt).'
+license: MIT
 ---
 
 # Packaging Scout

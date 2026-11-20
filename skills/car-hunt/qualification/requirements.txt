@@ -1,0 +1,4 @@
+# Seller-qualification determination engine (runtime deps).
+# Pure-Python, no server/DB — installed in the workflow's qualification step.
+pydantic>=2,<3
+python-statemachine>=2.3,<3

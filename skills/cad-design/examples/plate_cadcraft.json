@@ -1,0 +1,506 @@
+[
+ {
+  "tool": "new_drawing",
+  "args": {
+   "metric": true
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.new",
+   "params": {
+    "name": "OUTLINE",
+    "color": 7,
+    "lineweight": 0.5
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.new",
+   "params": {
+    "name": "HOLES",
+    "color": 1
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "linetype",
+   "params": {
+    "load": "HIDDEN"
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "linetype",
+   "params": {
+    "load": "CENTER"
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.new",
+   "params": {
+    "name": "HIDDEN",
+    "color": 3,
+    "linetype": "HIDDEN"
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.new",
+   "params": {
+    "name": "DIM",
+    "color": 4
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "ltscale",
+   "params": {
+    "scale": 0.5
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.new",
+   "params": {
+    "name": "CENTER",
+    "color": 2,
+    "linetype": "CENTER"
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.current",
+   "params": {
+    "name": "OUTLINE"
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "rectang",
+   "params": {
+    "p1": [
+     -40,
+     -25
+    ],
+    "p2": [
+     40,
+     25
+    ],
+    "fillet": 6
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "circle",
+   "params": {
+    "center": [
+     0,
+     0
+    ],
+    "diameter": 24
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.current",
+   "params": {
+    "name": "HOLES"
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "circle",
+   "params": {
+    "center": [
+     0,
+     0
+    ],
+    "diameter": 10
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "circle",
+   "params": {
+    "center": [
+     30,
+     15
+    ],
+    "diameter": 4.5
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "circle",
+   "params": {
+    "center": [
+     -30,
+     15
+    ],
+    "diameter": 4.5
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "circle",
+   "params": {
+    "center": [
+     30,
+     -15
+    ],
+    "diameter": 4.5
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "circle",
+   "params": {
+    "center": [
+     -30,
+     -15
+    ],
+    "diameter": 4.5
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.current",
+   "params": {
+    "name": "CENTER"
+   }
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line -45,0 45,0 "
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line 0,-30 0,30 "
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.current",
+   "params": {
+    "name": "OUTLINE"
+   }
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "rectang -40,-60 40,-54"
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "rectang -12,-54 12,-40"
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.current",
+   "params": {
+    "name": "HIDDEN"
+   }
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line -5,-60 -5,-40 "
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line 5,-60 5,-40 "
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line -32.25,-60 -32.25,-54 "
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line -27.75,-60 -27.75,-54 "
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line 27.75,-60 27.75,-54 "
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "line 32.25,-60 32.25,-54 "
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "layer.current",
+   "params": {
+    "name": "DIM"
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimlinear",
+   "params": {
+    "p1": [
+     -40,
+     25
+    ],
+    "p2": [
+     40,
+     25
+    ],
+    "at": [
+     0,
+     36
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimlinear",
+   "params": {
+    "p1": [
+     40,
+     -25
+    ],
+    "p2": [
+     40,
+     25
+    ],
+    "at": [
+     56,
+     0
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimlinear",
+   "params": {
+    "p1": [
+     -30,
+     15
+    ],
+    "p2": [
+     30,
+     15
+    ],
+    "at": [
+     0,
+     31
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimlinear",
+   "params": {
+    "p1": [
+     30,
+     -15
+    ],
+    "p2": [
+     30,
+     15
+    ],
+    "at": [
+     50,
+     0
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimlinear",
+   "params": {
+    "p1": [
+     -40,
+     -60
+    ],
+    "p2": [
+     -40,
+     -54
+    ],
+    "at": [
+     -52,
+     -57
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimlinear",
+   "params": {
+    "p1": [
+     -40,
+     -60
+    ],
+    "p2": [
+     -40,
+     -40
+    ],
+    "at": [
+     -60,
+     -50
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimdiameter",
+   "params": {
+    "center": [
+     0,
+     0
+    ],
+    "point": [
+     8.485,
+     8.485
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "dimdiameter",
+   "params": {
+    "center": [
+     30,
+     15
+    ],
+    "point": [
+     31.59,
+     16.59
+    ]
+   }
+  }
+ },
+ {
+  "tool": "execute",
+  "args": {
+   "command": "text",
+   "params": {
+    "at": [
+     -40,
+     -72
+    ],
+    "text": "MOUNTING PLATE  80 x 50 x 6  -  4x O4.5 THRU  -  BOSS O24 x 14, BORE O10",
+    "height": 3
+   }
+  }
+ },
+ {
+  "tool": "command_line",
+  "args": {
+   "text": "zoom e"
+  }
+ },
+ {
+  "tool": "inspect_drawing",
+  "args": {}
+ },
+ {
+  "tool": "render",
+  "args": {
+   "width": 1600,
+   "height": 1200,
+   "fit": true
+  },
+  "save": "cc_plate_v3.png"
+ },
+ {
+  "tool": "query_entities",
+  "args": {
+   "type": "circle"
+  }
+ },
+ {
+  "tool": "save",
+  "args": {
+   "path": "${OUT}/plate_v3.dxf"
+  }
+ },
+ {
+  "tool": "save",
+  "args": {
+   "path": "${OUT}/plate_v3.pdf"
+  }
+ },
+ {
+  "tool": "save",
+  "args": {
+   "path": "${OUT}/plate_v3.svg"
+  }
+ }
+]

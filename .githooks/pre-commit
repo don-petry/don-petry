@@ -1,0 +1,11 @@
+#!/bin/sh
+# Pre-commit gate for this repo. Enable once per clone:  git config core.hooksPath .githooks
+# Mirrors .github/workflows/skills.yml so a local pass predicts a green CI run.
+set -e
+python3 tools/check_no_pii.py --staged          # base rules + your gitignored .pii-rules.json
+python3 tools/lint_skills.py                    # agent-neutral skill standard
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --staged --redact --no-banner .   # secrets in what is about to be committed
+else
+  echo "pre-commit: gitleaks not installed (brew install gitleaks) — CI will still scan" >&2
+fi

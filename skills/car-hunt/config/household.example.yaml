@@ -1,0 +1,69 @@
+# car-hunt — household settings TEMPLATE (fictional placeholder values).
+# On first run, copy this file to config/household.yaml, ask the user for each
+# value, and write their answers there. household.yaml is personal: keep it out
+# of any public copy of this skill.
+
+location:
+  zip: "00000"                     # home ZIP — distance origin, Auto.dev tco/taxes
+  city: Anytown
+  state: ST                        # two-letter code — Auto.dev `--state`
+  state_name: Yourstate            # title-state question to sellers (qualification/specs.py); leave blank for a state-neutral question
+  metro_label: "Anytown ST metro"
+  search_terms: "Anytown Yourstate"   # appended to WebSearch site: queries
+  fb_marketplace_city_id: ""       # numeric Facebook Marketplace city ID — see SKILL.md "Search Parameters"
+  craigslist_regions: [anytown]    # Craigslist subdomains to search (e.g. the home region plus neighbors)
+
+# Defaults offered when the user starts an interactive hunt without arguments.
+interactive_defaults:
+  makes_models: [Honda Civic, Honda Accord, Honda CR-V, Toyota Camry, Toyota Corolla, Toyota RAV4]
+  example_zip: "00000"
+  example_radius_mi: 100
+  example_max_price: 10000
+  example_max_odometer: 150000
+
+# Unattended (scheduled) defaults.
+scheduled_defaults:
+  makes_models: [Honda Civic, Honda Accord, Toyota Camry]
+  zip: "00000"
+  radius_mi: 25                    # hard cap, geocoded
+  max_price: 6000
+  year_min: 2002
+  year_max: current
+  max_odometer: 250000
+
+# Location-quality tiers for the home metro (Step 3). Build on first run: research
+# median household income by city/neighborhood (Census, BestPlaces) and bucket with
+# these thresholds. CPM modifiers are ranking-only.
+location_tiers:
+  metro: "Anytown ST metro"
+  tiers:
+    A: { label: preferred, places: [Northside Hills], median_hhi: "$100K+",      cpm_adjust: -0.005, notes: "" }
+    B: { label: good,      places: [Lakeview],        median_hhi: "$75K–$100K", cpm_adjust: -0.002, notes: "" }
+    C: { label: neutral,   places: [Midtown],         median_hhi: "$55K–$75K",  cpm_adjust: 0.0,    notes: "" }
+    D: { label: caution,   places: [Old Mill],        median_hhi: "<$55K",      cpm_adjust: 0.003,  notes: "" }
+
+# Step 7 outreach opener and the fingerprint Step 8 uses to recognize it.
+outreach:
+  opener_template: "Hey [FIRST_NAME] - Very interested in your car! Could we meet up for a test drive? And do you have a clean title in hand? Thanks!"
+  opener_fingerprint: ["Very interested in your car", "clean title in hand"]   # stable fragments; must be unique to the opener
+
+# Title-transfer rules for the buyer's state (test-drive checklist, fraud checklist).
+# Check your state's motor-vehicle agency; the values below are placeholders.
+jurisdiction:
+  state_name: Yourstate
+  buyer_signs_title: "per your state's rules — some states require the buyer to sign in front of a clerk or notary"
+  register_within_days: 30
+  register_where: "county motor-vehicle office"
+  sales_tax_note: "state + local sales tax"
+  bill_of_sale_copies: 2
+  bill_of_sale_form: ""            # path to a state bill-of-sale PDF, if you have one
+
+# Where deliverables go.
+paths:
+  checklist_output_dir: "~/Downloads"
+  drive_folder: "Car Hunt — Inspection Docs"
+
+# The persistent tracking sheet (Step 6). Update `id` after every export.
+tracking_sheet:
+  title: "Car Hunt — Active Listings"
+  id: null

@@ -150,12 +150,13 @@ class TestLocalAssetName(unittest.TestCase):
 
 class TestFormatCommitDate(unittest.TestCase):
     def test_z_becomes_utc_offset(self):
+        # GitPython's '<unix-timestamp> +0000' form (see format_commit_date's docstring)
         result = M.format_commit_date("2024-06-01T12:00:00Z")
-        self.assertIn("+00:00", result); self.assertNotIn("Z", result)
+        self.assertEqual(result, "1717243200 +0000"); self.assertNotIn("Z", result)
     def test_strips_milliseconds(self):
         self.assertNotIn(".000", M.format_commit_date("2024-06-01T12:00:00.000Z"))
     def test_already_offset(self):
-        self.assertIn("+00:00", M.format_commit_date("2024-06-01T12:00:00+00:00"))
+        self.assertEqual(M.format_commit_date("2024-06-01T12:00:00+00:00"), "1717243200 +0000")
     def test_invalid_falls_back(self):
         result = M.format_commit_date("not-a-date")
         self.assertIsInstance(result, str); self.assertGreater(len(result), 0)

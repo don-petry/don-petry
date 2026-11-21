@@ -18,7 +18,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install lint and test dependencies
-        run: pip install pyyaml pytest -r skills/car-hunt/qualification/requirements.txt
+        # Every skill's requirements*.txt, so a new skill needs no edit here.
+        run: |
+          pip install pyyaml pytest
+          find skills tools -name 'requirements*.txt' -not -name '*.lock' -print0 | xargs -0 -r -n1 pip install -r
       - name: Strict no-PII check
         # Base rules are public in tools/check_no_pii.py. Household rules come from the
         # PII_CUSTOM_RULES_JSON repository secret and are never committed.
@@ -30,9 +33,17 @@ jobs:
       - name: Shell syntax
         run: find skills tools .githooks -type f \( -name '*.sh' -o -path '.githooks/*' \) -print0 | xargs -0 -n1 bash -n
       - name: Tests
-        run: >
-          python3 -m pytest -q -p no:cacheprovider tools skills/flight-price-optimizer
-          skills/car-hunt/qualification skills/car-hunt/sources
+        # Discovered: each folder holding test_*.py runs on its own (tests import sibling modules).
+        shell: bash
+        run: |
+          set -o pipefail
+          fail=0
+          for d in $(find tools skills -name 'test_*.py' -exec dirname {} \; | sort -u); do
+            echo "::group::$d"
+            (cd "$d" && python3 -m pytest -q -p no:cacheprovider) || fail=1
+            echo "::endgroup::"
+          done
+          exit $fail
 
   secret-scan:
     name: Secret scan (gitleaks)

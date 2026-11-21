@@ -1,0 +1,12 @@
+# Copy to config/household.yaml. That file is yours; keep it out of any public repo.
+
+# Name of the rclone remote whose OAuth token the script reuses (`rclone config` creates it;
+# the script reads ~/.config/rclone/rclone.conf and needs the full `drive` scope).
+rclone_remote: gdrive
+
+# Optional. Duplicate and zero-byte checks are limited to files under these folders and their
+# subfolders. The value is the folder ID from the folder's URL (the part after /folders/).
+# Leave empty ({}) to check every folder in My Drive.
+root_folders: {}
+#  Household: <folder-id>
+#  Finance: <folder-id>

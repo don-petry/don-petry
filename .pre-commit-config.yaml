@@ -1,0 +1,24 @@
+# For contributors who use the pre-commit framework instead of `git config core.hooksPath .githooks`.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: no-pii
+        name: no-PII check
+        entry: python3 tools/check_no_pii.py --staged
+        language: system
+        pass_filenames: false
+      - id: lint-skills
+        name: agent-neutral skill lint
+        entry: python3 tools/lint_skills.py
+        language: system
+        pass_filenames: false

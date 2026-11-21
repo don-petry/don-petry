@@ -1,0 +1,397 @@
+[
+ {
+  "tool": "inspect_design",
+  "args": {
+   "measure": false,
+   "sketches": false
+  }
+ },
+ {
+  "tool": "batch",
+  "args": {
+   "verbose": false,
+   "commands": [
+    {
+     "command": "parameters.add",
+     "params": {
+      "name": "L",
+      "expression": "80 mm"
+     }
+    },
+    {
+     "command": "parameters.add",
+     "params": {
+      "name": "W",
+      "expression": "50 mm"
+     }
+    },
+    {
+     "command": "parameters.add",
+     "params": {
+      "name": "T",
+      "expression": "6 mm"
+     }
+    },
+    {
+     "command": "parameters.add",
+     "params": {
+      "name": "inset",
+      "expression": "10 mm"
+     }
+    },
+    {
+     "command": "parameters.add",
+     "params": {
+      "name": "boss_d",
+      "expression": "24 mm"
+     }
+    },
+    {
+     "command": "parameters.add",
+     "params": {
+      "name": "boss_h",
+      "expression": "14 mm"
+     }
+    },
+    {
+     "command": "parameters.add",
+     "params": {
+      "name": "bore",
+      "expression": "10 mm"
+     }
+    },
+    {
+     "command": "sketch.create",
+     "params": {
+      "plane": "XY",
+      "name": "PlateSketch"
+     }
+    },
+    {
+     "command": "sketch.draw.dimensioned",
+     "params": {
+      "command": "sketch.rectangle.center",
+      "params": {
+       "center": [
+        0,
+        0
+       ],
+       "corner": [
+        40,
+        25
+       ]
+      },
+      "dimensions": {
+       "width": "L",
+       "height": "W"
+      }
+     }
+    },
+    {
+     "command": "sketch.finish",
+     "params": {}
+    },
+    {
+     "command": "solid.extrude",
+     "params": {
+      "distance": "T",
+      "name": "Plate"
+     }
+    },
+    {
+     "command": "solid.fillet",
+     "params": {
+      "edges": [
+       [
+        40,
+        25,
+        3
+       ],
+       [
+        -40,
+        25,
+        3
+       ],
+       [
+        40,
+        -25,
+        3
+       ],
+       [
+        -40,
+        -25,
+        3
+       ]
+      ],
+      "radius": 6,
+      "name": "Corners"
+     }
+    }
+   ]
+  }
+ },
+ {
+  "tool": "measure",
+  "args": {}
+ },
+ {
+  "tool": "batch",
+  "args": {
+   "verbose": false,
+   "commands": [
+    {
+     "command": "sketch.create",
+     "params": {
+      "plane": "XY",
+      "offset": "T",
+      "name": "BossSketch"
+     }
+    },
+    {
+     "command": "sketch.circle.center",
+     "params": {
+      "center": [
+       0,
+       0
+      ],
+      "radius": 12
+     }
+    },
+    {
+     "command": "sketch.dimension",
+     "params": {
+      "entities": [
+       "c1"
+      ],
+      "type": "diameter",
+      "value": "boss_d"
+     }
+    },
+    {
+     "command": "sketch.circle.center",
+     "params": {
+      "center": [
+       0,
+       0
+      ],
+      "radius": 5
+     }
+    },
+    {
+     "command": "sketch.dimension",
+     "params": {
+      "entities": [
+       "c2"
+      ],
+      "type": "diameter",
+      "value": "bore"
+     }
+    },
+    {
+     "command": "sketch.finish",
+     "params": {}
+    },
+    {
+     "command": "solid.extrude",
+     "params": {
+      "distance": "boss_h",
+      "sketch": "BossSketch",
+      "profiles": [
+       {
+        "point": [
+         8.5,
+         0
+        ]
+       }
+      ],
+      "operation": "join",
+      "name": "Boss"
+     }
+    },
+    {
+     "command": "solid.extrude",
+     "params": {
+      "distance": "T + 2",
+      "sketch": "BossSketch",
+      "profiles": [
+       {
+        "point": [
+         0,
+         0
+        ]
+       }
+      ],
+      "direction": "negative",
+      "operation": "cut",
+      "name": "Bore"
+     }
+    }
+   ]
+  }
+ },
+ {
+  "tool": "measure",
+  "args": {}
+ },
+ {
+  "tool": "batch",
+  "args": {
+   "verbose": false,
+   "commands": [
+    {
+     "command": "sketch.create",
+     "params": {
+      "plane": "XY",
+      "offset": "T",
+      "name": "HolePts"
+     }
+    },
+    {
+     "command": "sketch.point",
+     "params": {
+      "point": [
+       30,
+       15
+      ]
+     }
+    },
+    {
+     "command": "sketch.dimension",
+     "params": {
+      "entities": [
+       "origin",
+       "p1"
+      ],
+      "type": "horizontal",
+      "value": "L/2 - inset"
+     }
+    },
+    {
+     "command": "sketch.dimension",
+     "params": {
+      "entities": [
+       "origin",
+       "p1"
+      ],
+      "type": "vertical",
+      "value": "W/2 - inset"
+     }
+    },
+    {
+     "command": "sketch.finish",
+     "params": {}
+    },
+    {
+     "command": "solid.hole",
+     "params": {
+      "sketch": "HolePts",
+      "diameter": 4.5,
+      "name": "Hole"
+     }
+    },
+    {
+     "command": "solid.pattern.rectangular",
+     "params": {
+      "features": [
+       "Hole"
+      ],
+      "dir1": [
+       -1,
+       0,
+       0
+      ],
+      "count1": 2,
+      "spacing1": "L - 2*inset",
+      "dir2": [
+       0,
+       -1,
+       0
+      ],
+      "count2": 2,
+      "spacing2": "W - 2*inset",
+      "name": "Holes"
+     }
+    }
+   ]
+  }
+ },
+ {
+  "tool": "measure",
+  "args": {}
+ },
+ {
+  "tool": "inspect_design",
+  "args": {
+   "measure": false,
+   "sketches": false
+  }
+ },
+ {
+  "tool": "screenshot",
+  "args": {
+   "source": "model",
+   "view": "iso",
+   "width": 800,
+   "height": 560
+  },
+  "save": "sc_plate_iso.png"
+ },
+ {
+  "tool": "screenshot",
+  "args": {
+   "source": "model",
+   "view": "top",
+   "width": 800,
+   "height": 560
+  },
+  "save": "sc_plate_top.png"
+ },
+ {
+  "tool": "set_parameter",
+  "args": {
+   "name": "L",
+   "value": "120 mm"
+  }
+ },
+ {
+  "tool": "measure",
+  "args": {}
+ },
+ {
+  "tool": "screenshot",
+  "args": {
+   "source": "model",
+   "view": "iso",
+   "width": 800,
+   "height": 560
+  },
+  "save": "sc_plate_L120_iso.png"
+ },
+ {
+  "tool": "set_parameter",
+  "args": {
+   "name": "L",
+   "value": "80 mm"
+  }
+ },
+ {
+  "tool": "export",
+  "args": {
+   "path": "${OUT}/plate.step",
+   "format": "step"
+  }
+ },
+ {
+  "tool": "export",
+  "args": {
+   "path": "${OUT}/plate.stl",
+   "format": "stl"
+  }
+ },
+ {
+  "tool": "save",
+  "args": {
+   "path": "${OUT}/plate.solidcraft"
+  }
+ }
+]

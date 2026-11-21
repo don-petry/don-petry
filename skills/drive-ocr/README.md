@@ -62,8 +62,8 @@ Options:
 
 Open the folder in Google Drive. The URL looks like:
 ```
-https://drive.google.com/drive/folders/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+https://drive.google.com/drive/folders/<FOLDER_ID>
+                                        ^^^^^^^^^^^
                                         this is the folder ID
 ```
 

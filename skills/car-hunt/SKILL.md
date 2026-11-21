@@ -1,9 +1,14 @@
 ---
 name: car-hunt
-description: Find, research, and rank used Honda/Toyota vehicles (Civic, Accord, CR-V, Camry, Corolla, RAV4) by CPM (cost per remaining mile). Also supports Insurance Claim Comp mode: finds the highest-priced national dealer comps for a totalled vehicle to maximize insurance ACV payout. Researches reliability by model year, searches AutoTrader/CarGurus/Facebook Marketplace/Auto.dev, calculates value score, ranks candidates, and runs VIN recall/TCO lookups via NHTSA + Auto.dev CLI.
-argument-hint: [make model year-range max-price zip radius | --mode insurance-comp year make model trim drivetrain mileage]
-user-invocable: true
-allowed-tools: Read, Grep, Glob, Bash, Agent, AskUserQuestion, WebFetch, WebSearch, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__search_files, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__read_file_content, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__get_file_metadata, mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__download_file_content
+description: 'Find, research, and rank used Honda/Toyota/Scion vehicles (Civic, Accord, CR-V, Camry, Corolla,
+  RAV4, Tacoma, Scion tC/xD) by CPM (cost per remaining mile). Also supports Insurance Claim Comp mode:
+  finds the highest-priced national dealer comps for a totalled vehicle to maximize insurance ACV payout.
+  Researches reliability by model year, searches AutoTrader/CarGurus/Facebook Marketplace/Auto.dev, calculates
+  value score, ranks candidates, and runs VIN recall/TCO lookups via NHTSA + Auto.dev CLI.'
+license: MIT
+metadata:
+  argument-hint: '[make model year-range max-price zip radius | --mode insurance-comp year make model
+    trim drivetrain mileage]'
 ---
 
 # Car Hunt — Used Vehicle Finder & Ranker
@@ -16,61 +21,72 @@ Also supports **Insurance Claim Comp mode** — finds the highest-priced nationa
 
 ## Mode Detection
 
-Car Hunt has two modes. Detect from `$0` keywords or ask if ambiguous:
+Car Hunt has two modes. Detect from keywords in the user's request (or the skill arguments) or ask if ambiguous:
 
 | Trigger keywords | Mode |
 |---|---|
-| "insurance comp", "insurance claim", "totalled", "total loss", "ACV", "actual cash value", "totaled" | **Insurance Claim Comp** — skip to [Insurance Claim Comp Mode](#insurance-claim-comp-mode) |
+| "insurance comp", "insurance claim", "totalled", "total loss", "ACV", "actual cash value", "totaled" | **Insurance Claim Comp** — read [references/insurance-comp.md](references/insurance-comp.md) and follow it |
 | All other invocations | **Standard Hunt** — continue through Core Formula and Steps 1–7 |
 
-**If mode is Insurance Claim Comp:** jump directly to the Insurance Claim Comp Mode section. Do NOT run the Standard Hunt steps (reliability research, CPM scoring, test-drive prep, outreach). Those are irrelevant to an insurance claim.
+**If mode is Insurance Claim Comp:** read `references/insurance-comp.md` and follow it. Do NOT run the Standard Hunt steps (reliability research, CPM scoring, test-drive prep, outreach). Those are irrelevant to an insurance claim.
 
 ---
 
-## Tool Prerequisites
+## Household Config (read first)
 
-Check these before running. Tell the user upfront what's available and what will be degraded.
+Every run starts by reading `config/household.yaml` (next to this file). It holds the
+user's own values: home ZIP, city and state, Facebook Marketplace city ID, Craigslist
+regions, default makes/models, scheduled-run defaults, the home metro's
+location-quality tiers, the outreach opener, the title-transfer rules for their
+state, output folders, and the tracking-sheet ID.
 
-| Tool | How to check | Required for | Degraded without |
+**If `config/household.yaml` is missing:** copy `config/household.example.yaml` to
+`config/household.yaml`, ask the user for each value in one message (ZIP, city,
+state, preferred makes/models, outreach wording, where to save files), and write
+their answers. Leave a key empty rather than guessing. Never put the user's values
+back into this file or the example.
+
+Below, `CONFIG.<key>` means a value from that file (e.g. `CONFIG.location.zip`).
+
+---
+
+## Tools this works with
+
+Check these before running. Tell the user upfront what is available and what will be
+degraded. Any agent or harness works; use whatever provides the capability.
+
+| Capability | Examples | Required for | Degraded without |
 |---|---|---|---|
-| **Auto.dev CLI** | `npx @auto.dev/sdk whoami` | Standard Hunt Step 2, IC Step IC-2, VIN recalls/TCO | Falls back to web scraping; national structured search unavailable |
-| **Chrome MCP** (Claude in Chrome extension) | Look for `mcp__chrome__*` tools in allowed-tools | Standard Hunt Step 2 (FB Marketplace Option C), Step 5.5 (NHTSA VIN browser fallback), Step 7 (outreach) | Facebook Marketplace degrades to ~30% coverage (Google-indexed listings only); VIN recall check requires manual browser fallback |
-| **Google Drive MCP** | Look for `mcp__af7feda1-*` tools in allowed-tools | Standard Hunt Step 6 (Sheet export), IC Step IC-6 | Sheet export unavailable; results exist only in chat |
+| **Web search + fetch a URL** | built-in web search/fetch tools, a search API, `curl` | Step 1 research, Step 2 search, deep-dive | Nothing works well — this is the baseline |
+| **Shell (bash + Python 3)** | any local shell | Auto.dev CLI, the tested helpers in `qualification/` and `sources/`, PDF generation | Helpers can't run; do the checks by hand and say so |
+| **Auto.dev CLI** (`npx @auto.dev/sdk`) | the CLI with a browser login or `AUTODEV_API_KEY` | Step 2 dealer search, IC mode search, VIN recalls/TCO/taxes | Falls back to web scraping; national structured search unavailable |
+| **Browser automation with a logged-in session** | a Chrome/Chromium automation extension, a Playwright or Puppeteer server, or the user driving the browser manually | Step 2 Facebook Marketplace (Option C), Step 5.5 NHTSA VIN fallback, Steps 7–8 outreach and thread reading | Facebook Marketplace degrades to ~30% coverage (Google-indexed listings only); recall check needs a manual browser lookup; no outreach |
+| **Spreadsheet export** | a Google Drive tool that can create a spreadsheet from CSV, the Sheets API, or writing a local `.csv` | Step 6, IC Step IC-6 | Write a CSV file and give the user its path |
 
-### Auto.dev CLI — Login
+### Auto.dev CLI — login and tiers
 
 ```bash
 npx @auto.dev/sdk login      # opens browser → sign in → CLI authorized
 npx @auto.dev/sdk whoami     # verify auth status
 ```
 
-**Tier capability:**
-- **Starter (free):** `listings` — dealer inventory search. All Standard Hunt and IC search steps work at this tier.
-- **Growth:** `tco` — 5-year total cost of ownership by VIN (Step 5E).
-- **Scale:** `open-recalls`, `taxes` — per-VIN recall status and tax/fee estimate (Steps 5F2, 5.5B, 5.5E).
+The CLI handles auth, pagination, and output formatting. Tiers: **Starter (free)** —
+`listings` (all Standard Hunt and IC search steps); **Growth** — `tco` (Step 5E);
+**Scale** — `open-recalls`, `taxes` (Steps 5F2, 5.5B, 5.5E). `"You need to log in
+first."` → run `npx @auto.dev/sdk login`. Treat any `402: Payment Required` as "tier
+not available": skip TCO silently; use the NHTSA browser fallback for recalls; skip taxes.
 
-**Failure codes:**
-- `"You need to log in first."` → run `npx @auto.dev/sdk login`
-- `"402: Payment Required … requires a Growth plan"` → TCO unavailable; skip silently
-- `"402: Payment Required … requires a Scale plan"` → use NHTSA browser fallback for recalls; skip taxes
+### Browser automation — Facebook Marketplace
 
-### Chrome MCP (Claude in Chrome extension) — Facebook Marketplace
+A logged-in browser session is what makes Facebook Marketplace actually work. Without
+it, FB is limited to whatever listings Google has indexed (typically 20–40% of active
+inventory). It unlocks full Marketplace search, seller-profile extraction (Seller
+Trust Score, Step 3), the message composer (Step 7), thread reading (Step 8), and the
+NHTSA VIN recall fallback (Step 5.5B).
 
-The Chrome MCP is what makes Facebook Marketplace actually work. Without it, FB is limited to whatever listings Google has indexed (typically 20–40% of active inventory).
-
-**What it unlocks:**
-- Full FB Marketplace search with logged-in session — all active listings visible
-- Seller profile extraction (for Seller Trust Score — Step 3)
-- Inline message composer for Step 7 outreach
-- NHTSA VIN recall browser automation fallback (Step 5.5B)
-
-**If Chrome MCP is not connected:**
-- Standard Hunt: note "Facebook Marketplace: limited coverage (Chrome MCP not connected)" in Step 2 summary. Use Option A (Google-indexed listings) and Option B (manual search URL). Do NOT silently skip FB — always report the gap.
-- Insurance Claim Comp mode: no impact (IC mode is dealer-only; FB Marketplace is not searched).
-
-### Google Drive MCP — Sheet Export
-
-The Drive MCP tool ID used in this skill is `mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file`. If this tool is not in the allowed-tools list, Sheet export (Step 6 / IC Step IC-6) is unavailable. Note this to the user when they ask to export — don't attempt the call and fail silently.
+**If no browser automation is available:**
+- Standard Hunt: note "Facebook Marketplace: limited coverage (no logged-in browser)" in the Step 2 summary. Use Option A (Google-indexed listings) and Option B (manual search URL). Do NOT silently skip FB — always report the gap.
+- Insurance Claim Comp mode: no impact (dealer-only; FB Marketplace is not searched).
 
 ---
 
@@ -99,6 +115,9 @@ Baseline data — augmented each run by Step 1 (live reliability research). Do N
 | Toyota | Camry   | 300,000       | Exceptional longevity              |
 | Toyota | Corolla | 300,000       | Extremely durable drivetrain       |
 | Toyota | RAV4    | 250,000       | 5th gen (2019+) excellent          |
+| Toyota | Tacoma  | 250,000       | Legendary longevity (many reach 300k+); inspect frame for rust, esp. pre-2010 |
+| Scion  | tC      | 250,000       | Camry-derived engine; 1st-gen (05–10) 2AZ-FE burns oil — verify oil records |
+| Scion  | xD      | 250,000       | Corolla 1.8L; durable economy hatch, many reach 200k+ |
 
 ### Baseline Reliable/Caution Years
 
@@ -110,6 +129,9 @@ Baseline data — augmented each run by Step 1 (live reliability research). Do N
 | Toyota | Camry   | 2007–2011           | 2012+           | Oil consumption issues pre-2012         |
 | Toyota | Corolla | —                   | 2014+           | Generally very reliable across gens     |
 | Toyota | RAV4    | —                   | 2013+           | 2019+ (5th gen) preferred               |
+| Toyota | Tacoma  | 2016–2017, 2006–2009 | 2013–2015, 2018+ | 3rd-gen 2016–17 auto-trans shudder/hesitation; early 2nd-gen frame rust |
+| Scion  | tC      | 2005–2010 (1st gen) | 2011+           | 2AZ-FE oil consumption (piston rings); TSB on 2007–2009 |
+| Scion  | xD      | 2008                | 2011+           | 1st-yr oil consumption + electrical/HVAC; later years cleaner |
 
 ### Trim Hierarchy (low → high)
 
@@ -121,62 +143,34 @@ Baseline data — augmented each run by Step 1 (live reliability research). Do N
 | Toyota | Camry   | L → LE → SE → XLE → XSE → TRD → XSE V6 → XLE V6                    |
 | Toyota | Corolla | L → LE → SE → XLE → XSE → Apex                                      |
 | Toyota | RAV4    | LE → XLE → XLE Premium → TRD → Adventure → Limited → Platinum       |
-
----
-
-## Auto.dev CLI — Setup (one-time)
-
-Several steps in this skill use the [Auto.dev](https://auto.dev) automotive data API via its CLI (`npx @auto.dev/sdk`). The CLI handles auth, pagination, and output formatting automatically.
-
-**What it provides (used in this skill):**
-- `listings` — search dealer inventory by make/model/year/price/state (Starter tier)
-- `open-recalls` — unrepaired VIN recalls via API (replaces fragile NHTSA browser automation)
-- `tco` — 5-year total cost of ownership estimate by VIN (Growth tier)
-- `taxes` — sales tax + registration fee estimate by VIN + ZIP (Scale tier)
-
-**One-time login (requires browser):**
-```bash
-npx @auto.dev/sdk login
-# Opens browser → sign in → CLI is authorized
-```
-
-**Check auth status:**
-```bash
-npx @auto.dev/sdk whoami
-```
-
-**Auth and tier failure modes:**
-- `"You need to log in first."` → not authenticated; run `npx @auto.dev/sdk login`
-- `"402: Payment Required … requires a Growth plan"` → TCO not available on current tier; skip silently
-- `"402: Payment Required … requires a Scale plan"` → open-recalls and/or taxes not available; use NHTSA browser fallback for recalls, skip taxes
-- The `listings` command works on the **Starter tier** (free). TCO requires Growth; open-recalls and taxes require Scale. Treat any `402` response from these commands as "tier not available" and follow the skip/fallback instructions in the relevant step.
-
+| Toyota | Tacoma  | SR → SR5 → TRD PreRunner → TRD Sport → TRD Off-Road → Limited → Trailhunter → TRD Pro |
+| Scion  | tC      | Base → Release Series (RS) — mono-spec, no trim ladder; RS = special editions |
+| Scion  | xD      | Base → Release Series (RS) — mono-spec, no trim ladder; RS = special editions |
 
 ---
 
 ## Search Parameters
 
-If `$0` is provided, parse it for any of: make, model, year range, max price, zip, radius.
+If the request or skill arguments include any of make, model, year range, max price, zip, radius, parse them.
 
 Otherwise ask (combine into one prompt):
 
 > "Let's set up your search. Answer any you know:
-> 1. Which makes/models? (default: Civic, Accord, CR-V, Camry, Corolla, RAV4)
+> 1. Which makes/models? (default: {CONFIG.interactive_defaults.makes_models})
 > 2. Year range? (e.g., 2002–2023)
-> 3. Max price? (e.g., $10,000)
-> 4. Your zip code? (e.g., 35242)
-> 5. Search radius — how many miles from your zip to search? (e.g., 200)
-> 6. Max odometer — the highest mileage you'll consider on the car itself? (e.g., 150,000 — leave blank to include all)
+> 3. Max price? (e.g., ${CONFIG.interactive_defaults.example_max_price})
+> 4. Your zip code? (default: {CONFIG.location.zip})
+> 5. Search radius — how many miles from your zip to search? (e.g., {CONFIG.interactive_defaults.example_radius_mi})
+> 6. Max odometer — the highest mileage you'll consider on the car itself? (e.g., {CONFIG.interactive_defaults.example_max_odometer} — leave blank to include all)
 > 7. Min trim? (optional — e.g., 'EX or above')"
 
-Store as:
-- `MAKES_MODELS` — list of (make, model) pairs
-- `YEAR_MIN`, `YEAR_MAX`
-- `MAX_PRICE`
-- `ZIP`
-- `RADIUS` — search radius in miles from zip (how far away the car can be)
-- `MAX_ODOMETER` — max miles on the car's odometer (optional; defaults to expected lifetime per model)
-- `MIN_TRIM` (optional)
+Store as `MAKES_MODELS` (list of make/model pairs), `YEAR_MIN`, `YEAR_MAX`, `MAX_PRICE`,
+`ZIP`, `RADIUS` (miles from the ZIP — how far away the car can be), `MAX_ODOMETER`
+(optional; defaults to expected lifetime per model) and `MIN_TRIM` (optional).
+
+Location inputs for Step 2 come from `CONFIG.location`: `search_terms` (city/state words appended to WebSearch queries), `fb_marketplace_city_id`, `craigslist_regions`, and `state` (Auto.dev `--state`). If the user searches from a ZIP other than `CONFIG.location.zip`, derive these for that ZIP and offer to save them.
+
+**Facebook Marketplace city ID:** always use the numeric ID, never the city slug — slugs are disambiguated by IP/cookies and can resolve to a same-named city in another country. To find it, open the city's Marketplace page once in a logged-in browser and read the number from the URL after Facebook redirects; save it as `CONFIG.location.fb_marketplace_city_id`.
 
 ---
 
@@ -184,56 +178,11 @@ Store as:
 
 **Run this before searching listings.** The goal is to produce a per-model reliability card — best years to buy, years to avoid, and known problem patterns — sourced from live data rather than static knowledge. This step takes ~2 minutes and pays for itself by preventing bad purchases.
 
-### Sources to Query (run all in parallel via WebSearch)
-
-For each make/model in `MAKES_MODELS`, run these searches simultaneously:
-
-| Source | Search query |
-|--------|-------------|
-| Consumer Reports | `"{make} {model} reliability by year" site:consumerreports.org` |
-| JD Power | `"{make} {model} dependability rating" site:jdpower.com` |
-| Edmunds | `"{year_min}-{year_max} {make} {model} long-term reliability" site:edmunds.com` |
-| RepairPal | `"{make} {model} reliability rating common problems" site:repairpal.com` |
-| CarComplaints | `"{make} {model} worst years problems" site:carcomplaints.com` |
-| Owner forums | `"{make} {model} years to avoid reddit OR forum"` |
-
-For each source hit, WebFetch the top result and extract:
-- **Best model years** (rated reliable / low complaint rate)
-- **Worst model years** (high complaints / known defects / TSBs)
-- **Top 3 recurring issues** (e.g., "transmission shudder," "oil consumption," "AC compressor failure")
-- **Generation boundaries** (e.g., "10th gen Civic = 2016–2021")
-
-### Output — Reliability Card Per Model
-
-After research, output one card per make/model before proceeding to listing search:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  RELIABILITY CARD: {Make} {Model}
-  Sources: Consumer Reports · JD Power · RepairPal · CarComplaints
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✅ BEST YEARS TO BUY (within {year_min}–{year_max}):
-  {year_a}, {year_b}, {year_c} — {reason, e.g. "10th gen refresh, highest CR score"}
-
-⚠️  YEARS TO APPROACH WITH CAUTION:
-  {year_x} — {specific issue, e.g. "transmission shudder reported above 60k miles"}
-  {year_y} — {specific issue}
-
-🚫 YEARS TO AVOID (if any in range):
-  {year_z} — {reason, e.g. "first model year of gen — high TSB rate"}
-
-🔧 COMMON PROBLEMS (any year):
-  1. {problem} — {how common, severity}
-  2. {problem}
-  3. {problem}
-
-📊 RELIABILITY SCORE:
-  RepairPal: {X}/5.0 | JD Power: {X}/100 | CR: [Recommended / Not Recommended]
-
-💡 BUYING TIP:
-  {1 sentence: e.g. "Skip 2017, prioritize 2019–2021 — post-recall fix and strong resale"}
-```
+For each make/model in `MAKES_MODELS`, search Consumer Reports, JD Power, Edmunds,
+RepairPal, CarComplaints and owner forums in parallel, fetch the top hits, and output
+one **Reliability Card** per model (best years, caution years, avoid years, top-3
+recurring problems, generation boundaries, reliability scores, one buying tip).
+Queries and the card template: [references/reliability.md](references/reliability.md).
 
 ### How Research Feeds into Scoring
 
@@ -249,202 +198,22 @@ If research contradicts the static table (e.g., a year previously flagged is now
 
 ## Step 2: Search for Listings
 
-Search AutoTrader, CarGurus, Facebook Marketplace, Craigslist, and Auto.dev in parallel for each make/model combination.
+Search Facebook Marketplace, Craigslist, and Auto.dev in parallel for each make/model combination. **AutoTrader and CarGurus are DEPRECATED for routine hunting** (see `references/sources.md`) — Auto.dev covers the same dealer inventory. (CarGurus is still used in Insurance Claim Comp mode, which is unaffected by this deprecation.)
 
 > **Inspect before batch:** Before running bulk Auto.dev CLI listing queries, run one single-model call (e.g., `--make Honda --model Civic --limit 1 --json`) and inspect the actual JSON field names. Do not assume field names from documentation — verify `make`, `model`, `price`, `mileage`, `year` paths in the real response before extracting across all models.
 
-### AutoTrader
+### Per-source mechanics — read `references/sources.md`
 
-AutoTrader search result pages are JavaScript-rendered and return no usable listing data via WebFetch. **Do not attempt to WebFetch AutoTrader search pages** — always use the WebSearch approach below.
+**Read [references/sources.md](references/sources.md) before searching.** It holds the
+hard-won details for each source:
 
-**Reliable approach — WebSearch to find individual listing pages:**
-
-```
-WebSearch: site:autotrader.com used {year_min}-{year_max} {make} {model} under ${max_price} Birmingham OR Alabama OR "{nearest city}"
-```
-
-Examples:
-```
-site:autotrader.com used 2002-2015 honda accord under $6000 Birmingham Alabama
-site:autotrader.com used 2002-2015 toyota camry under $6000 Alabama
-site:autotrader.com used 2002-2015 honda civic 100000 miles Birmingham
-```
-
-From WebSearch results, collect individual AutoTrader listing URLs (format: `autotrader.com/cars-for-sale/vehicledetails.xhtml?listingId=...`). Then WebFetch each listing page — individual pages have price, mileage, trim, and dealer info embedded in the HTML. Extract those fields.
-
-**Run 2–3 WebSearch queries per model** (vary location terms and year ranges) to maximize coverage. Individual listing pages are far more reliable than search results pages.
-
-**AutoTrader outage handling:** If AutoTrader returns 503 / "currently unavailable" for multiple fetch attempts, note the outage in the results summary and continue with other sources. Do NOT skip the whole search — fall back to WebSearch for any individual listing URLs that may still be cached in search indexes.
-
-### CarGurus
-
-CarGurus search page URL structure changes frequently — the `nl-Used-{Make}-{Model}?zip=...` pattern often 404s. Use WebSearch to find the current working URL:
-
-```
-WebSearch: site:cargurus.com used {make} {model} {year_min}-{year_max} Birmingham Alabama under ${max_price}
-```
-
-From results, collect individual listing URLs (format: `cargurus.com/Cars/new/nl-Used-{Make}-{Model}-d{id}#listing={listingId}`). WebFetch each listing page — CarGurus individual listing pages contain price, mileage, trim, dealer, and posted date in page metadata.
-
-Run 2–3 WebSearch queries per model varying year ranges. If search results surface a working CarGurus search page URL, WebFetch it to extract multiple listings at once.
-
-### Facebook Marketplace
-
-Facebook Marketplace is login-gated. **Individual listing URLs (`facebook.com/marketplace/item/...`) are not publicly accessible** — WebFetch will hit a login wall and return no data. Never put a generic `facebook.com/marketplace` placeholder URL in the output. The link column must contain either a real item URL or "Search manually."
-
-**What actually works:**
-
-**Option A — Google indexes some public listings:**
-```
-WebSearch: site:facebook.com/marketplace/item {make} {model} {year_range} {city}
-```
-Example:
-```
-site:facebook.com/marketplace/item "Toyota Camry" "2012" OR "2013" Birmingham Alabama
-```
-If real `facebook.com/marketplace/item/{id}` URLs appear in search results, record them. Attempt WebFetch — if it returns listing data, extract it. If it redirects to a login page, still record the URL in the Link column so the user can open it themselves.
-
-**Option B — Provide the search URL for manual browsing:**
-If Google returns no results, include one row in the output table:
-```
-| — | Facebook Marketplace | — | — | — | — | — | — | — | {city} | — | https://www.facebook.com/marketplace/{city_id}/vehicles?minYear={YEAR_MIN}&maxPrice={MAX_PRICE} | Manual search required — FB Marketplace not publicly scrapeable |
-```
-This tells the user exactly where to look without fabricating listings.
-
-**Why FB Marketplace matters:** Private-party listings often appear only here at prices well below dealer, with CPM 20–40% better than comparable dealer listings. Always attempt it and always report the outcome honestly.
-
-**Option C — drive a logged-in Chrome session via the Claude in Chrome MCP (preferred when the extension is connected):**
-
-This is what actually works for Birmingham AL searches. Use the numeric city ID directly and apply all filters in the URL:
-
-```
-https://www.facebook.com/marketplace/{CITY_ID}/search?query={make}+{model}&daysSinceListed={N}&maxPrice={MAX_PRICE}&minPrice={MIN_PRICE}&maxMileage={MAX_ODO}&minYear={YEAR_MIN}&radiusKM={RADIUS_KM}&sortBy=creation_time_descend
-```
-
-Then via JS in the tab, scroll to load lazy results and extract `<a href="/marketplace/item/{id}/">` URLs plus the brief preview text from each card.
-
-**Critical operational facts (learned the hard way):**
-
-- **`/marketplace/birmingham/...` resolves to Birmingham, UK**, not Birmingham, AL. The slug-based path uses your IP/cookies for disambiguation and gets it wrong. **Always use the numeric city ID:** Birmingham AL = `107739635926718`. Look up the numeric ID for any other metro by visiting the city's marketplace page in a logged-in browser once and reading it from the URL after FB redirects.
-- **The `query=` parameter on `/marketplace/{cityId}/vehicles?...` URLs is silently dropped by the redirect.** Use `/marketplace/{cityId}/search?query=...` instead — same filters, query is honored. The URL gets rewritten to `/marketplace/category/search/?...` after page render, but the actual filtered results respect the query.
-- **`daysSinceListed=1`** filters to last 24 hours and is honored.
-- **The `radiusKM` parameter takes kilometers, not miles** — 100mi ≈ 160km.
-- The `[BLOCKED: Cookie/query string data]` error from `javascript_tool` happens when your return value contains a URL with query parameters. Strip URLs from returned strings, or write the URL to `window.__foo` and inspect via a separate call.
-
-**Inline message composer (Step 7 outreach) — what actually works:**
-
-After clicking the listing's "Message" button, the composer appears as an inline `<textarea>` to the right of the listing details (typically `top:~798, left:~1180, width:~406`). The default text is "Hi, is this available?". To replace it:
-
-1. Find via `document.querySelectorAll('textarea')`, filter for visible (`r.width > 50 && r.height > 10`).
-2. **The textarea is React-controlled — `el.value = msg` does NOT work.** Use the prototype setter: `Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(ta, msg)`, then dispatch `new Event('input', {bubbles: true})` and `new Event('change', {bubbles: true})`.
-3. The send button is `document.querySelector('[aria-label^="Send message to"]')` (its label is `"Send message to {Seller Name}"`). Click it.
-4. Confirm send by checking `/Message again/.test(document.body.innerText)` after a 2.5s delay.
-
-**Seller name extraction for personalization:** The seller's full name appears in the page text after the literal string `"Seller details "`. Match `/Seller details ([^()\n]+?)(?:\(|Joined|Profile|Message|$)/` and split the captured name on whitespace — first whitespace-delimited token is the first name. If that match fails, fall back to `[aria-label^="Send message to"]` and parse the suffix after `"to "`.
-
-**Seller profile extraction (for Seller Trust Score — Step 3, Option C only):** This extraction is only possible when using Option C (Chrome MCP with a live logged-in session). Options A and B have no sidebar to extract from — default those to NEUTRAL. After extracting listing fields, extract seller profile signals from the same "Seller details" sidebar. Run these against `document.body.innerText`:
-
-```
-/Joined Facebook (\d+) (year|month)s? ago/i
-/Joined Facebook (\d+) weeks? ago/i
-/Joined Facebook \d+ days? ago/i
-/(\d+\.\d+) \((\d+) ratings?\)/i
-/(\d+) active listings?/i
-```
-
-Convert to canonical form:
-- "Joined Facebook 3 years ago" → `joined_months = 36` (multiply years × 12)
-- "Joined Facebook 1 year ago" → `joined_months = 12`
-- "Joined Facebook 8 months ago" → `joined_months = 8`
-- "Joined Facebook N weeks ago" → `joined_months = 0` (force CAUTION — account is days/weeks old)
-- "Joined Facebook N days ago" → `joined_months = 0` (force CAUTION)
-- Rating not found → `fb_rating = null`, `fb_rating_count = 0`
-- Active listings not found → `active_listings = null` (not a flag — treated as low)
-
-**Failure handling:** If any regex fails (login wall crept in mid-session, React re-render changed DOM), default `seller_trust = NEUTRAL` and note `(profile unreadable)` in the Seller column. Never retry or block — one extraction attempt per listing, then move on.
-
-**Already-messaged detection:** `Message again` appearing on the listing page means a prior message was sent in this account. Always check this before opening the composer; never message twice. Also cross-check the sheet's `Contacted` column.
-
-**Stale composer state:** If a prior listing's composer is still floating in the page, you may see its `aria-label` ("Write to Seller · 2008 Honda Accord") on the contenteditable element. That's a different, dismissible chat panel — the inline `<textarea>` for the *current* listing is the one to target. Don't be misled by the contenteditable.
-
-### Craigslist
-
-**Primary approach — direct WebFetch of regional search pages:**
-
-WebFetch each regional search URL for every make/model combination. These pages return plain HTML with real listing URLs and brief details. Paginate through all pages until exhausted (increment `s=` by 120 per page):
-
-```
-https://atlanta.craigslist.org/search/cta?query={make}+{model}&max_price={MAX_PRICE}&auto_miles_max={MAX_ODOMETER}&sort=priceasc
-https://huntsville.craigslist.org/search/cta?query={make}+{model}&max_price={MAX_PRICE}&auto_miles_max={MAX_ODOMETER}&sort=priceasc
-https://bham.craigslist.org/search/cta?query={make}+{model}&max_price={MAX_PRICE}&auto_miles_max={MAX_ODOMETER}&sort=priceasc
-https://chattanooga.craigslist.org/search/cta?query={make}+{model}&max_price={MAX_PRICE}&auto_miles_max={MAX_ODOMETER}&sort=priceasc
-```
-
-From the search page HTML, extract all individual listing URLs in the format `{region}.craigslist.org/{sub}/cto/d/{slug}/{id}.html` or `{sub}/ctd/d/{slug}/{id}.html`. Then WebFetch each individual page — individual listing pages are plain HTML with full details: price, odometer, year, description, post date.
-
-**Secondary approach — WebSearch (use if regional WebFetch returns empty/gated results):**
-
-`site:craigslist.org "{make} {model}" "{year}" "{city}" -"wanted"` — but note this often returns category search pages, not individual listings; prefer regional WebFetch above.
-
-**Exhaustive coverage — do NOT stop at first page.** Check the total result count returned by the search page (e.g., "1–120 of 340 results"). If more pages exist, fetch subsequent pages by adding `&s=120`, `&s=240`, etc. until all results are retrieved.
-
-**Link rule:** Use only the exact URL scraped from the page. Never construct or guess a Craigslist listing URL — IDs are not predictable and a wrong ID is a 404.
-
-### Auto.dev (dealer inventory — structured API)
-
-Auto.dev's listings API provides clean, structured dealer inventory without JS rendering or scraping fragility. It **complements** private-seller sources (Craigslist, FB Marketplace) rather than replacing them — its coverage skews toward dealer lots.
-
-**Check auth first:**
-```bash
-npx @auto.dev/sdk whoami 2>&1
-```
-If not logged in, skip this section and note "Auto.dev: skipped (not logged in)" in the Step 2 summary.
-
-**Run one model first to inspect field names:**
-```bash
-npx @auto.dev/sdk listings --make Honda --model Civic --limit 1 --json 2>&1
-```
-Verify the actual JSON field paths for price, mileage, year, trim, location, and listing URL before building the full query.
-
-**Full search per make/model:**
-```bash
-npx @auto.dev/sdk listings \
-  --make {make} \
-  --model {model} \
-  --year {YEAR_MIN}-{YEAR_MAX} \
-  --price 0-{MAX_PRICE} \
-  --miles 0-{MAX_ODOMETER} \
-  --state AL \
-  --sort "price:asc" \
-  --limit 50 \
-  --json 2>&1
-```
-
-Run one query per (make, model) pair. Run all in parallel.
-
-**Extract per listing:**
-- `price`, `mileage` (odometer), `year`, `make`, `model`, `trim`, `location` (city/state), `listing URL` or dealer name
-- Mark `dealer` column as the dealership name (Auto.dev listings are dealer inventory; mark `Private? = No`)
-- `retailListing.miles` field path; `vehicle.year/make/model/trim`; `retailListing.price/city/state/dealer`
-
-**⚠️ 0-miles guard:** Auto.dev sometimes returns `"miles": 0` for listings where the dealer didn't report odometer data. A 0-miles reading is **not** a new car — it means the mileage is unknown. **Skip CPM calculation for any listing where `miles == 0`**; include the listing in a separate "Mileage not reported" section at the end of Step 2 output. Do NOT let these rank #1 — at 0 miles the CPM formula produces an artifically low number (e.g., $3,500 / 250,000 = $0.014/mi) that is meaningless.
-
-
-**Deduplication:** If a listing URL from Auto.dev matches one already found via AutoTrader or CarGurus scraping, keep the scraped version (richer description for disqualification scanning) and note "also on Auto.dev" in Notes.
-
-**Why this matters:** When AutoTrader/CarGurus scraping fails (JS rendering issues, 503s, URL structure changes), Auto.dev provides a stable structured fallback for dealer listings.
-
-### WebSearch Fallback (any source)
-
-If a source's page is unreachable or returns no data, fall back to WebSearch:
-
-```
-used {year_min}-{year_max} {make} {model} under ${max_price} Birmingham Alabama site:autotrader.com
-used {make} {model} {year_range} ${max_price} Birmingham site:cargurus.com
-used {make} {model} {year_range} Alabama craigslist.org
-```
-
-Then WebFetch individual listing URLs surfaced by the search results.
+| Source | Status | Key facts (full detail in the reference) |
+|---|---|---|
+| **Facebook Marketplace** | Primary private-party source | Options A (Google-indexed), B (manual search URL), C (logged-in browser — preferred). Numeric city ID, `/search?query=` URL form, `radiusKM` is km, **Discontinued makes** (Scion free-text + `sources/scion.py` post-filter), message-composer mechanics, seller-profile regexes, already-messaged detection. |
+| **Craigslist** | Primary | Modern search is a JS app — a thin shell is **gating, not zero inventory**; run every page through `sources/craigslist.py` `diagnose()`. Regions from `CONFIG.location.craigslist_regions`. |
+| **Auto.dev** | Dealer inventory (structured) | Inspect fields first; `--state {CONFIG.location.state}`; **0-miles guard**. |
+| **AutoTrader**, **CarGurus** | Deprecated for routine hunting | WebSearch-to-listing only; CarGurus still used in IC mode. |
+| **WebSearch fallback** | Any source | `site:` queries with `CONFIG.location.search_terms`. |
 
 ### Data to Extract Per Listing
 
@@ -466,56 +235,36 @@ If a field is not found, note it as "—" — it can be filled during deep-dive.
 
 ### Distance Estimation
 
-After collecting all unique listing cities, geocode them in bulk using the free Nominatim API (no key required) and compute driving distance estimates.
-
-**Step 1 — Geocode user ZIP:**
-```
-GET https://nominatim.openstreetmap.org/search?postalcode={ZIP}&countrycodes=us&format=json
-```
-Extract `lat` and `lon` for the user's home location.
-
-**Step 2 — Geocode each unique listing city (run in parallel):**
-```
-GET https://nominatim.openstreetmap.org/search?q={city},{state}&countrycodes=us&format=json&limit=1
-```
-Extract `lat` and `lon` for each city. Cache results — if two listings share the same city, only geocode once.
-
-**Step 3 — Compute distance via Haversine, then apply road correction:**
-```python
-import math
-
-def haversine(lat1, lon1, lat2, lon2):
-    R = 3958.8  # Earth radius in miles
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
-    return R * 2 * math.asin(math.sqrt(a))
-
-straight_line = haversine(user_lat, user_lon, listing_lat, listing_lon)
-driving_est   = round(straight_line * 1.3)  # 1.3 correction factor for road routing
-```
+After collecting all unique listing cities, geocode the user ZIP and each unique listing city with the free Nominatim API (no key;
+cache repeated cities), take the Haversine straight-line distance, and multiply by
+**1.3** for road routing (`driving_est`). Requests and code: the "Distance estimation"
+section of [references/sources.md](references/sources.md).
 
 Display as `~{driving_est} mi`. If geocoding fails for a city, use `—`.
 
 **Add `Distance` column to the output table and sheet** — sort remains CPM ascending, but distance helps the user weigh travel cost against CPM savings.
 
+**Hard distance cap:** **Drop any listing whose `driving_est` exceeds `RADIUS` miles** — it is too far to be worth a test drive, regardless of CPM. Record dropped-for-distance listings in the `disqualified` array with `reason: "too far (~{driving_est} mi > {RADIUS} mi cap)"` so they are auditable but never ranked or contacted. The FB Marketplace `radiusKM` URL parameter is a coarse pre-filter only (FB often returns listings well outside it); this geocoded cap is the authoritative distance gate. If a city can't be geocoded (`driving_est` = "—"), keep the listing but flag "distance unknown" — do NOT auto-drop it.
+
 **Staleness filter:** If `date_posted` is more than 21 days before today, **skip the listing entirely** — it has almost certainly sold or the seller is unresponsive. If `date_posted` cannot be determined, include the listing but note "Post date unknown" in Notes.
 
-**Hard disqualification filters — skip any listing that matches ANY of these:**
-
-1. **Dealer/finance language:** Any mention of "down payment," "monthly payment," "buy here pay here," "BHPH," "in-house financing," or "we finance" → skip. These are dealer tactics, not private party.
-2. **Title problems:** Any mention of "no title," "lost title," "salvage," "rebuilt title," "lien," or "lien release" → skip. Clean title is required.
-3. **Non-running / major mechanical:** Any mention of "won't crank," "will not crank," "won't start," "doesn't start," "no start," "needs motor," "needs engine," "needs transmission," "blown head gasket," "blown motor," "seized engine," "knocking," "rod knock," "needs to be towed," "must be towed," "as is" + non-running context, "for parts" → skip. The buyer needs a running car.
-4. **Scam signals:** Any of the following redirect patterns → skip immediately, do not contact:
-   - "Messenger broken" / "my messenger doesn't work" / "can't receive messages"
-   - "Contact me at [email]" or "email only" when posted on a platform with messaging
-   - Asks to text an out-of-platform number as the only contact method with urgency
-   - Price is dramatically below market for no stated reason (e.g., "selling quick, moving")
-5. **Mileage/data inconsistency:** Mileage that is implausibly low for the model year (e.g., <30K mi on a vehicle 10+ years old) without explicit explanation (low-mileage garage queen, second car with documented service history) → flag as potential typo or rollback and skip auto-contact. Log for human review.
+**Hard disqualification filters — skip any listing that matches ANY of:** dealer/finance
+language ("buy here pay here", "we finance"); title problems (no/lost title, salvage,
+rebuilt, lien); non-running or major mechanical ("doesn't run", "project car", "needs
+transmission", "blown head gasket", "ran when parked"…); scam redirects ("messenger
+broken", email-only, urgent off-platform texting, absurdly low price); implausibly low
+mileage for the age without explanation (log for human review, no auto-contact). Full
+keyword lists: "Disqualification keyword lists" in [references/sources.md](references/sources.md).
 
 **Description scraping is mandatory before disqualification.** The structured "About this vehicle" block (mileage, trim, transmission) is not enough — scam, title, and non-running disclosures live almost exclusively in the seller's free-form description. On FB Marketplace, the description appears under "Seller's description" and may be truncated behind a "See more" link; expand and capture the full text before running disqualification regexes.
 
 The non-running scan must run on the **full concatenated text** of: listing title + structured fields + seller's description + any visible "Condition" or "Notes" fields. Do not rely on a single regex against partial text.
+
+**Authoritative gate — use the tested filter, not eyeballing.** The keyword lists are documentation; the decision is owned by `skills/car-hunt/qualification/listing_filter.py` (`disqualifying_reason(text)`), which is unit-tested (`test_listing_filter.py`) and handles negation ("clean title, not salvage") and resolution ("head gasket replaced," "new transmission") so it doesn't false-positive on honest listings. **Before contacting OR drafting to any listing, pass its full concatenated text through the filter** — in the scheduled workflow:
+```
+printf '%s' "<FULL listing text>" | python3 skills/car-hunt/qualification/listing_filter.py
+```
+A non-zero exit (`DISQUALIFIED: <reason>`) means do NOT contact; record the reason in `disqualified[]`. This mirrors how seller-reply qualification moved the consequential decision into tested code — a non-running car must never receive an opener.
 
 Log all disqualified listings in a separate "Disqualified" section at the end of output with the reason — do not silently drop them.
 
@@ -535,7 +284,7 @@ Launch all make/model × source searches simultaneously. Target **50+ raw candid
 3. Only WebFetch individual listing pages for candidates that pass the price/mileage preview filter
 4. This keeps total fetches manageable while still covering all in-scope listings
 
-**Why results are often ~15:** A single Craigslist search page has 120 results but only a fraction pass price/mileage/year filters. Working through all 4 regional sites × 3 models = 12 searches, each potentially paginating, is the only way to find 50+ qualifying candidates. Do not stop early.
+**Why results are often ~15:** A single Craigslist search page has 120 results but only a fraction pass price/mileage/year filters. Working through every configured region × every model, each search potentially paginating, is the only way to find 50+ qualifying candidates. Do not stop early.
 
 ---
 
@@ -565,83 +314,35 @@ life_pct       = current_miles / expected_miles  # 0.0 to 1.0
 
 The seller's location is a real value signal. Used cars from higher-income areas correlate (statistically, not deterministically) with: more frequent dealer service, more single-owner histories, gentler use patterns (shorter commutes, more multi-car households spreading miles, fewer hard-loaded trips), and sellers who are less price-sensitive (i.e., more flexibility in negotiation since the asking price isn't load-bearing for their finances). Cars from lower-income areas are not categorically worse — there are well-maintained gems in every zip — but the base-rate odds are different, and that's worth a small modifier in ranking.
 
-**Tier the listing by city/neighborhood**, not by ZIP — Census-tract income data per ZIP is noisy and ZIPs cross municipal boundaries. Use the table below for the Birmingham AL metro; for any new metro, build a comparable table on first run and save it inline.
+**Tier the listing by city/neighborhood**, not by ZIP — Census-tract income data per ZIP is noisy and ZIPs cross municipal boundaries. The home metro's table lives in `CONFIG.location_tiers` (tier → places, median household income, CPM modifier, notes). Use it as written; if it is missing or the listing's city isn't in it, see "Extending to other metros" below the table.
 
-#### Birmingham AL metro — Location Quality Tiers
-
-| Tier | Locations (city / neighborhood) | Median HHI ~ | Notes |
+| Tier | Median HHI ~ (default thresholds) | Default CPM modifier | Meaning |
 |---|---|---|---|
-| **A** (preferred) | Mountain Brook, Vestavia Hills, Greystone, Indian Springs Village, Cahaba Heights, Liberty Park, Brook Highland, Inverness | $100K–$163K | Highest base-rate odds of single-owner, dealer-serviced car. Sellers often replace cars on cosmetic schedule, not mechanical. Good negotiation flexibility. |
-| **B** (good) | Homewood, Hoover (most), Helena, Trussville, Chelsea, Riverchase | $75K–$100K | Solid maintenance habits common. Mixed dealer/independent service. Negotiation typical. |
-| **C** (neutral) | Pelham, Alabaster, Pinson, Gardendale, Clay, Moody, Leeds, McCalla, Calera, Columbiana | $55K–$75K | No directional signal. Treat at face value. |
-| **D** (caution) | Birmingham city (most neighborhoods), Bessemer, Center Point, Tarrant, Fairfield, Adamsville, Warrior, Ensley, Pratt City, Roebuck, Wylam | <$55K | Higher base-rate of deferred maintenance, harder use patterns, tighter price negotiation (seller may need the cash). Not a disqualifier — just verify maintenance with extra rigor. |
+| **A** (preferred) | $100K+ | −$0.005/mi | Highest base-rate odds of a single-owner, dealer-serviced car; sellers often replace cars on a cosmetic schedule; good negotiation flexibility. |
+| **B** (good) | $75K–$100K | −$0.002/mi | Solid maintenance habits common; mixed dealer/independent service; negotiation typical. |
+| **C** (neutral) | $55K–$75K | none | No directional signal. Treat at face value. |
+| **D** (caution) | <$55K | +$0.003/mi | Higher base-rate of deferred maintenance and harder use; tighter negotiation. Not a disqualifier — verify maintenance with extra rigor. |
 
-**How tier affects scoring (apply during Step 3):**
-
-- Tier A: subtract $0.005/mi from the CPM as a "quality-adjusted CPM" for ranking purposes — e.g., a real $0.044/mi from Mountain Brook ranks against other cars at $0.039/mi.
-- Tier B: subtract $0.002/mi.
-- Tier C: no adjustment.
-- Tier D: add $0.003/mi to the quality-adjusted CPM.
+**How tier affects scoring (apply during Step 3):** add the tier's `cpm_adjust` from `CONFIG.location_tiers` (defaults above) to the real CPM to get a "quality-adjusted CPM" for ranking — e.g., a real $0.044/mi from a Tier A town ranks against other cars at $0.039/mi.
 
 This is a **ranking modifier only** — the displayed CPM remains the real number. The adjusted CPM is used for sort order and for the comparison tables in Step 5.25 (head-to-head). Always show both: real CPM and tier-adjusted CPM.
 
-**Tier-aware scoring rules:**
-- Tier A or B + listing description is sparse → still ⚠️ flag, but assume "maybe just terse seller, not hiding issues."
-- Tier D + sparse description → escalate to ⚠️⚠️ — sparse + likely-tighter-finances combination is the highest-risk group.
-- Tier A or B + price seems high → that's the negotiation opportunity; sellers in these tiers often accept 8–12% off ask without pushback.
-- Tier D + price below market → verify scam signals and title with extra rigor before celebrating CPM.
-
-**Display the Tier in:**
-- The ranked listings table (new column: `Tier`)
-- The Google Sheet (new column after `Location`: `Tier`)
-- The head-to-head comparison table (new row: `Location tier`)
-- The test-drive PDF header line (e.g., "Location: Mountain Brook AL · Tier A")
-- The skill's recommendation: a Tier A car at slightly worse CPM should still be presented as the leading candidate over a Tier D car at slightly better CPM, with the why explicit.
-
-**Extending to other metros:** when the user runs `/car-hunt` from a ZIP outside Birmingham, the skill should ask once: *"What ZIP are you searching from? I'll build a location-quality tier table for that metro on the first run and reuse it."* Then research median household income by city in that metro (Census, Wikipedia, BestPlaces.net) and build a 4-tier table with the same income thresholds. Save the table inline in this skill (under a new sub-heading per metro) so it persists across runs.
-
-**Honest framing in the user-facing output:**
-
-When you cite tier in a recommendation or warning, name the actual mechanism, not the demographic. Good: *"Sellers in Mountain Brook tend to be less price-sensitive — there's room to negotiate $300–500 off ask."* Bad: *"Mountain Brook is a rich neighborhood."* The signal is economic and behavioral, not identity-based; keep the language objective.
+Tier-aware flags, where to display `Tier`, building a table for a new metro, and how to word
+tier in user-facing copy: [references/scoring.md](references/scoring.md). **Extending to other metros:** when `CONFIG.location_tiers` is empty or the user searches outside the configured metro, build a 4-tier table with the thresholds above and save it to `config/household.yaml`. **Name the economic mechanism, never the demographic.**
 
 ### Seller Trust Score
 
-After applying the location-quality tier, compute a **Seller Trust Score** for each listing based on observable seller profile signals. This score stacks on top of the location-tier CPM adjustment.
+From the Facebook seller profile (tenure, rating and count, active listings — read only
+with a logged-in browser), classify each private listing — evaluate **CAUTION** first,
+then **TRUSTED**, else **NEUTRAL** (also the default when the profile is unreadable;
+Craigslist and other anonymous private sellers are NEUTRAL; dealers are `—`). TRUSTED
+subtracts $0.003/mi and CAUTION adds $0.004/mi to the quality-adjusted CPM, stacked on
+the tier adjustment:
 
-**Classification table (Facebook Marketplace):**
+`Adj.CPM = real CPM ± location-tier adjustment ± seller-trust adjustment` (the sort key).
 
-**Evaluate in order — CAUTION first, then TRUSTED, then NEUTRAL as the fallback.**
-
-| Score | Label | Criteria |
-|-------|-------|----------|
-| S− | `CAUTION` | `joined_months < 12` OR `active_listings ≥ 10` (flipper/dealer front) OR (`fb_rating < 4.0` AND `fb_rating_count ≥ 5`) |
-| S+ | `TRUSTED` | `joined_months ≥ 36` AND (`fb_rating ≥ 4.5` OR `fb_rating_count = 0` with `joined_months ≥ 24`) AND (`active_listings ≤ 3` OR `active_listings = null`) |
-| S0 | `NEUTRAL` | All other cases, including profile unreadable (default) |
-
-**Default seller trust by platform (when no profile data is available):**
-- Craigslist private: `NEUTRAL` (always anonymous; no signals)
-- AutoTrader / CarGurus private seller: `NEUTRAL` (no profile exposed)
-- Dealer listings (any platform): `—` (institutional sellers; no trust tier applies)
-
-**CPM adjustment (stacked on location-tier adjustment):**
-- `TRUSTED` → subtract $0.003/mi from quality-adjusted CPM
-- `NEUTRAL` → no change
-- `CAUTION` → add $0.004/mi to quality-adjusted CPM
-
-The final `Adj.CPM` used for sort order = real CPM ± location-tier adjustment ± seller-trust adjustment.
-
-**Seller column display format:**
-- `TRUSTED ★4.8(12)` — long-tenure account with rating and count
-- `TRUSTED` — long tenure, no ratings yet
-- `NEUTRAL` — default / no strong signal
-- `NEUTRAL (profile unreadable)` — extraction failed; treated conservatively
-- `CAUTION ⚠ new acct` — joined < 12 months
-- `CAUTION ⚠ 14 listings` — high active-listing count (flipper/dealer signal)
-- `—` — dealer listing (not applicable)
-
-**Additional flags** (add to Flags column):
-- `🔴 CAUTION SELLER` — seller is classified CAUTION; complements the CPM penalty so it's visible at a glance
-- `🟡 UNVERIFIED SELLER` — seller profile was unreachable or unreadable; score defaulted to NEUTRAL
+Thresholds, display format (`TRUSTED ★4.8(12)`, `CAUTION ⚠ new acct`, …) and the
+`🔴 CAUTION SELLER` / `🟡 UNVERIFIED SELLER` flags: [references/scoring.md](references/scoring.md).
 
 ---
 
@@ -649,41 +350,11 @@ The final `Adj.CPM` used for sort order = real CPM ± location-tier adjustment �
 
 Sort all candidates by **CPM ascending** (best value first).
 
-Present reliability cards first, then the ranked table:
-
-```
-═══════════════════════════════════════════════════════════════════
-  CAR HUNT RESULTS — {N} candidates — {date}
-  Search: {makes/models} | {year_min}–{year_max} | ≤${max_price} | {zip} +{radius}mi
-  Sources: AutoTrader · CarGurus · Craigslist · Facebook Marketplace · Auto.dev
-═══════════════════════════════════════════════════════════════════
-
-[Reliability cards from Step 1 — one per model — displayed here]
-
-─── RANKED LISTINGS (by CPM) ───────────────────────────────────
-
-| # | Make/Model | Year | Trim | Dr | Trans | Miles | Price | CPM | Adj.CPM | Life% | Dist | Posted | Location | Tier | Seller | Dealer | Flags | Link |
-|---|-----------|------|------|----|-------|-------|-------|-----|---------|-------|------|--------|----------|------|--------|--------|-------|------|
-| 1 | Honda Civic | 2021 | EX-L | 4 | Auto | 42,000 | $21,500 | $0.103 | $0.098 | 17% | ~12 mi | Apr 20 | Mountain Brook, AL | **A** | — | Dealer | — | [link] |
-| 2 | Toyota Camry | 2019 | XLE | 4 | Auto | 68,000 | $21,000 | $0.091 | $0.089 | 23% | ~172 mi | Apr 18 | Homewood, AL | **B** | — | CarMax | — | [link] |
-| 3 | Honda Accord | 2018 | Sport | 4 | Auto | 89,000 | $19,500 | $0.121 | $0.128 | 36% | ~8 mi | Apr 10 | Center Point, AL | **D** | CAUTION ⚠ new acct | Private 🏠 | ⚠️ CAUTION YEAR 🔴 CAUTION SELLER | [link] |
-...
-
-⚠️  FLAGS:
-  #3: Accord 2018 — CVT shudder reported at 70k+ miles (per CarComplaints); confirm transmission service history
-  #3: 🔴 CAUTION SELLER — FB account joined < 12 months ago; verify identity and title carefully
-  #N: [any other flags]
-
-📊 SUMMARY:
-  Best CPM overall:  #N — {make/model/year} @ ${cpm}/mi
-  Best local deal:   #N — within 50 miles of {zip}
-  Best private seller: #N — {make/model} via FB Marketplace
-  Best trusted seller: #N — {make/model}, TRUSTED ★{rating}({count}) (if any TRUSTED-classified FB listing exists)
-  Best Toyota:       #N — {model/year} @ ${cpm}/mi
-  Best Honda:        #N — {model/year} @ ${cpm}/mi
-  ✅ Best reliability year in results: {year} {make} {model} (per Step 1 research)
-  Skipped (no data): {count} listings where miles/price were missing
-```
+Present the reliability cards first, then the ranked table, then flags and a summary.
+Table columns: `# | Make/Model | Year | Trim | Dr | Trans | Miles | Price | CPM | Adj.CPM | Life% | Dist | Posted | Location | Tier | Seller | Dealer | Flags | Link`.
+Summary lines: best CPM overall, best local deal, best private seller, best trusted
+seller, best per make, best reliability year, and the count skipped for missing data.
+Full layout with a worked example: [references/scoring.md](references/scoring.md).
 
 Then ask:
 > "Want to dig deeper on any of these? I can pull NHTSA recall/complaint data and check the VIN for any you're seriously considering. Just give me the numbers (e.g., '#1, #3') or say 'all top 5'."
@@ -692,546 +363,62 @@ Then ask:
 
 ## Step 5: Deep-Dive (Optional — user-initiated)
 
-When the user selects specific candidates, run in parallel for each:
+When the user selects candidates or gives a VIN, **read [references/deep-dive.md](references/deep-dive.md)**
+and run its checks in parallel for each: NHTSA recalls, complaints and safety rating
+(free APIs, no key), market comparison, Auto.dev TCO, and the VIN lookup (vPIC decode —
+any mismatch is a 🚫 stop — per-VIN open recalls, and free/paid history-report links;
+never buy a paid report automatically).
 
-### A. NHTSA Recalls (free API)
+## Step 5.25: Head-to-Head Comparison (when the user is weighing two cars)
 
-```
-GET https://api.nhtsa.gov/recalls/recallsByVehicle?make={make}&model={model}&modelYear={year}
-```
-
-Report: number of open recalls, brief descriptions, whether they are safety-critical.
-
-### B. NHTSA Complaints (free API)
-
-```
-GET https://api.nhtsa.gov/complaints/complaintsByVehicle?make={make}&model={model}&modelYear={year}
-```
-
-Report: total complaints, top 3 complaint categories, any patterns matching the reliability card from Step 1.
-
-### C. NHTSA Safety Ratings (free API)
-
-```
-GET https://api.nhtsa.gov/SafetyRatings/modelyear/{year}/make/{make}/model/{model}
-```
-
-Report: overall safety rating (stars out of 5).
-
-### D. Market Comparison (WebSearch)
-
-Search: `"KBB {year} {make} {model} {trim} {miles} miles value"` to find if ask price is above/below market.
-
-```
-Market Context — {year} {make} {model} {trim} @ {miles}mi:
-  Ask price:    ${price}
-  KBB estimate: ~${kbb_range} (fair purchase price)
-  Verdict:      [Below market / At market / Above market by ~${delta}]
-```
-
-### E. Total Cost of Ownership (Auto.dev CLI — when logged in)
-
-```bash
-npx @auto.dev/sdk tco {VIN} --zip {ZIP} --json 2>&1
-```
-
-If the command fails (not logged in or Growth tier not enabled), skip this section silently — it's informational, not blocking.
-
-Parse the JSON and surface a TCO block in the deep-dive summary:
-
-```
-💵 5-YEAR TOTAL COST OF OWNERSHIP (Auto.dev estimate):
-  Fuel:           ~$X,XXX
-  Insurance:      ~$X,XXX
-  Maintenance:    ~$X,XXX
-  Depreciation:   ~$X,XXX
-  ─────────────────────
-  5-yr TCO:       ~$XX,XXX   (~$X,XXX/yr)
-```
-
-**Usage rules:**
-- TCO is a **secondary signal only** — never use it to override CPM for ranking decisions.
-- TCO assumes average driving (~15K mi/yr, national avg fuel/insurance rates). Flag to the user if their usage patterns differ significantly.
-- Comparing two candidates' TCO alongside their CPM helps surface cases where a nominally cheaper car (lower price, better CPM) has higher ongoing ownership costs.
-
-### F. VIN Lookup (user provides VIN — image, sticker photo, or string)
-
-When the user gives you a VIN (or a photo of one — read it from the image), run these in parallel:
-
-#### F1. NHTSA VIN decode — free, always works
-```
-GET https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{VIN}?format=json
-```
-Verify: model year, make, model, trim, body class, engine displacement, cylinders, transmission, drive type, plant city all match the listing. **Flag any mismatch as 🚫 — possible fraud, salvage rebuild, or wrong sticker.**
-
-#### F2. Per-VIN remedy status — Auto.dev CLI (preferred) or browser fallback
-
-**Preferred — Auto.dev CLI (no browser needed):**
-```bash
-npx @auto.dev/sdk open-recalls {VIN} --json 2>&1
-```
-Returns only unrepaired recalls for this specific VIN. Empty array = all recalls remedied.
-
-**Fallback — NHTSA browser automation (if not logged in to Auto.dev, or if CLI returns 402 Payment Required):**
-
-The public NHTSA recall API (`api.nhtsa.gov/recalls/recallsByVin`) returns "Missing Authentication Token" — it's not a real public endpoint. Drive it via the Chrome MCP:
-
-1. Navigate the tab to `https://www.nhtsa.gov/recalls`
-2. Find input `#ymm-vin-recalls-search-input`, focus it, set value via the prototype setter, dispatch `InputEvent('input')` with `inputType: 'insertText'` and `data: <VIN>`, then `change`.
-3. Walk up ~12 parents from the input to find the enclosing container, then click the visible submit button whose text is "Search".
-4. Wait ~6s for the result panel to render. The URL will redirect to `?vymm={VIN}`.
-5. Read `document.body.innerText` and parse the result block. Look for the literal pattern:
-   ```
-   {YEAR} {MAKE} {MODEL} VIN: {VIN}
-   Recall data refreshed on {date}
-   {N} Unrepaired Recalls associated with this VIN
-   ```
-   - If `{N} == 0` → **All recalls remedied — strong positive signal.**
-   - If `{N} > 0` → Each unrepaired recall is listed below with NHTSA campaign #, component, and "Remedy Available" / "Remedy Not Yet Available". Capture all of these and report them as blocking issues (free dealer fix required before purchase).
-
-**Caution:** the help text on the same page also contains the literal string "0 unrepaired recalls associated with this VIN" as an example — match against the result block (which has `VIN: {VIN}` immediately above), not just the literal phrase, to avoid false positives.
-
-**Do NOT use Honda's owner recall portal (`mygarage.honda.com/s/recall-search`).** Its Salesforce LWC form rejects programmatically-typed VINs as "Incorrect VIN entered" regardless of how the input value is set (prototype setter, InputEvent with data, execCommand insertText, blur-to-commit). NHTSA's site works; Honda's does not.
-
-#### F3. Vehicle history report (Carfax-style accident/ownership data)
-
-Carfax and AutoCheck are **paid** ($45–$100 per report) and require a logged-in user account. Do NOT automate these — point the user to them. There are also **free** alternatives that should be checked first:
-
-| Source | What you get | Cost | Automation |
-|---|---|---|---|
-| **NICB VINCheck** ([nicb.org/vincheck](https://www.nicb.org/vincheck)) | Theft history; salvage/total-loss declarations from member insurers | Free, 5/day limit | Manual — bot-protected form |
-| **NMVTIS** (vehiclehistory.com / clearvin.com / etc.) | Title history across all 50 states (junk, salvage, flood, brand changes) | $2–$5/report | Manual — paid |
-| **Manufacturer VIN history** (dealer service records) | Service/maintenance history from any franchise dealer using their factory system | Free if you ask the local dealer service desk politely; they often print it | Manual — phone call |
-| **Carfax via dealer trade-in tool** | Full Carfax | Free if any car dealer pulls it for you (they pay flat fee) | Manual |
-| **Carfax / AutoCheck direct** | Full report | $45–$100 | Manual — never auto-purchase |
-
-For each candidate the user wants to deep-dive, generate **all** of these as clickable links with the VIN pre-filled where supported:
-- `https://www.nicb.org/vincheck` (manual entry — VINCheck doesn't accept query params)
-- `https://www.vehiclehistory.com/license-plate-search/{VIN}` 
-- `https://www.carfax.com/vehicle/{VIN}`
-- `https://www.autocheck.com/vehiclehistory/autocheck/en/vinbasics?vin={VIN}`
-
-Tell the user explicitly: "I won't purchase paid reports automatically — open these links yourself if you want to spend the money. Run NICB and ask the local Honda dealer to pull a Carfax for free first."
-
-Present deep-dive report:
-
-```
-══════════════════════════════════════
-  DEEP DIVE: #{N} — {year} {make} {model} {trim}
-  ${price} | {miles} mi | CPM: ${cpm}/mi | Life: {life_pct}%
-══════════════════════════════════════
-
-📋 RELIABILITY (from Step 1 research):
-  {year} is a: ✅ Best year / ⚠️ Caution year / 🚫 Avoid year
-  Known issues for this year: {from reliability card}
-
-🔧 NHTSA RECALLS ({count} open):
-  {recall description} — {date} — [Safety critical? Yes/No]
-  (none) if clean
-
-📣 NHTSA COMPLAINTS ({total} total):
-  Top categories: {category1} ({n}), {category2} ({n}), {category3} ({n})
-  {any pattern matching reliability card issues}
-
-⭐ SAFETY RATING: {N}/5 stars overall
-
-💰 MARKET VALUE:
-  Ask: ${price} | KBB fair: ~${kbb} | [{verdict}]
-
-💵 5-YEAR TCO (Auto.dev — if available):
-  Fuel: ~$X,XXX | Insurance: ~$X,XXX | Maintenance: ~$X,XXX | Depreciation: ~$X,XXX
-  Total: ~$XX,XXX (~$X,XXX/yr)   [omit section if Auto.dev not logged in]
-
-🔑 VIN CHECK:
-  Decoded: {year} {make} {model} {trim} — ✅ matches listing / ⚠️ mismatch: {detail}
-  Full history: vehiclehistory.com/vin/{VIN}  (run manually)
-
-📋 RECOMMENDATION:
-  {1-2 sentence summary: worth pursuing / walk away / negotiate price / inspect specific items}
-```
-
----
-
-## Step 5.25: Head-to-Head Comparison (when user is weighing two cars)
-
-When the user pivots to "what about this one?" with a second listing while a first is already in play (or asks "should I do A or B"), do not just analyze the new listing in isolation. Generate an explicit head-to-head table comparing the two on every dimension that matters, with information asymmetry called out:
-
-| | Car A | Car B |
-|---|---|---|
-| Price | | |
-| Miles | | |
-| **CPM** | | |
-| **Adj.CPM (tier)** | | |
-| Remaining miles | | |
-| **Location tier** | A / B / C / D | |
-| Title | (verified vs. unknown) | |
-| Owners | (stated vs. unknown) | |
-| Recall status | (per-VIN result if known) | |
-| Description detail | (full vs. one sentence) | |
-| Caution year? | | |
-| Engine reliability | (specific known issues for this powertrain) | |
-| Expected lifetime | | |
-
-**Information asymmetry rule:** when one car has verified data (clean title confirmed in description, VIN-checked recall status, full description with disclosures) and the other has unknowns ("Runs and drives smooth" with no title/owner/issue mention), call this out explicitly. The one with more verified data is the higher-confidence buy even if the unverified one wins on raw CPM. Tell the user: "X is theoretically the better-value car, but you're paying with information asymmetry. Y is the higher-confidence buy at a slightly worse CPM."
-
-**Recommendation should be opinionated:** don't list both cars and let the user choose. Pick one and explain why, with a fallback condition ("test drive A first; if it disqualifies, fall back to B"). Hedging-by-default produces analysis paralysis at the seller's driveway.
-
----
+Generate an explicit side-by-side table and apply the **information-asymmetry rule**:
+the car with verified data (title, owners, per-VIN recalls) is the higher-confidence
+buy even at a slightly worse CPM. Be opinionated — pick one, with a fallback
+condition. Full table and rules: [references/deep-dive.md](references/deep-dive.md).
 
 ## Step 5.5: Pre-Test-Drive VIN Finalization
 
-**Trigger:** the user says they'll go look at, test drive, or visit a specific car ("I'll test drive it tomorrow", "I'm going to see the Camry", "set me up for the Accord visit", etc.). This step gates the test drive — do NOT let the user walk into a seller's driveway without it.
-
-**Goal:** convert "this listing looks good" into "this specific VIN is verified, recall-clear, and inspection-ready". The 5 minutes this takes prevents the most expensive failure modes (rebuilt title, salvage, mismatched VIN, open Takata airbag).
-
-### Inputs needed from user
-
-If the user has not provided the VIN, ask for it in one message:
-
-> "Before you drive over, ask the seller for the VIN. Most sellers will share it — if they refuse, that's a red flag worth walking away from. Send the VIN here (text or photo of the door sticker) and I'll run the final checks."
-
-Accept any of: typed VIN string, photo of door-jamb sticker (read it from the image), photo of dashboard windshield VIN.
-
-Always echo the VIN back to the user before running checks — VINs are easy to misread (8/B, 1/I/L, 0/O/Q, 5/S, 2/Z).
-
-### A. NHTSA VIN decode (free, always)
-
-```
-GET https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{VIN}?format=json
-```
-
-**Critical fields to verify against the listing:** ModelYear, Make, Model, Trim, BodyClass, EngineHP/Displacement/Cylinders, TransmissionStyle, DriveType, PlantCity, PlantCountry.
-
-**🚫 If ANY field disagrees with the listing → STOP.** Possible causes: salvage rebuild with mismatched parts/body, fraudulent listing, sticker swap on a stolen car, or a typo. Do not let the user proceed until the discrepancy is resolved.
-
-### B. Per-VIN unrepaired-recall check (Auto.dev CLI — preferred)
-
-**Try Auto.dev first** — it provides the same per-VIN unrepaired recall data via a stable API, without browser automation:
-
-```bash
-npx @auto.dev/sdk open-recalls {VIN} --json 2>&1
-```
-
-Parse the JSON response:
-- If the recalls array is empty → "All recalls remedied — no open recalls on this VIN."
-- If recalls present → list each with campaign number, component, and remedy-available status.
-
-**Tell the user to NOT take delivery until the dealer fixes any open recalls — Honda/Toyota fix open recalls for free regardless of buyer.**
-
-**Fallback — browser automation (if Auto.dev CLI not logged in, or if CLI returns 402 Payment Required):**
-
-
-Drive `https://www.nhtsa.gov/recalls` via the Chrome MCP. Use the 6-step flow documented in Step 5 §F2:
-1. Navigate to `https://www.nhtsa.gov/recalls`
-2. Find `#ymm-vin-recalls-search-input`, set value via prototype setter, dispatch `InputEvent('input')` with `inputType: 'insertText'` and `data: <VIN>`, then `change`.
-3. Walk up ~12 parents to find the enclosing container, click the visible "Search" submit button.
-4. Wait ~6s for the result panel to render (URL redirects to `?vymm={VIN}`).
-5. Read `document.body.innerText` and parse the result block:
-```
-{YEAR} {MAKE} {MODEL} VIN: {VIN}
-Recall data refreshed on {date}
-{N} Unrepaired Recalls associated with this VIN
-```
-6. Match against the result block (which has `VIN: {VIN}` immediately above) — not just the literal phrase — to avoid the false-positive in the page's help text.
-
-- `N == 0` → safe; report "all recalls remedied"
-- `N > 0` → list each unrepaired campaign with NHTSA #, component, and remedy availability.
-
-### C. Title pre-flight (free)
-
-For Alabama transactions specifically (or whichever state matches the listing), run NICB VINCheck (free, manual — no automation). Provide the link and the VIN. NICB will reveal:
-- Theft history
-- Total-loss declarations from any participating insurer (most major US insurers participate)
-
-If the user is comfortable spending $3, also offer the NMVTIS lookup ([vehiclehistory.com](https://www.vehiclehistory.com/license-plate-search/{VIN})) for nationwide title brand history — junk, salvage, flood, etc. Critical when a listing description omits title status.
-
-### D. Cross-check against listing claims
-
-Compare:
-- VIN-decoded year/trim ↔ listing year/trim
-- VIN-decoded plant ↔ "1 owner" / "always Alabama" claims (cars built outside Marysville/USA may have different histories than seller suggests)
-- Miles claimed ↔ NHTSA's odometer history (if available via the VIN report)
-
-Flag any inconsistency for the user to ask about face-to-face.
-
-### E. Estimated Out-of-Pocket (Auto.dev taxes — when logged in)
-
-After VIN decode confirms the car, run:
-
-```bash
-npx @auto.dev/sdk taxes {VIN} --price {LISTING_PRICE} --zip {ZIP} --json 2>&1
-# {LISTING_PRICE} = the seller's asking price from the listing, not the user's target budget
-```
-
-If the command fails (not logged in or Scale tier not enabled), **omit the entire block** — do not show empty fields. Just show: `Asking price: ${listing_price}`.
-
-Parse and add an out-of-pocket block to the test-drive summary before handing the user the checklist:
-
-```
-💳 ESTIMATED OUT-OF-POCKET (ZIP {ZIP}):
-  Asking price:       ${listing_price}
-  Sales tax (est.):   ${tax_amount}
-  Registration fee:   ${reg_fee}
-  Doc fee:            ${doc_fee}
-  ─────────────────────────────
-  Total (est.):       ${total}
-```
-
-This helps set the negotiation ceiling: if total is tight, the user knows to negotiate more aggressively on price to stay within budget after taxes and fees.
-
-### F. Generate the printable test-drive checklist
-
-After all VIN checks complete, **always** generate a checklist for this specific car. The checklist is the deliverable of Step 5.5 — it's what the user takes with them to the seller. Format it as a single block of clean Markdown that prints/copies cleanly to a phone or paper. Use this template:
-
-```
-═══════════════════════════════════════════════════════════════
-  TEST-DRIVE CHECKLIST — {YEAR} {MAKE} {MODEL} {TRIM}
-  VIN: {VIN}  ·  ${price}  ·  {miles} mi  ·  CPM ${cpm}/mi
-  Seller: {first_name}  ·  {city, state}  ·  Listing: {short_url}
-  Generated: {YYYY-MM-DD}
-═══════════════════════════════════════════════════════════════
-
-┌─ BEFORE YOU LEAVE THE HOUSE ─────────────────────────────────┐
-[ ] Cash or cashier's check ready (target: $______, walk-away: $______)
-[ ] Bill of sale form printed (Alabama: 2 copies, both signatures)
-[ ] Flashlight + magnet (paint/body filler check) + tire-tread gauge
-[ ] OBD-II scanner if you own one (clears recent codes = red flag)
-[ ] Phone fully charged for photos of damage, VIN, odometer
-[ ] Tell the seller: "Don't run it before I get there — I want to do a cold start."
-└──────────────────────────────────────────────────────────────┘
-
-┌─ PAPER CHECKS (before keys turn) ────────────────────────────┐
-[ ] Title in seller's name, clean, NOT marked "Salvage" / "Rebuilt" / "Junk"
-[ ] Title VIN matches dashboard VIN matches door-jamb sticker VIN
-    Expected VIN: {VIN}
-[ ] Seller's photo ID matches name on title
-[ ] Odometer on title matches dashboard reading (within 1000 mi)
-[ ] No active liens noted on title
-└──────────────────────────────────────────────────────────────┘
-
-┌─ COLD START (most important — only happens once) ────────────┐
-[ ] Hood up, key OFF: oil dipstick at FULL line, oil clean honey/light brown
-[ ] Coolant reservoir between MIN/MAX, no rust/oil floating in it
-[ ] Brake fluid at MAX, light amber not dark
-[ ] Power steering fluid at MAX, not foamy or dark
-[ ] Transmission dipstick (if equipped): FULL, RED — not brown, not burnt smell
-[ ] Now start it. WATCH the tailpipe in the rearview mirror at first key-on:
-    [ ] No blue/white smoke (= oil burning)
-    [ ] No black smoke (= rich/fuel issue)
-    [ ] Smoke clears within 10 seconds in cold weather, immediately in warm
-[ ] LISTEN for first 5 seconds:
-{IF make=Honda AND model=Civic AND year IN [2012-2015]}
-    [ ] No 1-2 second metallic rattle (= VTC actuator, $400-700 fix)
-{IF make=Honda AND model=Accord AND year IN [2008-2012]}
-    [ ] No metallic rattle on first cold start (= VTC actuator, $400-700)
-{IF make=Toyota AND model=Camry AND year IN [2007-2011]}
-    [ ] No clattering / valve-train tap (= 2AR-FE oil consumption beginning)
-{IF year < 2010}
-    [ ] No ticking/knocking from top end (= worn rocker arm or low oil)
-[ ] All warning lights illuminate THEN extinguish within 5 seconds
-[ ] No CEL (Check Engine), ABS, SRS, or TCS lights stay on
-[ ] All gauges sweep and settle in normal range
-└──────────────────────────────────────────────────────────────┘
-
-┌─ STATIC INSPECTION (engine off, 5 minutes) ──────────────────┐
-[ ] Walk around: panel gaps even, paint matches across panels (rebuild signal)
-[ ] Magnet sticks to every steel body panel (no Bondo)
-[ ] Tire tread depth ≥ 4/32" all four (penny test: Lincoln's head shows = bad)
-[ ] All four tires same brand & size, even wear (uneven = alignment/suspension)
-[ ] No rust on rocker panels, frame rails (look UNDER the car with flashlight)
-[ ] Check for fluid puddles where it was parked (oil, coolant, transmission)
-[ ] Open all 4 doors, hood, trunk — alignment, latches, weatherstripping intact
-[ ] All glass: no chips, cracks, repair stars (windshield replacement = $200-400)
-[ ] All lights work: headlights low/high, brake, turn (both sides), reverse
-[ ] AC: blows COLD at center vent within 60 seconds at idle
-[ ] Heat: blows HOT at center vent within 90 seconds (rules out heater core)
-[ ] All windows up/down without grinding (regulators are common failure)
-[ ] Power locks work all 4 doors
-[ ] Driver's seat slides/reclines smoothly; no broken plastics on switches
-[ ] All seatbelts retract fully and lock when yanked
-[ ] No mildew/cigarette/pet smell (flood/heavy use signal)
-[ ] Trunk floor / spare tire well DRY (water damage check)
-└──────────────────────────────────────────────────────────────┘
-
-┌─ MODEL-SPECIFIC RED FLAGS (this car's known issues) ─────────┐
-{INSERT model-specific items based on year/make/model from reliability card}
-{Examples — only emit the rows that match this car's profile:}
-[ ] {Honda Accord 2008-2012} Pull dipstick after test drive — oil should still be at FULL
-    Ask: "How often do you add oil between changes?" — anything > 0 qt/1000mi = walk
-[ ] {Honda Accord 2008-2012 V6} Reject this model — 5AT in V6 had failure rate >25% by 150K. K24 4-cyl only.
-[ ] {Honda Civic 2012-2015} Ask if airbag inflator recalls (Takata) have been done — verify on receipts
-[ ] {Toyota Camry 2007-2011} 2AR-FE oil consumption: ask about piston-ring TSB (T-SB-0094-11). Untreated cars use 1qt/1000mi.
-[ ] {Toyota Camry 2007-2011} Check for rear strut rubbing/clunk over bumps
-[ ] {Honda CR-V 2017-2018 1.5T} Walk away — oil dilution issue, especially in cold climates
-[ ] {Toyota Camry 2012+} Look for rear stabilizer bar end-link rattle on test drive
-[ ] {ANY 8th gen Accord 2008-2012} Verify A/C compressor — failure ~$800
-└──────────────────────────────────────────────────────────────┘
-
-┌─ TEST DRIVE — minimum 15 minutes, mixed roads ───────────────┐
-[ ] Driveway: smooth take-off from cold, no clunks from suspension
-[ ] Parking lot: tight figure-8 left and right, listen for CV joint clicks
-[ ] Reverse: 30+ feet straight back, no whine/grinding
-[ ] City stop-and-go: smooth 1→2 and 2→3 shifts, no flare or slip (auto)
-[ ] Hard braking from 30 mph (in safe spot): straight stop, no pulsation, no pull
-[ ] 45-55 mph cruise: no vibration in steering wheel (alignment/balance)
-[ ] Highway 65+ mph: no wandering, no death-wobble
-[ ] Highway: WOT (wide-open throttle) acceleration to 70 — listen for transmission slip
-[ ] Wind down all windows, stereo OFF: listen for whines, ticks, knocks at every speed
-[ ] Hot stop: park, leave running 2 min, look under for new leaks
-[ ] After drive: pop hood — coolant NOT boiling out of overflow (head gasket check)
-[ ] After drive: oil dipstick still at FULL (oil consumption check)
-└──────────────────────────────────────────────────────────────┘
-
-┌─ NEGOTIATION LEVERS YOU FOUND (fill in during inspection) ───┐
-[ ] Tire tread <4/32 → -$400 (set of 4 budget tires installed)
-[ ] AC weak → -$600 to -$1200 (compressor/condenser)
-[ ] Brake pulsation → -$200 (rotors + pads)
-[ ] Battery >4 yrs old → -$150
-[ ] Cracked windshield → -$300
-[ ] Each warning light ON → -$200 minimum (codes need scan)
-[ ] Cosmetic damage seller already disclosed: $______
-[ ] Total deductions: $______
-[ ] My ceiling: ${ask_price} − total deductions = $______
-└──────────────────────────────────────────────────────────────┘
-
-┌─ RED FLAGS — IF YOU SEE ANY OF THESE, WALK AWAY ─────────────┐
-[ ] Title not present at meeting (any reason)
-[ ] VIN on title doesn't match dashboard or door
-[ ] Seller name on title doesn't match seller's ID
-[ ] Engine smokes blue at any point (oil burning)
-[ ] Transmission flares or slips on test drive
-[ ] Any frame rail rust deeper than surface
-[ ] CEL on, seller "doesn't know what it means"
-[ ] Coolant in oil cap (mayonnaise) or oil in coolant (sheen)
-[ ] Recent paint on a single panel that doesn't match
-[ ] Seller pressures you to "decide now" or "two other people coming"
-└──────────────────────────────────────────────────────────────┘
-
-┌─ AFTER YOU AGREE TO BUY ─────────────────────────────────────┐
-[ ] Sign bill of sale (both copies, both sign, keep one)
-[ ] Title: seller signs and dates SELLER section ONLY (do not sign anywhere else
-    until you're at the courthouse — Alabama requires courthouse witness for buyer signature)
-[ ] Take photo of seller's driver's license next to the title for records
-[ ] Pay only after both signatures and physical title in YOUR hand
-[ ] Get keys (all keys — most cars have 2; ask for both)
-[ ] Drive immediately to nearest courthouse OR home (don't delay registration > 20 days
-    in Alabama — late fee accrues)
-└──────────────────────────────────────────────────────────────┘
-```
-
-**Implementation rules for the checklist generator:**
-
-- Always emit the WHOLE template — every section, every checkbox. Brevity is not a virtue here; the user is going to use this in a stressful negotiation and wants to see the line *before* needing to remember it.
-- Substitute `{...}` placeholders with concrete values from the listing + VIN check + reliability card.
-- For the `MODEL-SPECIFIC RED FLAGS` section: only emit the rows that match the year+make+model. If none match, emit a single line: `[ ] No known year-specific issues — standard inspection only`. Pull from the static caution table AND any live Step 1 reliability card findings.
-- Substitute the price and the `walk-away` line — walk-away should default to ask price minus typical inspection-revealed deductions (~$500 for most listings).
-
-### G. Save the checklist as a PDF (always)
-
-**Every checklist generated in Step 5.5 must also be saved as a printable PDF.** The Markdown is for the chat; the PDF is for the user's pocket — they'll print it or open it on their phone at the seller's driveway.
-
-**Filename:** `~/Downloads/car-hunt-checklist-{YYYY-MM-DD}-{make-lower}-{model-lower}-{last4ofVIN}.pdf`
-
-Example: `car-hunt-checklist-2026-04-28-honda-accord-9855.pdf`
-
-**Implementation:**
-- Use Python `reportlab` (Platypus). Install with `pip3 install --quiet reportlab` if it's not already present.
-- Page size: US Letter, 0.5" side margins, 0.4" top/bottom.
-- Use a header with the model + VIN, a sub-line with price/miles/CPM/seller/listing URL, and a "Verified: 0 unrepaired NHTSA recalls" line if Step B came back clean (or list the open ones if not).
-- Every checklist section becomes a `<b>` heading followed by checkbox rows: render checkboxes as the literal Unicode `☐` followed by the item text (a Paragraph). Use `<sub>` / `<super>` tags for any subscripts/superscripts — never Unicode subscript glyphs (built-in fonts don't render them).
-- The "Negotiation levers" section should be rendered as a `Table` with three columns (Issue / Deduction / Confirmed?) so the user can fill it in by hand. Bold-row + light-yellow background for the "Total deductions" and "My counter" rows.
-- Insert a `PageBreak()` after the static-inspection section so the model-specific + test-drive + negotiation sections start fresh on page 2.
-- Set the PDF's `title` and `author` metadata so it's identifiable in Finder/Files.
-- Footer: a small italic note acknowledging the cold-start tailpipe + VTC listen as the single most important moment.
-
-After writing the file, tell the user the absolute path and say: "Open it on your phone or AirPrint it. Take it to the seller."
-
-### H. Fraud / paperwork checklist (always emit alongside the test-drive checklist)
-
-Used-car fraud is a multi-billion-dollar industry: forged titles, VIN cloning, curbstoning, title-jumping, odometer rollback, fake cashier's checks. **Every test-drive checklist generated in §F must be paired with a fraud / paperwork checklist** so the user can verify the documents against the car. This is a vehicle-agnostic checklist — it doesn't change based on year/make/model — so generate it once and reuse it across cars in the same hunt session.
-
-**Filename:** `~/Downloads/car-hunt-fraud-paperwork-checklist.pdf` (no date or VIN in filename — it's reusable).
-
-If the file already exists from a prior run within the same week, **skip regeneration** unless the user asks for a refresh; just point them at the existing path. The fraud checklist is generic — there's no need to rebuild it for every car.
-
-**Mandatory sections, in this order:**
-
-1. **⚠️ Walk-away triggers** — single-fail-and-leave items (refused VIN, missing title, mismatched VIN, scratched/laminated title, salvage/rebuilt brand, lien with no release, crypto/wire payment demand, blank-form signing pressure, ID mismatch, location-changing meets, time pressure tactics)
-2. **Title document — visual inspection** (original not photocopy, watermarks/security features, no erasures/white-out, single ink color, brand-history field clean, owner name printed not handwritten, odometer field filled in, issue date plausible)
-3. **VIN verification — three locations match** (dashboard / door jamb / title — write all three down digit-by-digit; beware 0/O, 1/I/L, 5/S, 2/Z, 8/B; 17 chars post-1981; sticker intact, no fresh adhesive; no paint overspray on plates; NHTSA decode + nhtsa.gov/recalls + nicb.org/vincheck + optional NMVTIS)
-4. **Curbstoning detection** (title in seller's name 30+ days; ID matches title and address; ownership story plausible; insurance card present; personal photos in listing not lot/curbside; no multiple cars on same profile; reverse-image search; phone area code local; meeting at home)
-5. **Odometer fraud detection** (title odometer matches dash within 1000 mi; no "Not Actual Mileage"; wear consistent — bolster, wheel, pedals, carpet, door handles; service stickers; cluster screws factory; OBD-II ECU mileage)
-6. **Bill of sale** (two identical handwritten copies; today's date; both names + addresses; full VIN; odometer; actual sale price; AS-IS WHERE-IS language; both sign and date both copies; photo of seller's ID with bill of sale + VIN visible)
-7. **Title transfer mechanics** (state-specific; for Alabama: seller signs SELLER section only in your presence, fills odometer + price, **buyer does NOT sign yet — courthouse witness required**; register within 20 days; bring signed title + bill of sale + ID + insurance + payment ~2% sales tax)
-8. **Payment protection** (pay only after title + keys in hand; counterfeit-detector pen for cash; never accept seller's cashier's check; bank-to-bank meet at teller; never crypto/gift cards/wire to remote bank; no deposits; written receipt)
-9. **Stolen-vehicle detection** (NICB clean; ignition/locks intact; service records consistent owner; insurance matches title; license plate registered to seller; ask to meet at police station — real sellers say yes)
-10. **Title-jumping detection** (seller's name MUST be on title as registered owner, not as prior buyer; walk away from any "I haven't transferred it yet" situation except documented estate sales)
-11. **After-purchase (within 7 days)** (register at probate office; new plate; insurance updated; independent mechanic post-purchase inspection $75–100; save all documents 3+ years)
-
-**Implementation notes:**
-- Use the same reportlab structure as §F (US Letter, ☐ checkboxes, sections in `<b>` headings, page break after section 4 or 5).
-- Header should be in red (`#a83232`) instead of blue to visually distinguish it from the test-drive checklist.
-- Add a prominent footer: *"This checklist exists because used-car fraud is a multi-billion-dollar industry. Most sellers are honest; the protective habit is: walk away if anything feels off. There will be another car."*
-- A working reference implementation lives at `~/.claude/skills/car-hunt/build_fraud_paperwork_pdf.py` — copy and adapt rather than rebuilding from scratch.
-
-After writing the fraud PDF, tell the user: *"Two PDFs are ready — the test-drive checklist (car-specific) and the fraud-paperwork checklist (generic, reusable across all cars). Take both. The fraud one is most useful in the seller's driveway when you're looking at the title document."*
-
-**Sample script structure** (the implementation that worked for the first checklist):
-
-```python
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.colors import HexColor
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from reportlab.platypus.flowables import HRFlowable
-
-OUT = f'~/Downloads/car-hunt-checklist-{date}-{make}-{model}-{vin_last4}.pdf'
-doc = SimpleDocTemplate(OUT, pagesize=letter,
-    leftMargin=0.5*inch, rightMargin=0.5*inch,
-    topMargin=0.4*inch, bottomMargin=0.4*inch,
-    title=f'Car Hunt Test-Drive Checklist — {year} {make} {model} (VIN ...{vin_last4})',
-    author='car-hunt skill')
-
-# Styles, sections, items, neg-table, etc. (see prior implementation)
-
-doc.build(story)
-```
-
-A working reference implementation lives in `/tmp/build_checklist_pdf.py` after the first generation; copy and adapt it for each new car rather than rebuilding from scratch.
+**Trigger:** the user says they will go look at, test drive, or buy a specific car.
+This step gates the test drive. **Read [references/test-drive.md](references/test-drive.md)**
+and follow it: get and echo the VIN, decode and cross-check it, per-VIN recall check,
+title pre-flight, estimated out-of-pocket, then generate the car-specific
+**test-drive checklist** (Markdown + PDF saved to `CONFIG.paths.checklist_output_dir`)
+and hand over the reusable **fraud/paperwork checklist** and **bill of sale** from
+`forms/`. Title-transfer lines come from `CONFIG.jurisdiction`.
 
 ---
 
-## Step 6: Export to Google Sheet
+## Step 6: Export to a Spreadsheet
 
 After presenting results, always offer to export:
 
-> "Want me to save these results to a Google Sheet?"
+> "Want me to save these results to a spreadsheet?"
 
-### ⚠️ Drive MCP limitation — `create_file` does NOT overwrite
+Use whatever spreadsheet capability is available (see **Tools this works with**): a
+Google Drive tool that can create a spreadsheet from CSV, the Google Sheets API, or —
+if neither is available — a local `.csv` file whose path you give the user.
 
-The Drive MCP exposes only `create_file` for writes. **It does not overwrite by title or by ID.** Every call produces a brand-new file at a new sheet ID, regardless of whether a file with the same title already exists. There is no `update_file_content`, no "add tab to existing spreadsheet", no Sheets API write endpoint exposed through this MCP.
+### One persistent tracking sheet
 
-Practical consequences:
-- The user's bookmarked URL goes stale every run. Each run leaves an orphan sheet behind.
-- Memory (`project_car_hunt_skill.md`) must always be updated to point at the **latest** sheet ID, and prior IDs explicitly marked obsolete.
-- **Always** print the new sheet URL prominently in the run summary, with explicit text like "⚠️ Sheet ID changed — your bookmark to the prior sheet now shows yesterday's data; here's the new one." Don't bury it.
+1. Read the current sheet ID from `CONFIG.tracking_sheet.id`.
+2. If one exists, download its rows, merge the new results (deduplicate by Link URL), and write the merged sheet.
+3. If none exists, create a sheet titled `CONFIG.tracking_sheet.title`.
+4. Write the resulting sheet ID back to `config/household.yaml` (`tracking_sheet.id`) and show the sheet's link prominently.
 
-If a stable URL ever becomes a hard requirement, the only fix is to wire up direct Google Sheets API access via `gspread` + a service account JSON, or call the Sheets `values:update` endpoint via `curl` with an OAuth token. That's outside the Drive MCP. Until then, accept the new-sheet-per-run pattern and surface it loudly.
+**Many Drive tools can only *create* files, not overwrite them.** If yours creates a
+new file on every write, each run gets a new sheet ID: save the new ID to the config,
+and say loudly in the run summary — "⚠️ Sheet ID changed — your bookmark to the prior
+sheet now shows old data; here's the new one." A stable URL needs real Sheets API
+write access (e.g. `gspread` with a service account, or the Sheets `values:update`
+endpoint with an OAuth token).
 
-### Update Mode vs. New Sheet
+**Upload tip:** when a Drive tool converts uploads, send **`text/csv`** (base64 CSV if
+it wants encoded content) and let it convert to a Google Sheet. Uploading an xlsx MIME
+type commonly fails base64 validation.
 
-The skill maintains a **single persistent tracking sheet** across runs. On each run:
-
-1. Check memory (`~/.claude/projects/-Users-dj-repos-self/memory/project_car_hunt_skill.md`) for the current sheet ID.
-2. If a sheet ID exists, **update it** — download existing rows, merge with new results (deduplicate by Link URL), and rewrite into a new sheet (Drive MCP creates a new file each time — see warning above).
-3. If no sheet ID exists, **create a new sheet**, then save its ID to memory for future runs.
-
-**Deduplication logic:**
-- Match rows by `Link` URL — same URL = same listing
-- If a listing appears again with a different price, update the row and note "Price changed: was $X" in Notes
-- Mark listings that were in a prior run but are not found this run as `STALE — may be sold` in Notes (do not delete them)
-- New listings not in the prior run get added as new rows
+**Deduplication logic:** match rows by `Link` URL (same URL = same listing); on a price
+change, update the row and note "Price changed: was $X"; mark prior-run listings not
+found this run `STALE — may be sold` (never delete); add new listings as new rows.
 
 ### Column Order
 
@@ -1239,571 +426,61 @@ The skill maintains a **single persistent tracking sheet** across runs. On each 
 Date | Make | Model | Year | Package | Doors | Trans | Miles | Cost | CPM | Adj.CPM | Life | Dist | Posted | Location | Tier | Seller | Dealer | Link | Notes | Contacted
 ```
 
-- **Date** — `DD Mon YYYY` format (e.g., `25 Apr 2026`) — date this row was last updated
-- **Package** — trim level (e.g., `LX`, `EX`, `LE`)
-- **Doors** — `2` or `4`
-- **Trans** — `Auto` or `Manual`
-- **Posted** — date the listing was first posted (e.g., `Apr 20`) — omit year if current year; use `Unknown` if not found
-- **Miles** — numeric, no commas (e.g., `53000`)
-- **Cost** — formatted as `$4750`
-- **CPM** — formatted as `$0.019` (3 decimal places) — the *real* cost-per-mile
-- **Adj.CPM** — formatted as `$0.014` — the *quality-adjusted* CPM with location-tier AND seller-trust modifiers stacked (this is the column to sort by)
-- **Life** — formatted as `18%`
-- **Tier** — `A` / `B` / `C` / `D` — Location Quality Tier per the metro table; blank if metro not yet tabled
-- **Seller** — Seller Trust Score with detail (e.g., `TRUSTED ★4.8(12)`, `NEUTRAL`, `CAUTION ⚠ new acct`); `—` for dealer listings
-- **Notes** — include emoji flags (✅ BEST YEAR / ⚠️ CAUTION / 🚫 AVOID / ★ BEST PICK) and the specific reason
-- **Contacted** — `YYYY-MM-DD sent` when a message was sent to this seller (e.g., `2026-04-27 sent`); blank if not yet contacted. Updated by Step 7.
-
-### How to Create or Update the Sheet
-
-**Creating a new sheet:**
-
-**Step 1** — Build the CSV content, base64-encode it via Bash:
-
-```python
-import base64
-csv_content = "Date,Make,Model,Year,Package,Doors,Trans,Miles,Cost,CPM,Adj.CPM,Life,Dist,Posted,Location,Tier,Seller,Dealer,Link,Notes,Contacted\n"
-# ... one row per listing, sorted by CPM ascending ...
-encoded = base64.b64encode(csv_content.encode('utf-8')).decode('utf-8')
-```
-
-**Step 2** — Call `mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file` with:
-```json
-{
-  "title": "Car Hunt — Active Listings",
-  "mimeType": "text/csv",
-  "content": "{base64_encoded_csv}"
-}
-```
-
-The Drive MCP auto-converts `text/csv` → Google Spreadsheet. **IMPORTANT: Do NOT use xlsx MIME type** — it fails with a base64 validation error. Always use `text/csv`.
-
-**Step 3** — The tool returns a file object with an `id`. Construct the share URL:
-```
-https://docs.google.com/spreadsheets/d/{id}/edit
-```
-
-Save this ID to memory (`project_car_hunt_skill.md`) so future runs can update the same sheet.
-
-**Updating an existing sheet:**
-
-**Step 1** — Call `mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__download_file_content` with the stored sheet ID to read current rows.
-
-**Step 2** — Merge with new results: deduplicate by Link URL, update prices, mark stale.
-
-**Step 3** — Rebuild the full CSV and call `mcp__af7feda1-c109-4c1d-ad7b-0e864ed935d7__create_file` with the same title. **This creates a new file (new ID), not an overwrite** — see Drive MCP limitation note above. Save the new ID to memory and show the new URL prominently.
+Formats per column (dates, `$0.019` CPM, `Contacted` = `YYYY-MM-DD sent`, …):
+[references/scoring.md](references/scoring.md). Build the CSV with Python's `csv`
+module (UTF-8), one row per listing.
 
 ### Row Order and Completeness
 
-- Rows sorted by CPM ascending (best value first) — same order as the ranked output
-- Include ALL scored listings, even those over the mileage filter — flag over-limit rows in Notes
-- Include unscored listings at the bottom with `—` for CPM and Life, and reason in Notes
-- Do not drop any listing silently
+Sort rows by CPM ascending (same order as the ranked output). Include ALL scored
+listings, even those over the mileage filter (flag them in Notes), and unscored
+listings at the bottom with `—` for CPM and Life and the reason in Notes. Never drop
+a listing silently.
 
 ---
 
 ## Scheduling
 
-This skill is designed to run periodically (e.g., daily or weekly via `/schedule`).
+This skill is designed to run periodically (e.g., daily or weekly) from whatever scheduler your agent or CI offers.
 
 When running in scheduled/automated mode:
-- **Skip Step 1 (reliability research)** unless the model list has changed — reliability cards don't change week to week; cache the last research output
+- **Skip Step 1 (reliability research)** unless the model list has changed — reliability cards don't change week to week; use the static reference table or cache the last research output
 - Only surface **new** listings not seen before (compare links against prior run output)
 - Skip Step 6 (sheet write-back) unless new high-value finds warrant it
 - Send a push notification summary if new candidates have CPM below the current best in the tracked sheet
 
-Default search parameters when running unattended (update these after each interactive session):
-```
-MAKES_MODELS:   Civic, Accord, Camry
-ZIP:            {ZIP}
-RADIUS:         200
-MAX_PRICE:      6000
-YEAR_MIN:       2002
-YEAR_MAX:       current year
-MAX_ODOMETER:   250000
-```
+Default search parameters when running unattended come from `CONFIG.scheduled_defaults` (`makes_models`, `zip`, `radius_mi`, `max_price`, `year_min`, `year_max`, `max_odometer`). Update them there after an interactive session changes the user's targets. A scheduler that passes its own parameters overrides them.
 
 ---
 
 ## Step 7: Automatic Outreach (Optional)
 
-After Step 6 (sheet export), offer this option:
+Only with explicit user confirmation, and only on Facebook Marketplace listings with a
+logged-in browser. **Read [references/outreach.md](references/outreach.md) first.** The
+opener is `CONFIG.outreach.opener_template`; personalize `[FIRST_NAME]` only from the
+message-modal recipient name (never the listing sidebar), check "Message again" and the
+sheet's `Contacted` column before sending, show a dry run and wait for "proceed", and
+**fail closed**: send only after re-reading the composer and finding a
+`CONFIG.outreach.opener_fingerprint` fragment — never send Facebook's generic
+"is this still available?" prefill.
 
-> "Want me to message the top uncontacted listings on Facebook Marketplace?"
+## Step 8: Read & Interpret Messenger Threads (logged-in browser only)
 
-Only run this step if the user explicitly confirms — either at the start of a run (e.g., "also send messages") or when prompted here.
-
-### Message Template
-
-```
-Hey [FIRST_NAME] - Can I meet up tomorrow to test drive? Looking for a replacement car for a foster kid that got rear ended. Thanks!
-```
-
-Replace `[FIRST_NAME]` with the seller's actual first name extracted from the listing page. If the name can't be determined, omit the name entirely and open with "Hey -".
-
-### How to Execute
-
-**For each candidate in the top N uncontacted qualified listings (default N=3):**
-
-1. **Open the listing tab** — navigate to the FB Marketplace listing URL in the Chrome extension.
-
-2. **Check message history** — run this JS on the listing page:
-   ```javascript
-   const text = document.body.innerText;
-   const alreadyMessaged = text.includes('Message again');
-   const sellerMatch = text.match(/Seller details\s*\n([^\n(]+)/);
-   const sellerName = sellerMatch ? sellerMatch[1].trim().split(' ')[0] : null;
-   JSON.stringify({ alreadyMessaged, sellerName });
-   ```
-   - If `alreadyMessaged` is `true` → skip this listing (already contacted), move to next candidate
-   - Also check the sheet's `Contacted` column — if it has a date, skip
-
-3. **Show dry run first** — before sending anything, show the user:
-   ```
-   Proposed messages (dry run):
-   1. [Seller name] — [Year Make Model] — "Hey [Name] - Can I meet up..."
-   2. ...
-   
-   Proceed?
-   ```
-   Wait for explicit confirmation before sending.
-
-4. **Send via modal dialog** (the only reliable method on FB Marketplace):
-   - Click the blue "Message" button at the top of the listing (not the inline Send button at the bottom)
-   - Wait for the "Message [Seller Name]" modal to appear
-   - Click the textarea in the modal
-   - Type the personalized message
-   - Click "Send message" button in the modal
-   - Confirm send by checking for "Sending" button state
-
-5. **Update the sheet** — after successful send, write `YYYY-MM-DD sent` to the `Contacted` column for that listing's row.
-
-### Important Rules
-
-- **Always check history before sending** — use both JS detection (`Message again` text) and the sheet's `Contacted` column to avoid duplicate outreach
-- **Never send without dry-run approval** — show proposed messages first; wait for "proceed" / "yes" / "go ahead"
-- **Never fabricate a seller name** — if name extraction fails, drop the name from the greeting
-- **Skip non-FB listings** — this outreach flow only works on FB Marketplace; other sources require manual contact
-- **Skip listings where the modal doesn't open** — some FB profiles block messages; note it and move on
-- **Log every send attempt** — update the sheet regardless of whether the send succeeded or failed (note "FAILED" if the modal didn't respond)
-
----
+Runs at the **start** of a run, before ranking. **Read [references/outreach.md](references/outreach.md)**
+— its Step 8 section is authoritative. In short: read every recent thread in full as
+attributed turns (`seller` / `automation` / `human`); quote or it didn't happen; a
+human-led thread is hands-off except for objective disqualifiers; drafts only, never
+typed into Messenger. Seller qualification (VIN / title / runs) is extracted by the
+agent and **decided by the tested Python engine** in `qualification/`.
 
 ## Insurance Claim Comp Mode
 
-**Purpose:** Find the highest-priced comparable dealer listings (and recently-sold dealer comps) for a vehicle being totalled by insurance. The goal is to arm the user with evidence to extract the **maximum actual cash value (ACV)** from their insurer.
-
-**Core insight:** Insurance companies calculate ACV using comparable vehicles in the market. The higher the comps you present, the stronger your negotiating position. Dealer prices are the gold standard because they are published, verifiable, and represent "what you would have to pay to replace your vehicle today."
-
----
-
-### Step IC-1: Collect Totalled Vehicle Details
-
-Ask in one prompt (or parse from `$0`):
-
-> "To find insurance comps, I need a few details about your totalled vehicle:
-> 1. Year, make, model, and trim?
-> 2. Drivetrain — FWD, RWD, AWD, or 4WD?
-> 3. Current mileage on the odometer?
-> 4. Any significant packages or options? (e.g., Sport, Technology Package, sunroof — optional)"
-
-Store as:
-- `COMP_YEAR` — model year of totalled vehicle
-- `COMP_MAKE`, `COMP_MODEL`, `COMP_TRIM`
-- `COMP_DRIVETRAIN` — FWD / RWD / AWD / 4WD
-- `COMP_MILEAGE` — current odometer reading
-- `COMP_PACKAGES` — notable packages/options (optional)
-
-**Derived search parameters (set automatically — do NOT ask the user):**
-- `SEARCH_YEAR_MIN` = `COMP_YEAR − 1`
-- `SEARCH_YEAR_MAX` = `COMP_YEAR + 1`
-- `SEARCH_MILE_MIN` = max(0, `COMP_MILEAGE − 20000`)
-- `SEARCH_MILE_MAX` = `COMP_MILEAGE + 20000`
-- `DEALER_ONLY` = `true` — no private sellers
-- `SEARCH_SCOPE` = national (no radius limit)
-- `INCLUDE_SOLD` = `true` — listings sold within the past 12 months are valid comps
-- `SORT` = price DESCENDING — highest-priced comps first
-
----
-
-### Step IC-2: National Dealer Search
-
-Search **nationally** across all available sources for dealer listings matching the parameters. No radius filter. Do not remove listings based on distance.
-
-**Why national:** Insurance companies accept comps from anywhere in the country. A 2021 Toyota RAV4 AWD sold at a Seattle dealer for $32,000 is valid evidence even if you're in Alabama. National scope dramatically increases sample size and finds the highest-value comps.
-
-**Why dealers only:** Dealer prices are published, verifiable, and represent the true replacement cost. Private-party listings can be dismissed by insurers as below-market. Dealer prices carry more weight in negotiations.
-
-**Why include sold:** Sold listings represent actual transaction prices — money that changed hands. They are the strongest evidence of true market value. Most insurers accept recently-sold (last 12 months) as valid comps.
-
-#### Auto.dev (primary — structured, national, dealer-focused)
-
-```bash
-npx @auto.dev/sdk whoami 2>&1
-```
-
-If logged in, run:
-
-```bash
-npx @auto.dev/sdk listings \
-  --make {COMP_MAKE} \
-  --model {COMP_MODEL} \
-  --year {SEARCH_YEAR_MIN}-{SEARCH_YEAR_MAX} \
-  --miles {SEARCH_MILE_MIN}-{SEARCH_MILE_MAX} \
-  --sort "price:desc" \
-  --limit 100 \
-  --json 2>&1
-```
-
-Post-filter results to drivetrain match: keep only listings where the drivetrain field (or trim name) matches `COMP_DRIVETRAIN`. Drivetrain can differ $2,000–$8,000+ between AWD and FWD variants — a mismatch weakens the comp.
-
-**0-miles guard:** Same as Standard Hunt — skip listings where `miles == 0` (data missing, not a new car).
-
-#### AutoTrader (national dealer search)
-
-**⚠️ AutoTrader is frequently blocked or returns 503 during automated fetches.** Attempt it but do not spend more than one retry — if unavailable, skip and note "AutoTrader: unavailable" in the source summary. Do NOT let AutoTrader failure stall the run; other sources are sufficient.
-
-```
-WebSearch: site:autotrader.com dealer {COMP_YEAR-1} OR {COMP_YEAR} OR {COMP_YEAR+1} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
-WebSearch: site:autotrader.com certified {COMP_MAKE} {COMP_MODEL} {COMP_YEAR} {COMP_DRIVETRAIN}
-```
-
-Target CPO (certified pre-owned) listings specifically — they carry a premium that strengthens your comp package.
-
-#### CarGurus (national — includes sold data and Instant Market Value)
-
-CarGurus is valuable because it includes **sold listings** and its "Instant Market Value" (IMV) is accepted by some insurers as a third-party valuation reference. If a CarGurus IMV appears on any result page, capture and cite it.
-
-**Regional cycling strategy (critical for old/high-mileage vehicles):** CarGurus national search pages sort by proximity and show ~15–24 results before truncating. High-mileage listings are often buried. Cycle through multiple regional pages to surface them — each regional page shows a different slice of inventory.
-
-**Step 1 — Find the correct CarGurus URL via WebSearch** (CarGurus uses internal model/state IDs that can't be constructed; always discover URLs through search):
-```
-WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL}
-WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} Florida
-WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} California
-WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} "New York"
-WebSearch: site:cargurus.com used {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} Texas
-```
-
-**Step 2 — WebFetch each discovered URL.** Cycle through at minimum: national + Florida + California + New York + Texas + the user's home state. Each page may reveal listings not visible on others.
-
-**CarGurus direct listing URL format:** Individual listing pages are at `https://www.cargurus.com/details/{listingId}`. When WebFetch returns a listing ID (e.g., `/details/448199099`), construct the full URL as `https://www.cargurus.com/details/448199099`. Always provide full URLs, not relative paths.
-
-**⚠️ CarGurus price varies by regional page:** The same listing may show a different price on different regional pages because CarGurus adds estimated delivery fees based on the viewer's inferred location. **Always cross-reference against Cars.com to get the dealer's base asking price.** When prices differ, cite the lower (Cars.com) figure as the base price and note the discrepancy.
-
-#### Cars.com (national dealer inventory — authoritative price source)
-
-Cars.com shows the dealer's actual asking price without delivery-fee inflation. Use it as the **price authority** when CarGurus and Cars.com disagree.
-
-```
-WebFetch: https://www.cars.com/shopping/results/?makes[]={COMP_MAKE_LOWERCASE}&models[]={COMP_MODEL_LOWERCASE}&year_min={SEARCH_YEAR_MIN}&year_max={SEARCH_YEAR_MAX}&mileage_min={SEARCH_MILE_MIN}&mileage_max={SEARCH_MILE_MAX}&sort=list_price_desc&stock_type=used&page_size=20
-```
-
-Example for 2002–2004 Honda Accord, 198K–238K miles:
-```
-https://www.cars.com/shopping/results/?makes[]=honda&models[]=accord&year_min=2002&year_max=2004&mileage_min=198000&mileage_max=238000&sort=list_price_desc&stock_type=used&page_size=20
-```
-
-**⚠️ This URL frequently times out.** If it does, fall back to the trim-specific shopping page (faster, no mileage filter — scan results manually):
-```
-WebFetch: https://www.cars.com/shopping/{COMP_MAKE_LOWERCASE}-{COMP_MODEL_LOWERCASE}-{COMP_YEAR}-{COMP_TRIM_LOWERCASE}/
-```
-
-**Cars.com direct listing URL format:** Individual listing pages are at `https://www.cars.com/vehicledetail/{UUID}/`. These URLs are stable and suitable for adjuster email attachments.
-
-#### CarMax (national — fixed no-haggle prices, strongest comp credibility)
-
-CarMax prices are non-negotiable and publicly posted — they represent what you would actually pay a dealer today. Even a lower CarMax comp establishes a verifiable floor.
-
-```
-WebSearch: site:carmax.com {COMP_YEAR} {COMP_MAKE} {COMP_MODEL}
-```
-
-Verify drivetrain from the listing page.
-
-#### AutoList (national aggregator — useful for franchise dealer listings)
-
-AutoList aggregates listings from multiple sources and surfaces franchise dealer inventory that may not appear prominently on CarGurus or Cars.com searches.
-
-```
-WebFetch: https://www.autolist.com/{make-lowercase}-{model-lowercase}-{year}
-```
-
-Example: `https://www.autolist.com/honda-accord-2003`
-
-Look for franchise dealer listings specifically (e.g., Toyota/Chevy dealers selling off-brand used inventory) — these carry high credibility with adjusters because the dealership's reputation is on the line. **Direct listing URLs** on AutoList use the format `https://autolist.com/{make-model}#vin={VIN}`.
-
-#### KBB / Edmunds (dealer retail reference values)
-
-Even without a specific listing, KBB Dealer Retail and Edmunds True Market Value (TMV) for dealer retail are accepted reference points in insurance negotiations.
-
-**⚠️ KBB and Edmunds block direct WebFetch (HTTP 403).** Do NOT attempt to WebFetch kbb.com or edmunds.com pages directly — they will fail. Instead, use WebSearch and extract values from the search result snippets:
-
-```
-WebSearch: KBB {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_TRIM} {COMP_MILEAGE} miles dealer retail value
-WebSearch: Edmunds {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} True Market Value dealer retail
-```
-
-Capture the range (low / mid / high) and the mileage basis from the search result snippets. Note that KBB/Edmunds values are based on typical mileage for the vehicle's age — for high-mileage vehicles, actual dealer asking prices often exceed these reference values. When this happens, lead with the actual listings and cite KBB/Edmunds only for context.
-
-#### Sold comps (CarGurus + search)
-
-```
-WebSearch: "{COMP_YEAR} {COMP_MAKE} {COMP_MODEL}" sold dealer {COMP_DRIVETRAIN} {CURRENT_YEAR-1} OR {CURRENT_YEAR}
-WebSearch: site:cargurus.com sold {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
-```
-
-Mark all confirmed sold listings as `Status: SOLD` — these are the highest-credibility comps.
-
----
-
-### Step IC-3: Score and Rank Comps
-
-**No CPM calculation in this mode.** This is an insurance valuation exercise, not a CPM optimization.
-
-**Sort: price DESCENDING** — the most expensive comparable is listed first.
-
-For each listing, record:
-- `year`, `make`, `model`, `trim`
-- `drivetrain` — FWD / RWD / AWD / 4WD (infer from trim name if not explicitly stated)
-- `miles`
-- `price` — asking price, or confirmed sold price for SOLD listings
-- `status` — Available / Sold
-- `source` — AutoTrader / CarGurus / Auto.dev / Cars.com / CarMax / etc.
-- `dealer` — dealership name and state
-- `miles_delta` — signed difference from `COMP_MILEAGE` (negative = fewer miles than yours)
-- `year_delta` — signed difference from `COMP_YEAR`
-- `link` — direct listing URL
-- `notes` — CPO status, condition flags, special packages
-
-**Drivetrain mismatch handling:**
-- If drivetrain is confirmed different (e.g., FWD listing when totalled car is AWD), **exclude it** from the main comp table and show it in a separate "Excluded — different drivetrain" section at the end.
-- If drivetrain is ambiguous (not stated, inferred from trim name only), include the listing but mark as `⚠️ DRIVETRAIN UNVERIFIED`.
-
-**Mileage proximity flag:** Mark listings within ±5,000 miles of `COMP_MILEAGE` as `★ CLOSEST COMP` — these are the most defensible in a negotiation because the insurer cannot discount them on mileage grounds.
-
-**CPO flag:** Mark any CPO listing with `★ CPO`. If your vehicle had CPO status at purchase, cite CPO comps preferentially.
-
-**Franchise dealer flag:** Mark any listing from a franchise dealership (e.g., a Toyota/Chevy/Ford dealer selling a used Honda off their lot) with `★ FRANCHISE`. Franchise dealers carry more adjuster credibility than independent used-car lots because their published prices represent the retail market, not distressed/wholesale sales.
-
-**Unpriced listings:** Do not discard listings that show no asking price. Include them in a separate "Unpriced — verify manually" section with the listing URL and note "Call to confirm price." An unpriced listing with very close mileage is worth a phone call — it may be the strongest comp once priced.
-
-**Mileage range expansion rule:** If fewer than 5 priced dealer comps are found within the initial ±20,000-mile range, automatically expand the search:
-- First expansion: ±40,000 miles — rerun searches, note "expanded to ±40K mi (thin market)"
-- Second expansion: ±60,000 miles — rerun if still <5 comps, note "expanded to ±60K mi"
-- Always cite the actual mileage delta in the comp table so the adjuster can see the spread
-- For vehicles older than ~15 years or with >150K miles, the market is often thin enough to require expansion on the first run — anticipate this and run the broader search in parallel with the narrow one rather than sequentially
-
----
-
-### Step IC-4: Build the Comp Package
-
-Present the full deliverable — a package the user can email to their insurance adjuster.
-
-```
-═══════════════════════════════════════════════════════════════════
-  INSURANCE COMP PACKAGE — {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_TRIM}
-  Your Vehicle: {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} {COMP_TRIM} | {COMP_DRIVETRAIN} | {COMP_MILEAGE} mi
-  Search Criteria: ±1 year ({SEARCH_YEAR_MIN}–{SEARCH_YEAR_MAX}) | {COMP_DRIVETRAIN} only | {SEARCH_MILE_MIN}–{SEARCH_MILE_MAX} mi
-  Scope: Dealer listings only · National · Sold ≤12 months included
-  Generated: {date}
-═══════════════════════════════════════════════════════════════════
-
-📊 COMP SUMMARY:
-  Dealer comps found:     {n} listings ({n_avail} available, {n_sold} sold)
-  Highest comp:           ${max_price} — {year} {make} {model} {trim}, {miles} mi, {dealer}, {state}
-  Median comp price:      ${median_price}
-  Top-quartile price:     ${p75_price}  ← recommended minimum ACV to accept
-  KBB Dealer Retail:      ${kbb_low}–${kbb_high}  (if found; mileage basis: {kbb_miles})
-  Edmunds TMV:            ${edmunds_tmv}  (if found)
-
-💡 RECOMMENDED MINIMUM ACV: ${recommended_acv}
-  Based on the top-quartile comp price. The bottom half of comps are pulled down by
-  higher-mileage or lower-trim variants. Your insurer must explain why your vehicle
-  falls below this number.
-
-─── COMP LISTINGS (highest price first) ────────────────────────
-
-| # | Yr | Trim | DT | Miles | Δ Miles | Price | Status | Source | Dealer | State | Notes | Link |
-|---|----|------|----|-------|---------|-------|--------|--------|--------|-------|-------|------|
-| 1 | 2022 | EX-L | AWD | 48,200 | +1,200 | $32,500 | Available | AutoTrader | Honda of Seattle | WA | ★ CPO | [link] |
-| 2 | 2021 | EX | AWD | 55,100 | +8,100 | $30,900 | Available | CarMax | CarMax Charlotte | NC | — | [link] |
-| 3 | 2021 | EX | AWD | 47,000 | −5,000 | $30,500 | SOLD | CarGurus | Penske Honda | TX | ★ CLOSEST COMP | [link] |
-...
-
-⚠️  EXCLUDED — DRIVETRAIN MISMATCH (FWD listings — do not cite as comps for an AWD vehicle):
-  {list any excluded listings with reason}
-
-📋 HOW TO USE THIS PACKAGE:
-  1. Email your adjuster: "I have researched comparable vehicles. Attached are {n} dealer
-     listings for {SEARCH_YEAR_MIN}–{SEARCH_YEAR_MAX} {COMP_MAKE} {COMP_MODEL} {COMP_DRIVETRAIN}
-     with {SEARCH_MILE_MIN}–{SEARCH_MILE_MAX} miles, all from franchised or used-car dealers,
-     priced between ${min_comp} and ${max_comp}."
-  2. Lead with SOLD comps first — actual transactions are harder for adjusters to dispute
-     than asking prices.
-  3. Cite the top-quartile price as your floor: "Based on current market comparables, I
-     expect an ACV of at least ${p75_price}."
-  4. If the adjuster uses their own software (CCC ONE, Mitchell, Audatex), you have the
-     right to request the full comp report they generated and dispute any comps that are
-     lower-trim, higher-mileage, or in worse condition than yours.
-  5. ★ CLOSEST COMP listings are your strongest evidence — same drivetrain, closest in
-     mileage. The adjuster cannot discount these on spec mismatch grounds.
-  6. ★ FRANCHISE dealer listings are your most credible comps. A franchise Toyota or Chevy
-     dealer pricing a used Honda at $X is harder to dismiss than an independent lot.
-  7. **National vs. local scope:** Insurance software (CCC/Mitchell/Audatex) defaults to
-     local/regional comps within 30–60 days. For old or high-mileage vehicles where the
-     local market is thin, national comps are appropriate and defensible — preempt the
-     adjuster by stating: "Local market inventory for this vehicle is insufficient for
-     accurate valuation; I've used a national comp basis consistent with standard practice
-     for low-volume models." If even national comps are thin (fewer than 5), say so and
-     use the comps you have alongside KBB/Edmunds reference values.
-```
-
----
-
-### Step IC-5: Negotiation Strategy Brief
-
-After the comp package, always emit this strategy brief:
-
-```
-🧮 NEGOTIATION PLAYBOOK — {COMP_YEAR} {COMP_MAKE} {COMP_MODEL}
-
-KNOW YOUR NUMBERS:
-  Comp range:             ${min_comp} – ${max_comp}
-  Median comp:            ${median_comp}
-  Top quartile (floor):   ${p75_comp}
-  KBB Dealer Retail mid:  ${kbb_mid}  (if available)
-
-IF THE INSURER'S OFFER IS BELOW ${p75_comp}:
-
-  Step 1 — Request the comp report
-  "Please send me the vehicle condition report and the comparable vehicles your
-   system used to calculate this ACV."
-   Insurers are required to provide this in most states. Errors to look for:
-   lower-trim comps, higher-mileage comps, incorrect drivetrain, out-of-market comps.
-
-  Step 2 — Counter with your comps
-  "I've identified {n} dealer-listed comparables nationally priced ${min_comp}–${max_comp}.
-   {n_sold} of these have sold at the prices shown, confirming actual market value.
-   I'm attaching the listings."
-
-  Step 3 — Request a condition adjustment
-  If your vehicle was in above-average condition (recent service, no accidents, low
-  mileage for its year), ask: "My vehicle had {condition_factors} — I'd like to
-  discuss a positive condition adjustment."
-
-  Step 4 — Escalate if needed
-  Adjuster won't budge: request their supervisor → file a complaint with your state's
-  Department of Insurance (15 min online) → hire a public adjuster (typically 10% of
-  settlement; worth it on vehicles over $15K).
-
-WATCH FOR THESE ADJUSTER TACTICS:
-  ∙ "Our software shows $X" → Ask which software and request the exact comps it used.
-  ∙ Comps with higher mileage → Lower value; not valid apples-to-apples.
-  ∙ Comps with lower trim → An EX comp is not comparable to your EX-L.
-  ∙ Comps from depressed markets → Regional market differences can be disputed.
-  ∙ Fast-offer push ("accept in 72 hours") → You have time; don't accept under pressure.
-```
-
----
-
-### Step IC-6: Export to Google Sheet (optional)
-
-After presenting results, offer:
-> "Want me to export these comps to a Google Sheet for easy sharing with your adjuster?"
-
-If yes, use the same Sheet export process as Step 6 (Standard Hunt), with columns:
-```
-Year | Trim | Drivetrain | Miles | Δ Miles | Price | Status | Source | Dealer | State | CPO | Franchise | Link | Notes
-```
-
-Sort price descending. Title the sheet: `Insurance Comps — {COMP_YEAR} {COMP_MAKE} {COMP_MODEL} — {date}`.
-
----
-
-## Insurance Claim Comp — Test Cases
-
-Use these to verify the mode behaves correctly. Each test describes the input, what should happen, and what a correct output looks like.
-
----
-
-### IC-TC-1: Modern vehicle, healthy comp market
-
-**Input:** "My 2021 Honda CR-V EX AWD was totalled, 47,000 miles"
-
-**Expected behavior:**
-- `SEARCH_YEAR_MIN=2020`, `SEARCH_YEAR_MAX=2022`, `SEARCH_MILE_MIN=27000`, `SEARCH_MILE_MAX=67000`, `COMP_DRIVETRAIN=AWD`
-- Auto.dev + CarGurus + Cars.com + AutoTrader should return 20+ in-range dealer listings
-- No mileage range expansion needed (market is liquid for recent CRV)
-- Highest comp should be in the $28,000–$35,000 range
-- Multiple ★ CLOSEST COMP listings expected (many 40K–55K-mile CRVs on the market)
-- KBB/Edmunds values obtainable via WebSearch snippets; should broadly align with dealer listings
-- Comp package should cite top-quartile price as recommended minimum ACV
-- No need for national-scope justification (local market is adequate)
-
-**Red flags in output:** If highest comp is below $20,000 for a 2021 CRV EX AWD, the drivetrain filter may have allowed FWD comps through — recheck.
-
----
-
-### IC-TC-2: Old high-mileage vehicle, thin comp market
-
-**Reference run:** 2003 Honda Accord LX 4-cyl FWD sedan, 218,000 miles (tested 2026-05-16)
-
-**Expected behavior:**
-- `SEARCH_YEAR_MIN=2002`, `SEARCH_YEAR_MAX=2004`, `SEARCH_MILE_MIN=198000`, `SEARCH_MILE_MAX=238000`, `COMP_DRIVETRAIN=FWD`
-- Initial ±20K search returns fewer than 5 priced dealer comps → **mileage range expansion triggers automatically to ±40K**
-- AutoTrader likely unavailable → note and skip
-- KBB/Edmunds direct WebFetch returns 403 → use WebSearch snippets only
-- CarGurus regional cycling required (FL, CA, NY pages) to surface high-mileage listings buried in pagination
-- CarGurus and Cars.com may show different prices for the same listing (delivery fee inflation on CarGurus) → use Cars.com as authoritative price
-- AutoList surfaces franchise dealer listings not prominent on CarGurus/Cars.com
-- Realistic highest comp: $6,500–$8,500 for the mileage range (market data from reference run)
-- National scope justification required in comp package (local market too thin for 22-year-old vehicle)
-- Recommended minimum ACV: top-quartile of confirmed dealer comps; expect adjuster software to open below this
-
-**Verified comps from reference run (as of 2026-05-16):**
-| Year | Trim | Miles | Price | Dealer | State | URL |
-|------|------|-------|-------|--------|-------|-----|
-| 2004 | LX FWD | 214,461 | $7,000 | AutoNation Honda Columbus | GA | https://www.cars.com/vehicledetail/192ba0ea-f664-44ad-8524-4393734e45d3/ |
-| 2003 | LX FWD | 180,990 | $6,920 | Used Imports Auto | GA | https://www.cars.com/vehicledetail/384c184f-7f60-4dd8-9310-180c89882534/ |
-| 2003 | LX FWD | 177,562 | $6,868 | Markquart Motors ★ FRANCHISE | WI | https://www.autolist.com/honda-accord#vin=<VIN> |
-| 2003 | LX FWD | 242,525 | $4,795 | Zaza Moto | VA | https://www.cargurus.com/details/441399699 |
-
-**Red flags in output:** If the skill returns only 1–2 comps and stops, the mileage expansion rule did not trigger — it should have. If the highest comp is below $3,000, the drivetrain filter likely let V6 variants through (V6 Accords depreciate faster; exclude them).
-
----
-
-### IC-TC-3: Mileage range expansion trigger verification
-
-**Input:** Any vehicle where model year > 15 years ago OR odometer > 150,000 miles
-
-**Expected behavior:**
-- Run initial search at ±20K miles
-- If <5 priced dealer comps found: log "Thin market — expanding to ±40K miles" and rerun
-- If still <5: log "Expanding to ±60K miles" and rerun
-- Final comp table shows actual `Δ Miles` column so adjuster can see the range used
-- Comp package header clearly states the actual mileage range searched (not just ±20K)
-
-**Failure mode to catch:** Skill reports "3 comps found" without expansion, or expands silently without noting it in the output. Both are wrong — expansion must be logged visibly.
-
----
-
-### IC-TC-4: Mode detection
-
-**Inputs that must trigger Insurance Claim Comp mode (not Standard Hunt):**
-- "My car got totalled, I need comps"
-- "Insurance wants to total my RAV4 — what's it worth?"
-- "Help me fight my total loss settlement"
-- "What's the ACV for my 2019 Camry?"
-- "I need insurance comparable vehicles for my Civic"
-- `/car-hunt --mode insurance-comp 2021 Honda CRV EX AWD 47000`
-
-**Inputs that must NOT trigger Insurance Claim Comp mode:**
-- "Find me a used Accord under $8,000"
-- "Show me Civics near Birmingham"
-- `/car-hunt Honda Accord 2015-2020 $12000 35242 100`
-
-**Failure mode to catch:** The skill runs CPM scoring and reliability research for an insurance comp request, or runs comp-finding logic when the user just wants to buy a car.
+Find the highest-priced comparable dealer listings (and recently-sold dealer comps)
+for a vehicle being totalled by insurance, to support the **maximum actual cash value
+(ACV)**. National scope, dealer-only, sold ≤12 months included, sorted price
+descending, no CPM. **Read [references/insurance-comp.md](references/insurance-comp.md)**
+for Steps IC-1 to IC-6 (collect details, national search, score, comp package,
+negotiation playbook, export) and the IC-TC-1..4 regression test cases.
 
 ---
 

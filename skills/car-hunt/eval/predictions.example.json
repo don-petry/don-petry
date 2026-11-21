@@ -1,0 +1,17 @@
+[
+  { "id": "kolton-will-do-human-led", "human_led": true, "disposition": "unclear", "action_class": "hands_off", "draft_reply": null, "evidence": ["you (human) asked for the VIN and proposed tomorrow evening", "seller: 'Will do'"] },
+  { "id": "luhkane-rebuilt-title", "human_led": false, "disposition": "revealed_disqualifier", "action_class": "disqualify", "draft_reply": null, "evidence": ["the car has a rebuilt title"] },
+  { "id": "isaiah-available-question", "human_led": false, "disposition": "available", "action_class": "draft", "draft_reply": "Could we come by Saturday afternoon to take a look and test drive?", "evidence": ["Yes still available and I have a clean title", "When can you come see it?"] },
+  { "id": "ack-only-to-opener-lowconf", "human_led": false, "disposition": "unclear", "action_class": "none", "draft_reply": null, "evidence": ["seller: 'ok'"] },
+  { "id": "sold-case", "human_led": false, "disposition": "sold", "action_class": "disqualify", "draft_reply": null, "evidence": ["I sold it yesterday"] },
+  { "id": "scam-shipping-zelle", "human_led": false, "disposition": "scam", "action_class": "disqualify", "draft_reply": null, "evidence": ["I can ship it to you", "send a Zelle deposit to hold it", "my agent will arrange delivery"] },
+  { "id": "dealer-hours-other", "human_led": false, "disposition": "unclear", "action_class": "none", "draft_reply": null, "evidence": ["Our hours are 9 am 6 pm Mon-Sat"] },
+  { "id": "price-negotiation-human-led", "human_led": true, "disposition": "negotiating", "action_class": "hands_off", "draft_reply": null, "evidence": ["you (human) offered $4000 cash today", "seller: 'I could do $4300'"] },
+  { "id": "no-reply-yet", "human_led": false, "disposition": "unclear", "action_class": "none", "draft_reply": null, "evidence": [] },
+  { "id": "qual-positive-no-answers", "human_led": false, "disposition": "available", "slots": { "vin": { "verdict": "unknown" }, "title": { "verdict": "unknown" }, "runs": { "verdict": "unknown" } } },
+  { "id": "qual-title-clean-only", "human_led": false, "disposition": "available", "slots": { "vin": { "verdict": "unknown" }, "title": { "answered": true, "verdict": "pass", "evidence": "clean title in my name, I have it in hand" }, "runs": { "verdict": "unknown" } } },
+  { "id": "qual-rebuilt-title-answer", "human_led": false, "disposition": "available", "slots": { "vin": { "verdict": "unknown" }, "title": { "answered": true, "verdict": "fail", "evidence": "Title is rebuilt, it was in a wreck" }, "runs": { "verdict": "unknown" } } },
+  { "id": "qual-vin-refused", "human_led": false, "disposition": "available", "slots": { "vin": { "answered": true, "verdict": "fail", "evidence": "I'm not giving out the VIN until you show up with cash" }, "title": { "verdict": "unknown" }, "runs": { "verdict": "unknown" } } },
+  { "id": "qual-all-pass", "human_led": false, "disposition": "available", "slots": { "vin": { "answered": true, "verdict": "pass", "evidence": "VIN is 1HGCM82633A004352" }, "title": { "answered": true, "verdict": "pass", "evidence": "Clean title in my name, in hand" }, "runs": { "answered": true, "verdict": "pass", "evidence": "runs and drives great, no warning lights" } } },
+  { "id": "qual-runs-fail", "human_led": false, "disposition": "available", "slots": { "vin": { "verdict": "unknown" }, "title": { "answered": true, "verdict": "pass", "evidence": "Title's clean" }, "runs": { "answered": true, "verdict": "fail", "evidence": "the transmission is slipping bad, needs a rebuild" } } }
+]

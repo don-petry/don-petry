@@ -1,0 +1,179 @@
+{
+  "trip": "Example family - Denver, Thanksgiving 2026 (fictional; HOME and HUB are placeholder airport codes)",
+  "party": [
+    {"name": "Parent A", "type": "adult"},
+    {"name": "Parent B", "type": "adult"},
+    {"name": "Child 1", "type": "child", "age": 16},
+    {"name": "Child 2", "type": "child", "age": 12}
+  ],
+  "seats_together": true,
+  "checked_bags": 3,
+  "profile": "auto",
+
+  "dates": {
+    "mode": "flexible",
+    "outbound": {"preferred": "2026-11-21", "flex_days": [0, 2]},
+    "return": {"preferred": "2026-11-30", "flex_days": [2, 1]},
+    "nights": {"min": 5, "max": 9},
+    "must_be_there": ["2026-11-26"],
+    "blackout": ["2026-11-29"],
+    "outbound_time": {"depart_after": "06:00", "arrive_by": "21:00", "max_stops": 1},
+    "return_time": {"depart_after": "09:00", "arrive_by": "23:00", "red_eye_ok": false},
+    "note": "Thanksgiving Day (Nov 26) is the anchor - we must be in Denver for it. Both tails flex. Nov 29 is blacked out: the Sunday after Thanksgiving is the most expensive and most disrupted flying day of the year, and the kids are back at school Dec 1."
+  },
+
+  "route": {
+    "destination": "DEN",
+    "origins": ["HOME", "HUB"],
+    "destination_alternates": [],
+    "international": false
+  },
+
+  "origin_costs": {
+    "HOME": {
+      "drive_minutes": 20,
+      "drive_miles": 24,
+      "parking_per_day": 12
+    },
+    "HUB": {
+      "drive_minutes": 150,
+      "drive_miles": 300,
+      "parking_per_day": 10,
+      "prenight_hotel": 190,
+      "prenight_if_departs_before": "09:00",
+      "note": "Off-airport parking (~$10/day) plus an airport hotel the night before an early departure - the family's standing routine for the hub. Drive miles are round trip."
+    }
+  },
+
+  "miles": {
+    "program": "Delta SkyMiles",
+    "balance": 190000,
+    "min_cpm": 1.3
+  },
+
+  "target_price": 1600,
+  "walk_away_price": 2600,
+
+  "quotes": [
+    {
+      "observed_on": "2026-08-06",
+      "carrier": "Delta",
+      "carrier_type": "legacy",
+      "origin": "HOME",
+      "destination": "DEN",
+      "outbound_date": "2026-11-21",
+      "return_date": "2026-11-30",
+      "outbound_depart_local": "06:05",
+      "stops": 1,
+      "fare_brand": "Main Cabin",
+      "basic_economy": false,
+      "changeable": true,
+      "refundable_24h": true,
+      "price_per_person": 388.00,
+      "bag_fee_each_way": 35.0,
+      "seat_fee_total": 0.0,
+      "source": {"tier": 1, "name": "delta.com", "url": "https://www.delta.com/"}
+    },
+    {
+      "observed_on": "2026-08-08",
+      "carrier": "Delta",
+      "carrier_type": "legacy",
+      "origin": "HOME",
+      "destination": "DEN",
+      "outbound_date": "2026-11-21",
+      "return_date": "2026-11-30",
+      "outbound_depart_local": "06:05",
+      "stops": 1,
+      "fare_brand": "Main Cabin",
+      "basic_economy": false,
+      "changeable": true,
+      "refundable_24h": true,
+      "price_per_person": 388.00,
+      "bag_fee_each_way": 35.0,
+      "seat_fee_total": 0.0,
+      "source": {"tier": 1, "name": "delta.com", "url": "https://www.delta.com/"}
+    },
+    {
+      "observed_on": "2026-08-08",
+      "carrier": "Delta",
+      "carrier_type": "legacy",
+      "origin": "HUB",
+      "destination": "DEN",
+      "outbound_date": "2026-11-21",
+      "return_date": "2026-11-30",
+      "outbound_depart_local": "07:15",
+      "stops": 0,
+      "fare_brand": "Main Cabin",
+      "basic_economy": false,
+      "changeable": true,
+      "refundable_24h": true,
+      "price_per_person": 312.00,
+      "bag_fee_each_way": 35.0,
+      "seat_fee_total": 0.0,
+      "source": {"tier": 1, "name": "delta.com", "url": "https://www.delta.com/"},
+      "notes": "Cheapest fare on the board, and the most expensive option once the drive, ten days of parking and the night-before hotel are counted."
+    },
+    {
+      "observed_on": "2026-08-08",
+      "carrier": "Southwest",
+      "carrier_type": "southwest",
+      "origin": "HOME",
+      "destination": "DEN",
+      "outbound_date": "2026-11-22",
+      "return_date": "2026-11-28",
+      "outbound_depart_local": "10:40",
+      "stops": 0,
+      "fare_brand": "Choice",
+      "basic_economy": false,
+      "changeable": true,
+      "refundable_24h": true,
+      "price_per_person": 338.00,
+      "bag_fee_each_way": 45.0,
+      "seat_fee_total": 0.0,
+      "seats_left": 6,
+      "source": {"tier": 1, "name": "southwest.com", "url": "https://www.southwest.com/"},
+      "notes": "Choice fare - re-fareable for the difference with no change fee every time the price drops."
+    },
+    {
+      "observed_on": "2026-08-08",
+      "carrier": "Frontier",
+      "carrier_type": "budget",
+      "origin": "HUB",
+      "destination": "DEN",
+      "outbound_date": "2026-11-22",
+      "return_date": "2026-11-28",
+      "outbound_depart_local": "05:50",
+      "stops": 0,
+      "fare_brand": "Basic",
+      "basic_economy": true,
+      "changeable": false,
+      "refundable_24h": true,
+      "price_per_person": 119.00,
+      "bag_fee_each_way": 79.0,
+      "seat_fee_total": 96.0,
+      "seats_left": 3,
+      "source": {"tier": 2, "name": "Google Flights", "url": "https://www.google.com/travel/flights"},
+      "notes": "$119 on the screen. Carry-on and checked bags are extra, seats together are extra, and it leaves the hub at 5:50 AM."
+    },
+    {
+      "observed_on": "2026-08-08",
+      "carrier": "Delta",
+      "carrier_type": "legacy",
+      "origin": "HOME",
+      "destination": "DEN",
+      "outbound_date": "2026-11-21",
+      "return_date": "2026-11-30",
+      "outbound_depart_local": "06:05",
+      "stops": 1,
+      "fare_brand": "Main Cabin award",
+      "changeable": true,
+      "refundable_24h": true,
+      "price_per_person": 0,
+      "bag_fee_each_way": 35.0,
+      "award": {"miles_per_person": 32000, "cash_per_person": 5.60},
+      "source": {"tier": 1, "name": "delta.com award calendar", "url": "https://www.delta.com/"}
+    }
+  ],
+
+  "purchased": null
+}

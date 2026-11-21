@@ -1,0 +1,66 @@
+# Copy to config/household.yaml and fill in your own household. That file is yours; keep it out of
+# any public repo. Every value below is fictional. SKILL.md reads it at Step 0.
+
+household:
+  user: Parent A                # the adult who runs this skill and acts for others
+  adults: [parent-a, parent-b]  # advisory.party slugs whose own matters are SELF / JOINT
+  spouse: Parent B              # or null
+  protected_persons:            # other adults the household cares for (gate row 3: no drafts, never move assets)
+    - name: Grandparent 1
+      note: "Who holds authority for them (guardian, conservator, POA agent) and on what document."
+
+paths:                          # relative to your repository root
+  verify_sources: tools/verify_sources.py
+  verify_sources_tests: python3 -m unittest tools/test_verify_sources.py
+  deadline_calc: tools/deadline_calc.py             # does not exist until trigger T-CLOCK is built
+  household_facts: notes/household-facts.md         # people, dates of birth and the AUTHORITY DOCUMENTS
+  matter_register: notes/legal/index.md             # list of matters and where each project.yaml lives
+  advisory_contract: docs/advisory-teams.md         # the shared contract for advisory teams
+  escalation_contacts: notes/advisory-contacts.md   # your private copy of the escalation table, with real contacts
+  design_doc: null
+  project_intake: null          # a project-manager skill's intake, if you use one; else write project.yaml by hand
+
+schema:                         # rename the generic advisory: fields only if your project.yaml uses other names
+  field_names:
+    capacity: capacity
+    personal_interest: personal_interest
+
+jurisdiction:
+  home: XX                      # your state's postal code; advisory.jurisdiction default: [XX, federal]
+  name: Example State
+  notes: reference/jurisdictions/XX.md              # write it from reference/jurisdictions/AL.md's shape
+  source_hosts: [legislature.example.gov]           # host(s) your state adapter fetches from
+  time_computation_rule: "your state's civil-procedure rule on computing time; state and federal holidays"
+  court_clerk: the county clerk                     # ask whether a guardian may file for a ward without a lawyer
+  court_self_help: your state court system's self-help materials
+
+referral:
+  line: "Example State Bar Lawyer Referral Service (205-555-0100)"
+
+regulators:
+  insurance: Example State Department of Insurance consumer complaint
+
+insurance:
+  liability_carriers: [Auto Insurer, Home Insurer, Umbrella Insurer]   # tender a claim against the household here first
+
+escalation:
+  government_agencies: [Medicaid, Social Security, IRS, state revenue department, motor-vehicle agency, property tax]
+
+gate_examples:                  # your own illustrations of the gate rows (optional)
+  cross_state: Child 1's custody order from another state
+  federal_in_home_forum: an FCRA credit-report dispute
+  conflict: Parent A's reimbursement of medical bills from Child 1's settlement
+  own_petition_hearing: the court-approval hearing on Child 1's settlement
+
+matters:                        # live matters a playbook can point at as the working example (optional)
+  insurance-claim: null
+
+guardianship_notes:             # what each authority document does and does not cover (optional)
+  insurance-claim: null
+
+expected_matters:               # matter types you expect soon, for trigger conditions (optional)
+  contract: null
+  landlord: null
+  estate: null
+
+harnesses: [your agent harnesses]

@@ -1,0 +1,148 @@
+# Legal capability triggers — shared format: the advisory contract §8 (docs/advisory-teams.md).
+#
+# Nothing here is installed by default and nothing records "enabled". Each run probes what THIS session has
+# (SKILL.md Step 0.3), records a gap in the matter's advisory.gaps when a capability was missing
+# (`- {trigger: T-…, date: YYYY-MM-DD, note: …}`), and raises a trigger to the user as an open question when its
+# signal is met. On a yes, the setup is committed for the harnesses the household uses (config `harnesses`); git
+# history is the record.
+#
+# `setup.any` applies to every harness; per-harness keys appear only where the step differs.
+#
+# Escalation is evaluated BEFORE any trigger. A litigation-shaped matter is a reason to call a lawyer, not a
+# reason to install more AI.
+#
+# Shorthand used in signals:  G = every legal project.yaml   (git grep -l 'legal:' -- '*project.yaml')
+# "the gate script" = config paths.verify_sources (tools/verify_sources.py in the public repo)
+
+# ── Sources ─────────────────────────────────────────────────────────────────────────────────────────
+
+- id: T-COURTLISTENER-TOKEN
+  condition: a draft quotes a case (the quote is BLOCKED without opinion text), or the anonymous 5/min, 125/day quota ran out
+  signal: "git grep -h 'trigger: T-COURTLISTENER-TOKEN' -- '*project.yaml' | wc -l  >= 1"
+  probe: "test -n \"$COURTLISTENER_TOKEN\""
+  setup:
+    any: "free CourtListener account → API token (read-only); keep it out of git unless your own rules allow read-only keys, and export COURTLISTENER_TOKEN in the environment or setup script"
+  secrets: COURTLISTENER_TOKEN (read-only)
+  data_flow: legal concepts and citations only — never names or amounts
+  verify: "COURTLISTENER_TOKEN=… python3 <gate script> <draft quoting a federal case> → quote PASS"
+  proposed_as: question
+
+- id: T-COURTLISTENER-MCP
+  condition: research (not verification) needs case-law search more than a handful of times in one matter
+  signal: "two or more T-COURTLISTENER-MCP gap entries in G"
+  probe: "a case-law search tool (e.g. one whose name contains 'courtlistener') is available in this session"
+  setup:
+    claude-code: ".mcp.json → remote server https://mcp.courtlistener.com/ (OAuth, free account)"
+    codex: ".codex/config.toml [mcp_servers.courtlistener] url = https://mcp.courtlistener.com/"
+    copilot: ".vscode/mcp.json → same remote server"
+    antigravity: "user-level MCP config → same remote server"
+    gemini-cli: ".gemini/settings.json mcpServers → same remote server"
+  secrets: none (OAuth per user per machine)
+  data_flow: legal concepts only
+  verify: "search for 5 U.S. 137 returns Marbury v. Madison"
+  proposed_as: question
+
+- id: T-STATE-ADAPTER
+  condition: a matter's advisory.jurisdiction names a state the gate script has no adapter for, so every citation to that state's code FAILs as unsupported
+  signal: "python3 <gate script> --list-adapters does not list a code in config jurisdiction.home or in any advisory.jurisdiction in G"
+  probe: "python3 <gate script> --list-adapters"
+  setup:
+    any: "write my_state.py from the adapter interface in the gate script's docstring (the built-in AL adapter is the example), with tests; load it with --adapter-file or VERIFY_SOURCES_ADAPTER_FILES; add reference/jurisdictions/<code>.md"
+  secrets: none
+  data_flow: citations only, to the state's official code site
+  verify: "python3 <gate script> <draft citing one section of your state's code> --jurisdiction <code> → PASS"
+  proposed_as: question
+
+- id: T-PDF-TEXT
+  condition: a quote must be checked against a policy or letter PDF and pdftotext is missing (source BLOCKED)
+  signal: "a verification-log.jsonl entry whose reason contains 'pdftotext is not installed'"
+  probe: "command -v pdftotext"
+  setup:
+    any: "laptop: brew install poppler (macOS) or apt-get install poppler-utils · cloud: add poppler-utils to the environment setup script"
+  secrets: none
+  data_flow: local only
+  verify: "python3 <gate script> <draft quoting a policy PDF with [src: …]> → quote PASS"
+  proposed_as: question
+
+- id: T-EYECITE
+  condition: the gate's citation patterns miss a citation form a draft uses (short forms, id., parallel cites)
+  signal: "a source-verifier report listing an authority the script's table did not"
+  probe: "python3 -c 'import eyecite'"
+  setup:
+    any: "add eyecite (BSD-2) to the gate script's requirements; extract() uses it when importable"
+  secrets: none
+  data_flow: local only
+  verify: "the gate script's tests (config paths.verify_sources_tests) pass, plus a new short-form test"
+  proposed_as: question
+
+# ── Deadlines ───────────────────────────────────────────────────────────────────────────────────────
+
+- id: T-CLOCK
+  condition: a clock is set by a rule (limitations period, days after service, policy clause) rather than printed on a document
+  signal: "a clock in G with 'needs: deadline calculation'"
+  probe: "test -f <config paths.deadline_calc>"
+  setup:
+    any: "build a SHARED deadline_calc.py at config paths.deadline_calc (business days, the jurisdiction's and federal holidays, computation trace; the rule set in config jurisdiction.time_computation_rule) with tests; coordinate with the tax-and-wealth team, which adds IRC §7503 and the estimate calendar"
+  secrets: none
+  data_flow: local only
+  verify: "the deadline calculator's tests pass, including a weekend and a state-holiday case"
+  proposed_as: question
+
+# ── Playbooks ───────────────────────────────────────────────────────────────────────────────────────
+
+- id: T-CONTRACT
+  condition: a contract, lease, estimate with terms, or release arrives for review (config expected_matters.contract)
+  signal: "a file named *contract*, *agreement*, *lease* or *release* appears in a legal matter's incoming/ or drafts/"
+  probe: "test -f playbooks/contract-review.md"
+  setup:
+    any: "write playbooks/contract-review.md; optionally vendor an MIT-licensed contract-review skill, pinned to a commit SHA — never a live plugin install"
+  secrets: none
+  data_flow: local only
+  verify: "the playbook's checklist runs end to end on the actual contract and the red team reads the result"
+  proposed_as: question
+
+- id: T-ESTATE
+  condition: a household adult (config household.adults — never a protected person, gate row 3) starts or reviews their own will, POA, advance directive or trust, or the tax-and-wealth team's estate audit asks legal to read the documents
+  signal: "a project.yaml with legal.matter_type: estate and advisory.party in config household.adults, or a tax-and-wealth question addressed to legal"
+  probe: "test -f playbooks/estate-self.md && test -f agents/legal-estate.md"
+  setup:
+    any: "write playbooks/estate-self.md and agents/legal-estate.md (shared with the tax-and-wealth estate audit per the advisory contract §1); re-link personas for each harness"
+  secrets: none
+  data_flow: local only
+  verify: "a dry run on the household's existing estate notes (config expected_matters.estate) lists the documents and the questions for an estate attorney"
+  proposed_as: question
+
+- id: T-LANDLORD
+  condition: first landlord-tenant matter (config expected_matters.landlord) — note which side the household is on
+  signal: "a project.yaml with legal.matter_type: landlord"
+  probe: "test -f playbooks/landlord-tenant.md"
+  setup:
+    any: "write playbooks/landlord-tenant.md, side-aware (the household as landlord is an exposure escalation)"
+  secrets: none
+  data_flow: local only
+  verify: "playbook dry run on the matter"
+  proposed_as: question
+
+- id: T-SMALL-CLAIMS
+  condition: first dispute a household member may bring or defend in small claims
+  signal: "a project.yaml with legal.matter_type: small-claims"
+  probe: "test -f playbooks/small-claims.md"
+  setup:
+    any: "write playbooks/small-claims.md from the configured jurisdiction's court self-help materials (config jurisdiction.court_self_help; limit and forms verified through the gate)"
+  secrets: none
+  data_flow: local only
+  verify: "playbook dry run on the matter"
+  proposed_as: question
+
+# ── Enforcement ─────────────────────────────────────────────────────────────────────────────────────
+
+- id: T-CI
+  condition: a second harness commits under agents/ or skills/ and the layout drifts, or a draft reaches outbound/ without a passing log entry
+  signal: "the repo's skill/persona layout check fails on the default branch, or an outbound/ file whose sha256 has no PASS line in verification-log.jsonl"
+  probe: "a CI workflow that runs the layout check and the outbound/ ↔ verification-log check exists"
+  setup:
+    any: "CI job on push to the default branch: the layout check + an outbound/ ↔ verification-log check; optionally a session-start hook that runs the check only (never syncs or commits)"
+  secrets: none
+  data_flow: n/a
+  verify: "the workflow fails on a deliberately broken branch and passes on the default branch"
+  proposed_as: question

@@ -1,0 +1,76 @@
+# Your household's values for the project-manager skill. Copy to config/household.yaml (same
+# folder) and fill it in; that file is personal and should stay out of any public repo.
+# Read by SKILL.md and the reference files, and by scripts/pm.py (timezone, paths, publish,
+# routine). Every key is optional; the defaults are noted.
+
+household:
+  user: Parent A                 # the human a run reports to; draft placeholders read [[Parent A: …]]
+  decision_makers: [Parent A, Parent B]   # default `owners` for a new project
+  members:                       # calendar attendees who may be invited without it counting as sending
+    - {name: Parent A, email: parent.a@example.com}
+    - {name: Parent B, email: parent.b@example.com}
+  self_cc: parent.a+cc@example.com        # your own cc/digest address — a typical watch.exclude term
+
+timezone: America/New_York       # "today" and "due" mean this zone. Default: the machine's local zone.
+
+calendar_for_reminders:          # default for a new project's calendar_for_reminders
+  id: family-calendar-id@example.com
+  name: Family Calendar
+
+paths:                           # repo-relative from the root of your notes repo
+  house_rules: AGENTS.md         # your repo's working agreement, if any; its drafting section governs drafts
+  drafting_conventions: reference/drafting.md
+  mojibake_guard: tools/mojibake_guard.py   # optional; default: tools/ or scripts/mojibake_guard.py if present
+  verify_sources: tools/verify_sources.py   # advisory matters only (docs/advisory-teams.md)
+  advisory_contract: docs/advisory-teams.md
+  example_project: skills/project-manager/examples/kitchen-remodel/project.yaml
+
+publish:
+  branch: main                   # record --publish lands commits on origin/main
+  session_branch_prefix: null    # e.g. "agent/" if your hosted sessions must also push their own branch
+
+routine:                         # scheduled runs (reference/routine.md)
+  dir: routines                  # prompt files, relative to the skill folder: <dir>/<id>.md
+  default_cron: "CRON_TZ=America/New_York 30 11 * * 1-5"
+  repo: null                     # owner/name of the notes repo a hosted trigger must check out
+  connectors: []                 # e.g. [Gmail, Google-Drive, Google-Calendar] for a hosted trigger
+  scheduler_notes: >-
+    How your scheduler is deployed and checked — cron on a home server, a GitHub Actions
+    schedule, or your agent's own scheduler. Note any usage-limit reset to stay clear of.
+
+schema:                          # project.yaml field names for the generic advisory: fields
+  field_names:                   # only if your files use other names
+    capacity: capacity
+    personal_interest: personal_interest
+
+skills:                          # optional skills a run may hand work to; absent = by hand / needs_local
+  form_fill: null                # a form-filling skill
+  texts: null                    # a skill that retains text-message threads into the repo
+  advisory:                      # the team skill that owns each advisory block
+    legal: null
+    tax_wealth: null
+    health: null
+
+texts:
+  sync_host: null                # where text threads are synced; a cloud run cannot refresh them
+  caveat: null                   # any known gap in the retained threads
+
+local:                           # the household machine that can do what a cloud run cannot
+  name: the home computer
+  browser: a signed-in browser the agent can drive
+  large_upload: null             # a script that uploads large files with a local credential
+
+tools:                           # how each capability appears in your sessions
+  cloud: mail, drive and calendar tools from your agent's connectors
+  local: the same
+  cloud_has_gh: false
+
+lessons: {}                      # your own incidents behind the generic pitfalls, if you keep them
+
+advisory:
+  referral_line: "your state bar's lawyer referral service"
+  example_rule: null
+  gate_example: "Mode FIDUCIARY_PRESUIT · nothing new from the insurer or the provider"
+
+examples:
+  - skills/project-manager/examples/kitchen-remodel/project.yaml

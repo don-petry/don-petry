@@ -1,0 +1,178 @@
+# project.yaml — a FICTIONAL sample project for the project-manager skill.
+# Every name, address and number here is invented. Field reference: ../../reference/project-schema.md
+# Validate: python3 ../../scripts/pm.py validate project.yaml --no-git
+
+id: kitchen-remodel
+title: Kitchen Remodel
+status: active
+owners: [Parent A, Parent B]
+hard_deadline: 2027-03-15        # family hosts a spring gathering; the kitchen must work by then
+notes_root: skills/project-manager/examples/kitchen-remodel
+runtime: cloud
+trigger_id: null
+cadence:
+  cron: "CRON_TZ=America/New_York 45 11 * * 1-5"
+  urgency_window_days: 10
+  overdue_reping_days: 7
+calendar_for_reminders: family-calendar-id@example.com
+
+charter:
+  goal: A working kitchen with new cabinets, counters and a vented range hood by 2027-03-15, within $48,000.
+  scope:
+    - Cabinets, counters, backsplash, sink and faucet
+    - Range hood ducted to the outside (needs a mechanical permit)
+    - Electrical for the island and under-cabinet lights
+  out_of_scope:
+    - Moving walls or plumbing stacks
+    - Flooring outside the kitchen
+  success_criteria:
+    - Final inspection passed and the permit closed
+    - Total paid within the $48,000 budget, retainage released only after the punch list
+
+summary: |
+  Two of three contractor bids are in; Ridge Builders' bid fails the license requirement until
+  they send proof. Cabinet lead time (8–10 weeks) is the critical path: the order must be placed by
+  2026-12-04 to finish before the deadline. The permit application is waiting on the contractor's
+  drawing set.
+
+wind_down:
+  - Final inspection passed and the permit closed
+  - Every invoice paid and retainage released
+  - No open actions or clocks
+
+workstreams:
+  - {id: bids, title: Contractor bids, notes: ./index.md}
+  - {id: permit, title: Permit and inspections, notes: ./index.md}
+
+watch:
+  parties:
+    - name: Pat Rivera
+      org: Ridge Builders
+      emails: [pat@example.com]
+      domains: [example.com]
+      phones: ["205-555-0100"]
+      waiting_on: proof of a current contractor license and insurance certificate
+      last_heard: 2026-11-10
+      silent_after_days: 7
+      status: active
+    - name: Sam Okafor
+      org: Okafor & Sons Cabinetry
+      emails: [sam@example.org]
+      waiting_on: final cabinet quote with door style 3
+      last_heard: 2026-11-18
+      silent_after_days: 5
+      status: active
+    - name: Lee Chen
+      org: Chen Home Renovation
+      emails: [lee@example.net]
+      waiting_on: ""
+      last_heard: 2026-11-05
+      status: declined
+  identifiers: ["BP-2026-04417"]           # the permit application number
+  keywords: ["kitchen remodel", "range hood"]
+  exclude: ["from:parent.a+cc@example.com"]
+  drive_folders: []
+  calendars: []
+  web:
+    - {url: "https://permits.example.gov/status/BP-2026-04417", check: permit status}
+  texts: []
+
+requirements:
+  - The contractor holds a current state license for the work and names us on a liability certificate
+  - The bid is itemized (labor, materials, permit, disposal) — a lump sum fails
+  - Payment schedule holds back at least 10% until the final inspection passes
+do_not:
+  - Do not pay any deposit above 10% before materials are delivered
+playbook_notes:
+  - The permit office answers by its portal, not by email; check the status page, never chase by mail
+  - Ridge Builders texts more than it emails — ask a parent for any text before marking them silent
+
+raid:
+  risks:
+    - {id: R1, text: "Cabinet lead time slips past 10 weeks and the deadline is missed"}
+  assumptions:
+    - {id: S1, text: "The existing panel has capacity for the island circuit (to be confirmed by the electrician)"}
+  issues: []
+  dependencies:
+    - {id: P1, text: "Permit application needs the contractor's drawing set"}
+
+decisions:
+  - id: D1
+    text: Keep the current layout; no walls move
+    status: DECIDED
+    date: 2026-10-20
+    rationale: "Parent A and Parent B, family meeting 2026-10-20 — moving the wall doubled the engineering cost"
+    ref: ./index.md
+  - id: D2
+    text: Which contractor to hire
+    status: OPEN
+    rationale: Decide once two bids pass every requirement; drop-dead date 2026-12-01 to hold the cabinet order date
+
+actions:
+  - id: A1
+    text: Get proof of license and insurance from Ridge Builders
+    owner: Pat Rivera
+    due: 2026-11-24
+    status: waiting
+    next_step: Chase by email if nothing arrives by 11-24; their bid is not comparable without it
+  - id: A2
+    text: Choose the contractor
+    owner: Parent A
+    due: 2026-12-01
+    status: open
+    blocked_by: A1
+    next_step: Side-by-side table of the passing bids, recommendation, and the cost of waiting
+  - id: A3
+    text: Place the cabinet order
+    owner: Parent B
+    due: 2026-12-04
+    status: open
+    blocked_by: D2
+    next_step: Confirm the final quote matches door style 3 and the measured plan before ordering
+  - id: A4
+    text: Collect the three bids
+    owner: Parent A
+    due: 2026-11-15
+    status: done
+    done_on: 2026-11-18
+
+clocks:
+  - id: C1
+    due: 2026-12-04
+    item: Cabinet order — the last date that still finishes by the hard deadline at a 10-week lead time
+    owner: Parent B
+    on_miss: Installation slips past 2027-03-15
+    source: Okafor & Sons email 2026-11-18 (lead time 8–10 weeks)
+  - id: C2
+    due: 2027-01-15
+    item: Okafor & Sons quote expires
+    owner: Okafor & Sons Cabinetry
+    on_miss: Prices re-quoted at the new year's rates
+    source: quote 2026-11-18
+
+questions:
+  - id: Q1
+    text: Is the $48,000 budget firm, or can it stretch to the higher passing bid if that one is faster?
+    for: Parent A
+    blocking: A2
+    raised: 2026-11-18
+    status: open
+
+needs_local:
+  - id: L1
+    task: Download the drawing set from the contractor's file-share portal
+    why: needs a signed-in browser
+    raised: 2026-11-18
+    status: open
+
+discard_drafts: []
+
+escalate_when:
+  - A change order or any price increase arrives
+  - The permit office asks for corrections
+
+last_run:
+  at: null
+  runtime: null
+  result: null
+  escalated: []

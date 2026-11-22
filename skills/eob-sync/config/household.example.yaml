@@ -1,0 +1,46 @@
+# Copy to config/household.yaml and fill in your own household. That file is yours; keep it out of
+# any public repo. Every value below is fictional. SKILL.md reads it at the start of every run.
+# Plan facts, members, notice senders and thresholds go in the store's plans.yaml
+# (see examples/store/plans.yaml), not here.
+
+household:
+  user: Parent A                        # runs the sync
+  account_holders:                      # who signs in to which portal (the agent never types a password)
+    dental: Parent A
+    medical: Parent B (the subscriber's login usually sees every member's claims)
+  adult_children: [Child 2]             # members 18 or older: decisions about their care are theirs
+  not_on_plans: []
+  timezone: America/New_York            # the zone dates in the store are written in
+
+paths:                                  # relative to your repository root
+  store: data/insurance-eobs            # plans.yaml, claims.csv, notices.csv, accumulators.csv, index.md
+  reimburse_skill: skills/hsa-fsa-reimburse
+  team_skill: skills/health-advocate
+  pdf_text_reader: null                 # an in-page PDF text reader, if you have one
+  mojibake_guard: python3 tools/mojibake_guard.py --staged
+
+mailbox:
+  address: name@example.com             # where the carriers' notice emails land
+  note: null
+
+pdfs:
+  policy: every claim you owe anything on, and every denial (they are your HSA/FSA receipts)
+  name: "YYYY-MM-DD <carrier> <plan> EOB <patient> <claim>.pdf"
+  upload: copy to your document store (e.g. rclone copy <dir> "remote:Health/EOBs/<year>")
+  ids: the document store's file ID     # recorded in claims.csv eob_drive_id
+
+portal_notes: reference/portals/blue-cross.md   # write reference/portals/<insurer>.md for yours
+
+notice_subjects:                        # subject fragment → notices.csv kind
+  "Payment Confirmation": premium_paid
+  "Explanation of Benefits": eob
+  "Prior Authorization": prior_auth
+
+cob_hint: a second coverage (a spouse's plan, Medicaid or CHIP) is the usual cause
+
+calendar_check:
+  calendars: [Family]
+  terms: [Dental, Dentist]
+  calendar_skill: null                  # any calendar tool; show events for approval before creating them
+
+commit: Commit the store after each run.

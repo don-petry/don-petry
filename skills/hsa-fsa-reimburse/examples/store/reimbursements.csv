@@ -1,0 +1,2 @@
+claim_id,plan,patient,service_date,amount,account,status,date,note
+D1002,dental,Parent B,2026-04-14,45.00,HSA,paid-by-card,2026-04-15,Example Benefits HSA card 2026-04-15 EXAMPLE FAMILY DENTAL

@@ -1,0 +1,4 @@
+id,date,settled,acct,type,merchant,mcc,amount,paid,status,claimant,svc_start,svc_end,provider,patient,balance_due,ineligible,reason,claim_id,receipts,key,item,seq
+HSA|CARD TRANSACTION|k100|1,2026-04-15,,HSA,CARD TRANSACTION,EXAMPLE FAMILY DENTAL,"Dentists, Orthodontists",45.00,45.00,Paid,Parent B,,,,,0,0,,,False,k100,,1
+FSA|CARD TRANSACTION|k101|1,2026-06-03,,FSA,CARD TRANSACTION,EXAMPLE EYE CARE,Opticians,120.00,120.00,Paid,Parent B,,,,,0,0,,,False,k101,,1
+HSA|DEPOSIT|k102|1,2026-06-15,,HSA,DEPOSIT,Payroll Deposit,,150.00,150.00,Paid,Parent B,,,,,0,0,,,False,k102,,1

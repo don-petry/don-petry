@@ -1,0 +1,7 @@
+plan,claim_id,patient,provider,network,service_date,processed_date,billed,allowed,plan_paid,deductible,copay,coinsurance,not_covered,patient_resp,status,remarks,appeal_by,provider_billed,reimbursed,eob_drive_id,resolution,notes,cleaning
+dental,D1001,Parent A,Example Family Dental,out,2026-02-25,2026-03-02,120.00,120.00,70.00,50.00,,,,50.00,paid,,,,,,,PREVENTIVE,covered
+dental,D1002,Parent A,Example Family Dental,out,2026-08-25,2026-09-01,120.00,120.00,120.00,0.00,,,,0.00,paid,,,,,,,PREVENTIVE,covered
+dental,D1003,Parent A,Example Family Dental,out,2026-10-20,2026-10-28,56.00,0.00,0.00,0.00,,,56.00,56.00,denied,CARC 119: benefit maximum for this time period has been reached,,,,,,PREVENTIVE,denied
+dental,D1004,Child 1,Sample Pediatric Dentistry,in,2026-05-26,2026-06-01,140.00,90.00,90.00,0.00,,,,0.00,paid,,,,,,,PREVENTIVE,covered
+medical,M2001,Child 2,Example Imaging Center,in,2026-09-11,2026-09-25,330.00,180.00,144.00,0.00,,36.00,,36.00,paid,,,95.00,,,,,
+medical,M2002,Parent B,Example Clinic,in,2026-10-02,,210.00,,,,,,,0.00,pending,,,,,,,,

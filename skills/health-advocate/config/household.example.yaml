@@ -1,0 +1,87 @@
+# Copy to config/household.yaml and fill in your own household. That file is yours; keep it out of
+# any public repo. Every value below is fictional. SKILL.md and the health personas read it at Step 0.
+
+household:
+  user: Parent A                        # runs the team
+  timezone: America/New_York
+  members:                              # plan members in scope: claims.csv name → project slug, and who may act
+    - {name: Parent A, slug: parent-a, role: self}
+    - {name: Parent B, slug: parent-b, role: spouse, note: "holds the HSA/FSA accounts"}
+    - {name: Child 1, slug: child-1, role: minor_child, note: "both parents"}
+    - name: Child 2
+      slug: child-2
+      role: child_of_separated_parents
+      note: "Which order governs (state, date), who has legal custody, and how records access works with the provider."
+    - name: Child 3
+      slug: child-3
+      role: adult_child
+      note: "18 or older: acts for their own care. Anything asked of a provider needs their signed authorization."
+  spouses_are_agents: "Which document makes each spouse the other's health-care / HIPAA agent, if any."
+  out_of_scope:                         # adults the team does not act for: say so and stop
+    - {name: Grandparent 1, why: "protected person; their guardian or agent acts, with a lawyer"}
+  child_facing_style: one step, warm, fewest words, no references to the plan or the system
+
+paths:                                  # relative to your repository root
+  projects: data/health                 # <slug>/project.yaml per person; drafts in <slug>/drafts/
+  team_index: data/health/index.md
+  eob_store: data/insurance-eobs        # skills/eob-sync and skills/hsa-fsa-reimburse share it
+  household_facts: notes/household-facts.md    # people, dates of birth and the AUTHORITY DOCUMENTS
+  advisory_contract: docs/advisory-teams.md    # the shared contract for advisory teams (escalation table)
+  coverage_questions: null
+  onboarding_answers: null
+  emergency_contacts: null
+  operations_notes: null
+  person_notes: null
+  enrollment: null                      # benefits-enrollment notes: who is enrolled where
+  tax_decisions: null                   # where dependency decisions are recorded
+  plans: data/insurance-eobs/plans.yaml
+  ledger: null
+  documents: your document store's health folder
+  project_tool: null                    # e.g. a project-manager skill's validate / clocks commands
+  verify_sources: python3 tools/verify_sources.py
+  deadline_calc: tools/deadline_calc.py # does not exist until trigger T-CLOCK is built
+  mojibake_guard: python3 tools/mojibake_guard.py --staged
+
+schema:                                 # rename the generic advisory: fields only if your project.yaml uses other names
+  field_names:
+    capacity: capacity
+    personal_interest: personal_interest
+
+skills:
+  eob: skills/eob-sync
+  reimburse: skills/hsa-fsa-reimburse
+  forms: null                           # a form-filling skill for claim forms and HIPAA authorizations
+  calendar: null                        # any calendar tool; show events for approval before creating them
+  tax_team: null                        # whoever decides dependency: a tax skill, a CPA, the return preparer
+  legal_team: skills/legal
+
+jurisdiction:
+  home: XX                              # your state's postal code
+  notes: reference/jurisdictions/XX.md  # write it from reference/jurisdictions/AL.md's shape
+
+plans:                                  # appeal tracks (SKILL.md "Pick the track")
+  medical:
+    label: Example Employer PPO (group plan, ERISA)
+    track: erisa                        # erisa | aca_individual | excepted_dental | medicaid
+  dental:
+    label: Example Dental individual policy
+    track: excepted_dental
+    regulator: Example State Department of Insurance
+
+portals: [Example Insurer, Example Benefits]
+
+eob_feed_fix: the subscriber turns on email EOB notices in the insurer's portal, to an address the sync reads
+hsa_feed: null                          # a read-only bank aggregator link for the HSA, if you use one
+clinical_records: null                  # a patient-authorized records service, if you use one
+
+decisions:                              # project actions the weekly run updates (optional)
+  account_holder_project: parent-b
+  balance_due_action: null
+  plan_totals_action: null
+  dcfsa_actions: []
+
+weekly_routine: null                    # your scheduler entry for `weekly`
+
+commit: Commit the projects and the store after each run.
+
+harnesses: [your agent harnesses]

@@ -1,0 +1,3 @@
+id: health-parent-b
+health:
+  hsa_eligible: {status: "yes", basis: "the account holder or a tax dependent (sample)", source: "sample"}

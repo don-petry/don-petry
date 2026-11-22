@@ -1,0 +1,5 @@
+# PolicyEngine-US engine (T-POLICYENGINE): compute.py, ssa_pia.py and their tests.
+# Pinned: a run id hashes the engine version, so an upgrade gives new run ids rather than changing old ones.
+policyengine-us==2.15.6
+policyengine-core==3.32.7
+pyyaml==6.0.3

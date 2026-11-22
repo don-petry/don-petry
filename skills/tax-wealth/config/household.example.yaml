@@ -1,0 +1,83 @@
+# Copy to config/household.yaml and fill in your own household. That file is yours; keep it out of any
+# public repo. Every value below is fictional. The tax & wealth team (tax-wealth, tax-wealth-returns,
+# tax-wealth-job-offer, tax-wealth-intake and agents/tax-wealth-*.md) reads it at Step 0.
+
+household:
+  user: Parent A                    # the adult who runs the skills and is asked trigger questions
+  adults: [parent-a, parent-b]      # advisory.party slugs whose own money is SELF / JOINT
+  decision_makers: Parent A and Parent B   # who decides money moves; drafts go to both
+  protected_persons:                # adults whose assets are never moved, in any capacity (Step 0)
+    - name: Grandparent 1
+      note: "Who holds authority for them (guardian, conservator, POA agent), on what document, and who decides about their money."
+  authority_notes:                  # what each authority document does and does not cover (Step 0)
+    - "Parent A's guardianship of Child 2 is of the person only, not the estate: it gives no authority over Child 2's money."
+  minors_turning_adult: "Child 2 (wages, a settlement); authority_expires on their age of majority under your state's law"
+  side_businesses: [Example Crafts (Schedule C)]
+  rentals: [123 Example St]
+  household_workers: null
+
+paths:                              # relative to your repository root
+  household_facts: notes/household-facts.md        # people, dates of birth and the AUTHORITY DOCUMENTS
+  project: notes/tax-wealth/project.yaml           # the household's tax-wealth project
+  notes_root: notes/tax-wealth                     # drafts/, runs/ and the year folders live here
+  engine_dir: notes/tax-wealth/engine              # engine inputs (plan JSON, retirement case, SSA statement)
+  returns_dir: notes/tax-wealth/returns            # extracted returns (JSON) and the multi-year table
+  advisory_contract: docs/advisory-teams.md        # the shared contract for advisory teams
+  verify_sources: tools/verify_sources.py
+  pm: null                                         # a project-manager script (validate / render / clocks), if you use one
+  design_doc: null
+  research_notes: null                             # secondary research — finds rules, never verifies them
+  opportunities: null                              # where job offers and opportunities are noted
+  insurance_notes: null
+  estate_project: null
+  ledger: null                                     # a Beancount ledger, if you keep one (T-BEANCOUNT)
+  student_notes: null
+
+schema:                             # rename the generic advisory: fields only if your project.yaml uses other names
+  field_names:
+    capacity: capacity
+    personal_interest: personal_interest
+
+jurisdiction:
+  home: XX                          # your state's postal code; write reference/jurisdictions/XX.md from AL.md's shape
+  name: Example State
+  notes: reference/jurisdictions/XX.md
+  revenue_department: Example State Department of Revenue (revenue.example.gov)
+  plan_529: Example State 529 Plan
+  red_team_seat: state-examiner
+  return_kind: null                 # extract_return.py --kind for the state return (only "al" is mapped today)
+
+engines:
+  venv: ~/.venvs/tax-wealth         # PolicyEngine-US venv (T-POLICYENGINE)
+  owl_venv: ~/.venvs/owl            # Owl planner venv (T-OWL)
+  retirement_case: notes/tax-wealth/engine/retirement-case.json   # start from examples/retirement-case.example.json
+  ssa_statement: notes/tax-wealth/engine/ssa-statement.json       # start from examples/ssa-statement.example.json
+
+returns:
+  link_template: null               # e.g. a cloud-drive file URL with {id}; extract_return.py --link-template
+  inventory: notes/tax-wealth/returns/inventory.yaml
+
+employment:
+  benefits_lost_on_leaving: >-
+    list what ends with the current job (group umbrella or liability cover, life and disability, unvested
+    match) and where the policies are noted
+  example_triggers: ["leaving Example Corp"]
+
+watermarks: ["Parent A Name", "name@example\\.com"]   # dewatermark_pdf.py strips lines matching these regexes
+
+rule_notes: {}                      # your own application notes for rules-<year>.md entries, keyed by rule key
+
+household_workflows: []             # other skills or reads your team hands off to (state tax portal, account sync)
+
+intake_sources:                     # tax-wealth-intake reads these, in order
+  - notes/people.md — people, birthdays, relationships, roles
+  - notes/vital-records.md — documents per person
+  - notes/emergency-contacts.md — who lives where, custody, household workers
+  - every project.yaml — decisions and answered questions
+
+trigger_notes: {}                   # your own specifics for reference/triggers.yaml, keyed by trigger id
+
+commit_checks: []                   # checks to run before committing (linters, encoding guards)
+commit_rule: commit per your repository's rules
+
+harnesses: [your agent harnesses]

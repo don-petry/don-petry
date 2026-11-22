@@ -1,0 +1,2 @@
+# dewatermark_pdf.py
+pymupdf==2.1

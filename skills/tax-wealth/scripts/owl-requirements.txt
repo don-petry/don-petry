@@ -1,0 +1,6 @@
+# Owl retirement planner (T-OWL) for retirement.py. Install in its OWN venv — Owl pins numpy, pandas and
+# scipy differently from PolicyEngine-US:
+#   python3 -m venv ~/.venvs/owl && ~/.venvs/owl/bin/pip install -r scripts/owl-requirements.txt
+# Named so CI does not install it beside requirements.txt; test_retirement.py skips without Owl.
+owlplanner==2026.10.10
+highspy==1.15.1

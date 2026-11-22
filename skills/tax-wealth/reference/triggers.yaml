@@ -1,0 +1,263 @@
+# Tax-wealth capability triggers — shared format: the advisory contract (config paths.advisory_contract;
+# docs/advisory-teams.md in the public repo).
+#
+# Nothing here is installed by default and nothing records "enabled". Each run probes what THIS session has
+# (SKILL.md Step 0.3), records a gap in the project's advisory.gaps when a capability was missing
+# (`- {trigger: T-…, date: YYYY-MM-DD, note: …}`), and raises a trigger to the user (config household.user) as
+# an open question when its signal is met. On a yes, the setup is committed for the harnesses the household uses
+# (config `harnesses`); git history is the record.
+#
+# `setup.any` applies to every harness; per-harness keys appear only where the step differs. CLI and Python
+# capabilities are harness-independent. Engines install into a venv OUTSIDE the repo on a laptop, and per
+# session in a cloud container (ephemeral); promote a cloud install into the environment's setup script only
+# after two sessions have needed it. Pinned requirements files pin a version; they do not claim anything is
+# enabled.
+#
+# Escalation is evaluated BEFORE any trigger.
+#
+# Shorthand used in signals:  P = config paths.project        F = config paths.household_facts
+# Script paths are relative to this skill's folder; "the gate script" = config paths.verify_sources.
+# Household specifics for a trigger (exact signal ids, dates built, local paths): config trigger_notes.<id>.
+
+# ── Engines ─────────────────────────────────────────────────────────────────────────────────────────
+
+- id: T-POLICYENGINE
+  condition: a draft needs a federal or state tax figure — projection, W-4, bunching, estimates
+  signal: "grep -q 'trigger: T-POLICYENGINE' P  ||  an open action in P whose next_step says 'Needs a projection'"
+  probe: "python3 -c 'import policyengine_us'  (inside the tax-wealth venv, config engines.venv)"
+  setup:
+    any: "python3 -m venv <config engines.venv> → pip install -r scripts/requirements.txt (policyengine-us pinned; a full lock, if you keep one, pins the rest); scripts/compute.py --smoke checks the known answer"
+  secrets: none
+  data_flow: local only — household inputs never leave the machine
+  verify: "python3 scripts/compute.py --smoke  returns the known answer"
+  proposed_as: question
+
+- id: T-TAXCALC
+  condition: a federal figure drives a decision large enough to want an independent second engine (Roth conversion, large bunching year), or red-team asks for a cross-check
+  signal: "a red-team or source-verifier report in <notes_root>/<year>/drafts/ that says 'cross-check'"
+  probe: "python3 -c 'import taxcalc'"
+  setup:
+    any: "add taxcalc to scripts/requirements.txt; compute.py --engine taxcalc maps the same inputs"
+  secrets: none
+  data_flow: local only
+  verify: "compute.py --engine taxcalc --smoke  agrees with policyengine within the stated tolerance"
+  proposed_as: question
+
+- id: T-USTAXES
+  condition: the CPA packet or a self-prepared return needs actual federal forms rendered
+  signal: "an action in P for the CPA packet moves to in_progress"
+  probe: "UsTaxes desktop app present, or its web build reachable"
+  setup:
+    any: "laptop only — install the UsTaxes desktop release; export PDFs to your document store, never into the repo"
+  secrets: none
+  data_flow: local only
+  verify: "a prior-year return re-keyed in UsTaxes matches the filed 1040's total tax"
+  proposed_as: question
+
+- id: T-OWL
+  condition: a Roth conversion, rollover, withdrawal-order, early-retirement or retirement-income question — likely with a job change
+  signal: "config paths.opportunities shows an accepted offer, or a question in P mentions rollover, Roth or retirement age"
+  probe: "<config engines.owl_venv>/bin/python -c 'import owlplanner'"
+  setup:
+    any: "own venv so Owl's numpy/pandas pins never move PolicyEngine's: python3 -m venv <config engines.owl_venv> → pip install -r scripts/owl-requirements.txt (owlplanner pinned, GPL-3.0, HiGHS solver). scripts/retirement.py reads a retirement case (examples/retirement-case.example.json shows the shape; the household's is config engines.retirement_case) and writes write-once owl-<id> runs. Limits that matter (owlplanner MODELING_CAPABILITIES.md): standard deduction only; no early-commencement pension reductions (enter the plan's own figure per start age); no rule-of-55 or 72(t) exceptions; no pro-rata rule; Owl's state tables may not match the state's treatment of pensions or of federal tax paid (Alabama's sets pension_exemption = 0 and has no deduction for federal income tax paid — not verified) — cross-check a year's tax against compute.py before citing a tax total"
+  secrets: none
+  data_flow: local only
+  verify: "<config engines.owl_venv>/bin/python scripts/retirement.py verify  — three published example cases match the values Owl's own tests pin (VERIFY OK)"
+  proposed_as: question
+
+- id: T-OPEN-SOCIAL-SECURITY
+  condition: a Social Security claiming-age question
+  signal: "a question in P mentions claiming age or Social Security benefits"
+  probe: "session can fetch a URL"
+  setup:
+    any: "no install — use the Open Social Security web calculator; save inputs and results as a run file. For the PIA by last working year, scripts/ssa_pia.py on a transcribed my Social Security statement"
+  secrets: none
+  data_flow: numeric inputs only leave the machine — no names or SSNs
+  verify: "results page loads for a test case"
+  proposed_as: question
+
+- id: T-MACRS
+  condition: the first Schedule E depreciation question for a rental (config household.rentals) or a side-business asset
+  signal: "a question or action in P mentions depreciation, basis or Form 4562"
+  probe: "test -f scripts/macrs.py"
+  setup:
+    any: "write scripts/macrs.py + test_macrs.py from the IRS Pub 946 tables, cited in rules-<year>.md"
+  secrets: none
+  data_flow: local only
+  verify: "test_macrs.py reproduces a worked example from Pub 946"
+  proposed_as: question
+
+# ── Data ────────────────────────────────────────────────────────────────────────────────────────────
+
+- id: T-BEANCOUNT
+  condition: side-business or rental records are needed for Schedule C/F/E or estimates and live in more than one place
+  signal: "F answers the side-business records question with records spread across sheets and statements"
+  probe: "command -v bean-check"
+  setup:
+    any: "pip install beancount (and fava); a plain-text ledger at config paths.ledger, fed from statements or an account-aggregator export (T-EMPOWER-LOOKUP)"
+  secrets: none — no bank or aggregator credentials in the repo; statements and snapshots are imported locally
+  data_flow: local only
+  verify: "bean-check <config paths.ledger> exits 0"
+  proposed_as: question
+
+- id: T-GHOSTFOLIO
+  condition: a portfolio-level question (allocation, harvesting, cost basis) across more than one custodian
+  signal: "a question in P mentions allocation, tax-loss harvesting or cost basis"
+  probe: "GHOSTFOLIO_URL set and reachable"
+  setup:
+    any: "laptop or home server only (Docker) — never a cloud session; positions entered from downloaded statements"
+  secrets: "GHOSTFOLIO_URL, GHOSTFOLIO_TOKEN (names only; values in your password manager)"
+  data_flow: stays on the household network
+  verify: "the holdings endpoint returns the expected account count"
+  proposed_as: question
+
+- id: T-EMPOWER-LOOKUP
+  condition: live balances, holdings, transactions or net-worth queries needed for tax-wealth planning, for a household that aggregates its accounts in Empower Personal Dashboard
+  signal: "a question in P mentions balance, net worth, holdings, cashflow or spending"
+  probe: "command -v empower || python3 -c 'import empower_personal_dashboard'"
+  setup:
+    any: "pip install 'empower-personal-dashboard[all]' — the public combsmith/empower-personal-dashboard client (CLI `empower`, an MCP server, and a Beancount export); this team ships no copy of it"
+  secrets: none in the repo — the client keeps its session in the user's home directory (0600) after `empower --login`
+  data_flow: local session to the Empower API; exported data stays on the machine
+  verify: "empower --sandbox exits 0"
+  proposed_as: question
+
+# ── Verification and clocks (shared scripts — coordinate through the advisory contract) ─────────────
+
+- id: T-VERIFY-TAX-ADAPTERS
+  condition: a tax-wealth draft needs PASS, not MANUAL, on state revenue guidance or on a figure
+  status: >-
+    HALF MET (2026-11-21). The gate script's `irs` adapter exists (IRS publications, edition year checked),
+    and U.S.C. and C.F.R. (eCFR, LII fallback) are checked by its `federal` adapter. Still missing: a
+    state-revenue adapter (ADOR / revenue.alabama.gov in the example state) and the [run:<id>] numeric check.
+  signal: "python3 <gate script> --list-adapters shows no adapter for the state revenue department, and a draft has a MANUAL item on state guidance"
+  probe: "python3 <gate script> --list-adapters"
+  setup:
+    any: "add a state-revenue adapter (the department's publications, forms and instructions) and the [run:<id>] numeric check to the gate script, with canary tests; load a state adapter with --adapter-file until it is upstream; edit the advisory contract in the same commit"
+  secrets: none
+  data_flow: fetches public pages only; queries carry tax concepts, never names or amounts
+  verify: "canaries fail: a fabricated IRS publication section, an altered quote, a fabricated state-revenue page, a figure with no run file"
+  proposed_as: question
+
+- id: T-CLOCK
+  condition: a tax deadline derived from a rule rather than printed on a form or notice (a notice response window, a weekend roll-over)
+  signal: "a clock in P whose item says 'computed'"
+  probe: "test -f <the shared deadline calculation script>"
+  setup:
+    any: "if the shared deadline calculation does not exist yet, build it (business days, state and federal holidays, computation trace) per the advisory contract; add the IRC §7503 rule and the quarterly-estimate calendar"
+  secrets: none
+  data_flow: local only
+  verify: "a notice-response date computed with trace matches the date printed on a sample IRS notice"
+  proposed_as: question
+
+# ── Personas and workflows — added when first needed ──────────────────────────────────────────────
+
+- id: T-STRATEGIST
+  condition: the first projection memo is drafted (after T-POLICYENGINE)
+  signal: "a file appears in <notes_root>/<year>/runs/"
+  probe: "test -f agents/tax-wealth-strategist.md"
+  setup:
+    any: "write agents/tax-wealth-strategist.md (name + description only; inputs, method, output) and link it for each harness"
+  secrets: none
+  data_flow: n/a
+  verify: "the persona loads in each harness the household uses"
+  proposed_as: question
+
+- id: T-ESTATE-AUDIT
+  condition: the legal team's estate playbook exists and the estate matter's project.yaml exists (config paths.estate_project)
+  signal: "test -f <config paths.estate_project> && the legal skill has an estate playbook"
+  probe: "test -d skills/tax-wealth-estate-audit"
+  setup:
+    any: "write skills/tax-wealth-estate-audit and agents/tax-wealth-estate-auditor.md; the audit compares titling and beneficiaries against what legal's playbook reads from the documents; add the tax_wealth: block (scope: estate) to the estate project"
+  secrets: none
+  data_flow: n/a
+  verify: "the skill and persona load; the estate project validates"
+  proposed_as: question
+
+- id: T-RISK-REVIEW
+  condition: a coverage-adequacy question no insurance project already owns (landlord, business, D&O for board roles, life, disability)
+  signal: "a question in P mentions coverage outside an insurance project's charter"
+  probe: "test -f agents/tax-wealth-risk-reviewer.md"
+  setup:
+    any: "write agents/tax-wealth-risk-reviewer.md; policy selection still goes to a licensed broker (advisory contract escalation table)"
+  secrets: none
+  data_flow: n/a
+  verify: "the persona loads in each harness the household uses"
+  proposed_as: question
+
+- id: T-SIDE-BUSINESS
+  condition: a side-business (config household.side_businesses) classification, hobby-loss, state sales-tax or entity-tax question
+  signal: "F answers the side-business question, or a question in P mentions Schedule C, Schedule F, sales tax or LLC"
+  probe: "test -f agents/tax-wealth-side-business.md"
+  setup:
+    any: "write agents/tax-wealth-side-business.md; entity formation documents route to legal; classification is a CPA question"
+  secrets: none
+  data_flow: n/a
+  verify: "the persona loads in each harness the household uses"
+  proposed_as: question
+
+- id: T-EDUCATION-FUNDING
+  condition: a 529, education-credit, FAFSA or dual-enrollment funding question beyond a year-end contribution
+  signal: "a question in P or a student's project mentions FAFSA, AOTC, Lifetime Learning or 529 withdrawals"
+  probe: "test -f agents/tax-wealth-education-funding.md"
+  setup:
+    any: "write agents/tax-wealth-education-funding.md; it reads the household's student notes (config paths.student_notes), never restates them"
+  secrets: none
+  data_flow: n/a
+  verify: "the persona loads in each harness the household uses"
+  proposed_as: question
+
+- id: T-MINOR-PROJECT
+  condition: a minor has income, an account or a settlement that needs tax work — each minor's money is its own project
+  signal: "F shows wages, an account or a settlement for a minor (config household.minors_turning_adult)"
+  probe: "the minor's project.yaml exists with a tax_wealth: block (scope: individual)"
+  setup:
+    any: "create the minor's project.yaml (or add tax_wealth: to the legal team's project for a settlement) with advisory: party <slug>, capacity guardian or parent, authority_doc from F's authority documents, authority_expires at the state's age of majority, and personal_interest where the user has a stake"
+  secrets: none
+  data_flow: n/a
+  verify: "the project validates"
+  proposed_as: question
+
+- id: T-HOUSEHOLD-EMPLOYMENT
+  condition: household workers' pay may require household employment tax (config household.household_workers)
+  signal: "F answers the household-worker question with any wages"
+  probe: "a rules-<year>.md entry for the household employment threshold exists"
+  setup:
+    any: "add the threshold and Schedule H rules to rules-<year>.md from IRS Pub 926; an action in P for the determination"
+  secrets: none
+  data_flow: n/a
+  verify: "source-verifier PASS or MANUAL on the Pub 926 entry"
+  proposed_as: question
+
+- id: T-JOB-CHANGE
+  condition: a household adult accepts an offer or receives separation terms
+  signal: "config paths.opportunities shows an accepted offer or a separation agreement"
+  probe: "n/a — workflow, not a tool"
+  setup:
+    any: "run the tax-wealth-job-offer skill on the opportunity's notes folder; money side here (401(k) rollover, HSA/FSA run-out, severance withholding, benefits lost — config employment.benefits_lost_on_leaving) — fires T-OWL; agreement terms, non-competes and releases escalate to an employment attorney"
+  secrets: none
+  data_flow: n/a
+  verify: "an action in P lists each benefit deadline with its source"
+  proposed_as: question
+
+- id: T-EQUITY-COMP
+  condition: an offer, grant, plan document or exit event involves equity (options, restricted stock, RSUs, ESOP)
+  signal: "an opportunity note (config paths.opportunities) mentions equity, options, 409A or QSBS, or a grant agreement appears in a matter's notes"
+  probe: "test -f scripts/equity_scenarios.py && test -f agents/tax-wealth-equity-analyst.md"
+  setup:
+    any: "built — the tax-wealth-job-offer skill, agents/tax-wealth-equity-analyst.md, scripts/equity_scenarios.py (stdlib, no install); marginal and AMT rates need T-POLICYENGINE"
+  secrets: none
+  data_flow: local only
+  verify: "python3 -m unittest scripts/test_equity_scenarios.py passes"
+  proposed_as: question
+
+- id: T-MEDICAID-LTC
+  condition: a protected person's (config household.protected_persons) Medicaid or long-term-care eligibility comes up
+  signal: never auto-fires — a joint research pass with the legal team comes first
+  probe: "n/a"
+  setup:
+    any: "no capability — record income and asset facts in the facts file only; route to an elder-law attorney; no transfers"
+  secrets: none
+  data_flow: n/a
+  verify: "n/a"
+  proposed_as: question

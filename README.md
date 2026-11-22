@@ -41,6 +41,7 @@ it in a browser).
 | [cad-design](skills/cad-design/SKILL.md) | Drives two open-source CAD apps over MCP to model 3D parts (STEP/STL/3MF) and 2D drawings (DXF/PDF), verifying every stage numerically. |
 | [packaging-scout](skills/packaging-scout/SKILL.md) | Researches and scores packaging options (boxes, mailers, jars, labels, void fill) for a product, then delivers a ranked recommendation, sourcing list, and PDF report. |
 | [onenote-migration](skills/onenote-migration/SKILL.md) | Migrates a personal Microsoft OneNote account to a Git repo of Markdown files via Microsoft Graph, keeping hierarchy, attachments, and version history. |
+| [project-manager](skills/project-manager/SKILL.md) | Runs household projects — remodels, claims, disputes — from a `project.yaml`: syncs mail, files and web pages, tracks decisions, clocks and parties, drafts chasers (never sends), and escalates only when a human is needed. Deterministic helper `pm.py` with tests and a fictional sample project. |
 
 ### Household advisory teams
 

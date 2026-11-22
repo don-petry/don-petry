@@ -872,6 +872,56 @@ const AGENTS = [
   "related": []
  },
  {
+  "id": "project-manager",
+  "name": "Project Manager",
+  "icon": "📋",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/project-manager  ·  skills/project-manager/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Project manager for household efforts — a remodel, an insurance claim, a dispute, a side business, anything with parties, deadlines and decisions. Each effort keeps its state in a `project.yaml` beside its notes (charter, watch list, hard requirements, RAID log, decisions, actions, clocks, open questions). A run reads new email, shared-drive files, calendar entries, text threads and watched web pages; reconciles them against that state with a deterministic helper (date math, decision lock); drives the work forward by drafting replies and chasers (never sending), booking reminders and decision holds, and doing research; records the run; and notifies a human only when a decision, a missing fact or a clock needs one. Runs on a schedule or interactively. Use for \"run the project manager\", \"project status\", \"what's open on <project>\", \"what needs me\", \"what's overdue\", \"onboard a new project\", \"answer the project questions\", \"chase the contractors\", \"note that the contractor called\".",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/project-manager/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/project-manager/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/project-manager/examples/",
+    "d": "2 files"
+   },
+   {
+    "p": "skills/project-manager/reference/",
+    "d": "8 files"
+   },
+   {
+    "p": "skills/project-manager/scripts/",
+    "d": "2 files"
+   }
+  ],
+  "metrics": {
+   "lines": 247,
+   "words": 2457,
+   "files": 14,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
   "id": "tax-wealth",
   "name": "Tax Wealth",
   "icon": "💰",

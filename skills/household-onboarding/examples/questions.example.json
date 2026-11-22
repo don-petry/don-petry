@@ -1,0 +1,17 @@
+{
+ "settings": {"names": ["Parent A", "Parent B"], "owner": "Parent A"},
+ "questions": [
+  {"id": "A1-01", "area": "A1", "areaName": "People, relationships & authority", "kind": "confirm", "for": "Parent A",
+   "text": "The 2019 county order names Parent A as guardian of Child 1, of the person only. Correct?",
+   "why": "Every team's capacity gate reads this.", "options": ["Yes, person only", "Person and estate", "Not sure"],
+   "order": 1, "status": "open", "source": "cards/A1-people-authority.md"},
+  {"id": "A2-01", "area": "A2", "areaName": "Estate", "kind": "gap", "for": "either",
+   "text": "Where are the signed originals of the wills?",
+   "why": "Only copies were found.", "options": ["Home safe", "The drafting lawyer's office", "Don't know"],
+   "order": 2, "status": "open", "source": "cards/A2-estate.md"},
+  {"id": "A2-02", "area": "A2", "areaName": "Estate", "kind": "intent", "for": "joint",
+   "text": "Who should raise the children if something happens to you both?",
+   "why": "The wills name no guardian for Child 2.", "options": [],
+   "order": 3, "status": "open", "source": "cards/A2-estate.md"}
+ ]
+}

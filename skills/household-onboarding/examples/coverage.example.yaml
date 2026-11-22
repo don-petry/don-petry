@@ -1,0 +1,39 @@
+# Onboarding coverage — one row per area (references/plan.md §6). Fictional example household.
+# Status per section: gap | partial | known.
+#   known   = every field in that section of the area's state card has a source
+#   partial = some do
+#   gap     = none do, or discovery has not run
+# Validate and report: python3 scripts/onboarding_coverage.py examples/coverage.example.yaml
+
+started: 2026-01-10
+current_wave: 1
+
+areas:
+  - area: A1
+    name: People, relationships & authority
+    wave: 1
+    card: cards/A1-people-authority.md
+    discovered: 2026-01-12
+    past:    {status: known, verified: 2026-01-20}
+    current: {status: partial, verified: null}   # custody order found; no link yet for the step-parent question
+    future:  {status: gap, verified: null}       # emergency decision-makers per child not stated
+    open_questions: [Q-HF1, Q-HF2]
+    documents_missing:
+      - "Signed 2019 custody order for Child 1"
+    session: sessions/2026-01-20-A1.md
+    next_session: 2026-02-03
+    next_review: 2026-04-20
+
+  - area: A11
+    name: Vehicles
+    wave: 4
+    card: cards/A11-vehicles.md
+    discovered: 2026-01-14
+    past:    {status: known, verified: 2026-01-14}
+    current: {status: known, verified: 2026-01-14}
+    future:  {status: known, verified: 2026-01-27}
+    open_questions: []
+    documents_missing: []
+    session: sessions/2026-01-27-A11.md
+    next_session: null
+    next_review: 2026-04-27

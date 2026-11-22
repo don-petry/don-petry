@@ -1,0 +1,294 @@
+<title>Household Onboarding Questions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --ink:#1C2630; --muted:#5B6873; --line:#D9DFDD;
+  --accent:#2F6B5E; --accent-ink:#FFFFFF; --accent-soft:#E2EEEA;
+  --amber:#9A6412; --amber-soft:#F6EBD7; --red:#A2402F; --red-soft:#F5E1DC;
+  --blue:#2E5C8A; --blue-soft:#DFE8F2; --violet:#5E4B8B; --violet-soft:#E8E3F2;
+  --focus:#2F6B5E;
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#131A1F; --surface:#1B242B; --ink:#E6ECEA; --muted:#9AA8B0; --line:#2E3A42;
+    --accent:#6FB3A2; --accent-ink:#0F1A17; --accent-soft:#1F3530;
+    --amber:#E0B064; --amber-soft:#3A2E1A; --red:#E28A78; --red-soft:#3C231E;
+    --blue:#8DB4DE; --blue-soft:#1E2D3D; --violet:#B7A6E0; --violet-soft:#2A2440;
+    --focus:#6FB3A2;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#131A1F; --surface:#1B242B; --ink:#E6ECEA; --muted:#9AA8B0; --line:#2E3A42;
+  --accent:#6FB3A2; --accent-ink:#0F1A17; --accent-soft:#1F3530;
+  --amber:#E0B064; --amber-soft:#3A2E1A; --red:#E28A78; --red-soft:#3C231E;
+  --blue:#8DB4DE; --blue-soft:#1E2D3D; --violet:#B7A6E0; --violet-soft:#2A2440;
+  --focus:#6FB3A2;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:26px;line-height:1.2;margin:0;font-weight:700;text-wrap:balance;letter-spacing:-.01em}
+.lede{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.who{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:600 14px var(--sans);background:transparent;color:var(--ink);border:0;padding:7px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.progress{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.progress b{color:var(--ink)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sep{width:1px;align-self:stretch;background:var(--line);margin-inline:2px}
+.chipbtn{font:500 13px var(--sans);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.chipbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.area{display:flex;flex-direction:column;gap:12px}
+.area h2{font-size:17px;margin:8px 0 0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.area h2 .code{font:500 13px var(--mono);color:var(--muted)}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.q.done{border-color:var(--accent)}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px}
+.id{font:500 12px var(--mono);color:var(--muted)}
+.kind{font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:11px;padding:2px 8px;border-radius:999px}
+.k-confirm{background:var(--accent-soft);color:var(--accent)}
+.k-conflict{background:var(--red-soft);color:var(--red)}
+.k-gap{background:var(--amber-soft);color:var(--amber)}
+.k-intent{background:var(--blue-soft);color:var(--blue)}
+.k-policy{background:var(--violet-soft);color:var(--violet)}
+.for{color:var(--muted)}
+.qtext{font-size:16px;font-weight:600;margin:0;max-width:65ch}
+.why{margin:0;color:var(--muted);font-size:14px;max-width:65ch}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.opt input{margin-top:4px;accent-color:var(--accent)}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+textarea{width:100%;min-height:64px;font:15px/1.45 var(--sans);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;resize:vertical}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.save{font:600 14px var(--sans);background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 16px;cursor:pointer}
+.save:disabled{opacity:.5;cursor:not-allowed}
+.status{font-size:13px;color:var(--muted)}
+.status.ok{color:var(--accent)}
+.status.err{color:var(--red)}
+.answered{font-size:13px;color:var(--accent);font-weight:600}
+.note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;max-width:65ch}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:18px;color:var(--muted)}
+button:focus-visible,.chipbtn:focus-visible,textarea:focus-visible,.opt input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.q{transition:border-color .2s}}
+.local{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.local[hidden]{display:none}
+</style>
+<div class="wrap">
+  <header>
+    <h1>Household onboarding questions</h1>
+    <p class="lede">Only what the records could not answer. It opens on your own questions; switch to everyone's any time. The next onboarding session writes your answers into the household files.</p>
+  </header>
+
+  <div class="bar">
+    <div class="who">
+      <span class="lbl" id="who-lbl">Answering as</span>
+      <div class="seg" id="who-seg" role="group" aria-labelledby="who-lbl"></div>
+    </div>
+    <div class="progress" id="progress">Loading…</div>
+  </div>
+
+  <div class="local" id="local" hidden>
+    <label class="chipbtn" for="qfile">Open questions file</label>
+    <input type="file" id="qfile" accept=".json,application/json" hidden>
+    <button type="button" class="chipbtn" id="dl">Download answers</button>
+    <span>Answers stay in this browser until you download them.</span>
+  </div>
+
+  <div class="filters" id="filters" role="group" aria-label="Show questions"></div>
+
+  <main id="list"><div class="empty">Loading questions…</div></main>
+
+  <p class="note">Answers are for the household only. Do not type passwords or account logins here; those stay in your password manager. "I don't know" is a fine answer: say who might know or where the paper might be.</p>
+</div>
+
+<script>
+/* Data model (references/phone-page.md):
+   settings/respondents {names:[...], owner}   questions/<id> {id, area, areaName, kind, for, text, why, options[], order, status}
+   answers/<qid> {qid, choice, text, by, at}
+   Hosted mode: a shared-storage artifact runtime (window.claude.use("db")). Local mode: any browser; questions from a
+   JSON file, answers in localStorage and downloaded as answers.json. */
+(function(){
+  const KIND_LABEL={confirm:"Confirm",conflict:"Conflict",gap:"Missing",past:"The story",intent:"Your goals",policy:"Standing rule"};
+  const FOR_BOTH=["either","joint"];
+  let who=null, filter="open", mineOnly=true, questions=[], answers={}, settings=null, store=null, readOnly=false;
+  const drafts={};
+  try{ who=localStorage.getItem("onb-who"); }catch(e){}
+  try{ filter=localStorage.getItem("onb-filter")||"open"; }catch(e){}
+  try{ mineOnly=localStorage.getItem("onb-mine")!=="0"; }catch(e){}
+  const isMine=q=>!who||!mineOnly||q.for===who||FOR_BOTH.includes(q.for)||!q.for;
+  const $=s=>document.querySelector(s);
+
+  function el(tag,attrs,...kids){
+    const n=document.createElement(tag);
+    for(const k in (attrs||{})){ if(k==="class") n.className=attrs[k]; else if(k==="text") n.textContent=attrs[k]; else n.setAttribute(k,attrs[k]); }
+    kids.flat().forEach(k=>{ if(k!=null) n.append(k) });
+    return n;
+  }
+  function fmtDate(iso){ try{ return new Date(iso).toLocaleDateString(undefined,{month:"short",day:"numeric"}) }catch(e){ return "" } }
+
+  /* Respondents: the settings doc, else every name a question is "for" (in question order). */
+  function respondents(){
+    if(settings&&Array.isArray(settings.names)&&settings.names.length) return settings.names;
+    const seen=[]; questions.forEach(q=>{ if(q.for&&!FOR_BOTH.includes(q.for)&&!seen.includes(q.for)) seen.push(q.for) });
+    return seen;
+  }
+  const possessive=n=>n+(n.endsWith("s")?"'":"'s");
+  const askName=()=>{ const r=respondents(); return r.length?r.join(" or "):"your name"; };
+
+  function setWho(w){ who=w; try{localStorage.setItem("onb-who",w)}catch(e){} render(); }
+  function renderWho(){
+    const seg=$("#who-seg"); seg.textContent="";
+    respondents().forEach(n=>{
+      const b=el("button",{type:"button","aria-pressed":String(n===who),text:n});
+      b.addEventListener("click",()=>setWho(n)); seg.append(b);
+    });
+  }
+
+  function renderFilters(){
+    const box=$("#filters"); box.textContent="";
+    if(who){
+      const t=el("button",{type:"button",class:"chipbtn","aria-pressed":String(mineOnly),text:mineOnly?"Just "+possessive(who):"Everyone's"});
+      t.title="Switch between your questions and everyone's";
+      t.addEventListener("click",()=>{mineOnly=!mineOnly; try{localStorage.setItem("onb-mine",mineOnly?"1":"0")}catch(e){} render();});
+      box.append(t, el("span",{class:"sep","aria-hidden":"true"}));
+    }
+    const areas=[...new Map(questions.filter(isMine).map(q=>[q.area,q.areaName])).entries()];
+    const opts=[["open","Unanswered"],["all","All"],...areas.map(([a,n])=>[a,a+" "+n])];
+    if(!opts.some(o=>o[0]===filter)) filter="open";
+    opts.forEach(([v,t])=>{
+      const b=el("button",{type:"button",class:"chipbtn","aria-pressed":String(filter===v),text:t});
+      b.addEventListener("click",()=>{filter=v; try{localStorage.setItem("onb-filter",v)}catch(e){} render();});
+      box.append(b);
+    });
+  }
+
+  function render(){
+    renderWho();
+    const mine=questions.filter(isMine);
+    const open=mine.filter(q=>!answers[q.id]).length;
+    $("#progress").textContent="";
+    $("#progress").append(el("b",{text:String(mine.length-open)})," of "+mine.length+" answered");
+    renderFilters();
+    const list=$("#list"); list.textContent="";
+    const shown=mine.filter(q=>filter==="all"||(filter==="open"?!answers[q.id]:q.area===filter));
+    if(!who&&questions.length) list.append(el("div",{class:"empty",text:"Pick "+askName()+" at the top to see just your questions."}));
+    if(!questions.length){ list.append(el("div",{class:"empty",text:store&&store.local?"Open the questions file the last onboarding session wrote.":"No questions yet. The next onboarding session adds them."})); return; }
+    if(!shown.length){ list.append(el("div",{class:"empty",text:"Everything for you here is answered. Thank you."})); return; }
+    const groups=new Map(); shown.forEach(q=>{ if(!groups.has(q.area)) groups.set(q.area,{name:q.areaName,qs:[]}); groups.get(q.area).qs.push(q) });
+    for(const [area,g] of groups){
+      const sec=el("section",{class:"area"},el("h2",{},el("span",{class:"code",text:area}),g.name));
+      g.qs.forEach(q=>sec.append(card(q)));
+      list.append(sec);
+    }
+  }
+
+  function card(q){
+    const a=answers[q.id];
+    const d=drafts[q.id]||(drafts[q.id]={choice:a?.choice??"",text:a?.text??""});
+    const c=el("article",{class:"q"+(a?" done":""),id:"q-"+q.id});
+    c.append(el("div",{class:"meta"},
+      el("span",{class:"id",text:q.id}),
+      el("span",{class:"kind k-"+q.kind,text:KIND_LABEL[q.kind]||q.kind}),
+      q.for?el("span",{class:"for",text:q.for==="either"?"either of you":q.for==="joint"?"both of you":"for "+q.for}):null));
+    c.append(el("p",{class:"qtext",text:q.text}));
+    if(q.why) c.append(el("p",{class:"why",text:q.why}));
+    if(Array.isArray(q.options)&&q.options.length){
+      const box=el("div",{class:"opts",role:"radiogroup","aria-label":"Choices"});
+      q.options.forEach((o,i)=>{
+        const id="o-"+q.id+"-"+i;
+        const inp=el("input",{type:"radio",name:"r-"+q.id,id,value:o});
+        if(d.choice===o) inp.checked=true;
+        inp.disabled=readOnly;
+        inp.addEventListener("change",()=>{d.choice=o; upd()});
+        box.append(el("label",{class:"opt",for:id},inp,el("span",{text:o})));
+      });
+      c.append(box);
+    }
+    const ta=el("textarea",{id:"t-"+q.id,placeholder:q.options?.length?"Anything to add (optional)":"Your answer","aria-label":"Answer for "+q.id});
+    ta.value=d.text; ta.disabled=readOnly;
+    ta.addEventListener("input",()=>{d.text=ta.value; upd()});
+    c.append(ta);
+    const btn=el("button",{type:"button",class:"save",text:a?"Update answer":"Save answer"});
+    const st=el("span",{class:"status"});
+    c.append(el("div",{class:"row"},btn,a?el("span",{class:"answered",text:"Answered by "+a.by+" · "+fmtDate(a.at)}):null,st));
+    function upd(){ btn.disabled=readOnly||!store||(!d.choice&&!d.text.trim()); }
+    upd();
+    btn.addEventListener("click",async()=>{
+      if(!who){ st.className="status err"; st.textContent="Pick "+askName()+" at the top first."; return; }
+      btn.disabled=true; st.className="status"; st.textContent="Saving…";
+      try{
+        await store.save({qid:q.id,choice:d.choice||"",text:d.text.trim(),by:who,at:new Date().toISOString()});
+        st.className="status ok"; st.textContent="Saved";
+      }catch(e){
+        if(e&&e.code==="invalid_argument"){ readOnly=true; st.className="status err"; st.textContent="This view can read but not save. Ask the page owner for edit access."; }
+        else{ st.className="status err"; st.textContent="Not saved. Check your connection and try again."; btn.disabled=false; }
+      }
+    });
+    return c;
+  }
+
+  const live=q=>q&&q.status!=="closed";
+  let isOwner=null;   // hosted mode: true for the page owner, false for anyone else, null if unknown
+  /* First visit only: the owner answers as settings.owner, anyone else as the first other respondent. */
+  function autoPick(){
+    if(who||isOwner===null) return;
+    const names=respondents(); if(!names.length) return;
+    const o=(settings&&settings.owner)||names[0];
+    who=isOwner?o:(names.find(n=>n!==o)||o);
+    try{localStorage.setItem("onb-who",who)}catch(e){}
+  }
+
+  async function hosted(rt){
+    const db=await rt.use("db");
+    if(!db) return null;
+    try{
+      const user=await rt.use("user");
+      if(user&&user.can){ const w=await user.can("data.write"); if(w===false) readOnly=true; }
+      if(user&&!who) isOwner=await user.isOwner();
+    }catch(e){}
+    db.collection("settings").onSnapshot(s=>{ s.docs.forEach(d=>{ if(d.id==="respondents"&&d.data()) settings=d.data() }); autoPick(); render(); },()=>{});
+    db.collection("questions").orderBy("order").onSnapshot(s=>{ questions=s.docs.map(d=>d.data()).filter(live); autoPick(); render(); },()=>{});
+    db.collection("answers").onSnapshot(s=>{ answers={}; s.docs.forEach(d=>{ const v=d.data(); if(v) answers[d.id]=v }); render(); },()=>{});
+    return {local:false, save:a=>db.doc("answers/"+a.qid).set(a)};
+  }
+
+  function local(){
+    const KEY="onb-local";
+    const load=()=>{ try{ return JSON.parse(localStorage.getItem(KEY)||"{}") }catch(e){ return {} } };
+    const keep=s=>{ try{ localStorage.setItem(KEY,JSON.stringify(s)) }catch(e){} };
+    let s=load(); settings=s.settings||null; questions=(s.questions||[]).filter(live); answers=s.answers||{};
+    $("#local").hidden=false;
+    $("#qfile").addEventListener("change",async ev=>{
+      const f=ev.target.files[0]; if(!f) return;
+      try{
+        const data=JSON.parse(await f.text());
+        const qs=Array.isArray(data)?data:(data.questions||[]);
+        s={settings:Array.isArray(data)?s.settings:(data.settings||s.settings||null), questions:qs.slice().sort((a,b)=>(a.order??0)-(b.order??0)), answers:s.answers||{}};
+        keep(s); settings=s.settings; questions=s.questions.filter(live); answers=s.answers; render();
+      }catch(e){ $("#list").textContent=""; $("#list").append(el("div",{class:"empty",text:"That file is not a questions file (JSON)."})); }
+    });
+    $("#dl").addEventListener("click",()=>{
+      const blob=new Blob([JSON.stringify(Object.values(answers),null,1)],{type:"application/json"});
+      const u=URL.createObjectURL(blob); const a=el("a",{href:u,download:"answers.json"}); document.body.append(a); a.click(); a.remove(); URL.revokeObjectURL(u);
+    });
+    return {local:true, save:async a=>{ answers[a.qid]=a; s.answers=answers; keep(s); render(); }};
+  }
+
+  async function start(){
+    const rt=window.claude;
+    try{ store = rt&&rt.use ? await hosted(rt) : null; }catch(e){ store=null; }
+    if(!store) store=local();
+    render();
+  }
+  start();
+})();
+</script>

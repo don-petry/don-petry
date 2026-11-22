@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Explorer</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --panel-2:#fbfbfd; --ink:#16181d; --ink-2:#4a5160;
+  --ink-3:#7b8496; --line:#e2e5ea; --line-2:#cdd3dc; --accent:#2f5fd0; --accent-soft:#e8eefc;
+  --ok:#1a7f4b; --ok-soft:#e2f4ea; --warn:#9a6a05; --warn-soft:#fdf1d8;
+  --off:#8a8f99; --off-soft:#eceef1; --danger:#b3341f; --danger-soft:#fbe7e2;
+  --shadow:0 1px 2px rgba(16,20,30,.06), 0 6px 18px rgba(16,20,30,.06);
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1014; --panel:#161a21; --panel-2:#1b2029; --ink:#e8ebf0; --ink-2:#aab3c2;
+    --ink-3:#79839a; --line:#252b35; --line-2:#333b48; --accent:#7ba3f5; --accent-soft:#1a2540;
+    --ok:#5fd39a; --ok-soft:#12291f; --warn:#e6b657; --warn-soft:#2b2314;
+    --off:#77808f; --off-soft:#1e232b; --danger:#f08a72; --danger-soft:#2e1a16;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1014; --panel:#161a21; --panel-2:#1b2029; --ink:#e8ebf0; --ink-2:#aab3c2;
+  --ink-3:#79839a; --line:#252b35; --line-2:#333b48; --accent:#7ba3f5; --accent-soft:#1a2540;
+  --ok:#5fd39a; --ok-soft:#12291f; --warn:#e6b657; --warn-soft:#2b2314;
+  --off:#77808f; --off-soft:#1e232b; --danger:#f08a72; --danger-soft:#2e1a16;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+
+/* ---------- header ---------- */
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+h1{font-size:26px;line-height:1.15;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--ink-2);font-size:14px;margin:0;max-width:62ch}
+.themebtn{background:var(--panel);border:1px solid var(--line-2);color:var(--ink-2);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.themebtn:hover{border-color:var(--accent);color:var(--accent)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin:0 0 22px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:22px;line-height:1.1;letter-spacing:-.02em}
+.stat span{display:block;font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+
+/* ---------- toolbar ---------- */
+.toolbar{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:18px;box-shadow:var(--shadow)}
+.searchrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#q{flex:1 1 260px;min-width:0;background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink);
+   border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit}
+#q:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.views{display:flex;gap:4px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:3px}
+.views button{background:none;border:none;color:var(--ink-2);padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit}
+.views button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.filters{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.fgroup{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.flabel{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);margin-right:2px}
+.chip{background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink-2);border-radius:99px;
+  padding:4px 11px;font-size:12.5px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip .n{opacity:.65;margin-left:5px;font-variant-numeric:tabular-nums}
+.clearbtn{margin-left:auto;background:none;border:none;color:var(--ink-3);font-size:12.5px;cursor:pointer;text-decoration:underline;font-family:inherit}
+
+/* ---------- cards ---------- */
+.count{font-size:13px;color:var(--ink-3);margin:0 2px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;cursor:pointer;
+  box-shadow:var(--shadow);text-align:left;font-family:inherit;color:inherit;display:flex;flex-direction:column;gap:9px;
+  transition:border-color .12s,transform .12s}
+.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chead{display:flex;align-items:flex-start;gap:10px}
+.icon{flex:none;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:16px;background:var(--accent-soft)}
+.cname{font-weight:650;font-size:15px;letter-spacing:-.01em;margin:0}
+.cinvoke{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);margin:2px 0 0;word-break:break-all}
+.cdesc{font-size:13.2px;color:var(--ink-2);margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto;padding-top:4px}
+.badge{font-size:11px;padding:2.5px 8px;border-radius:99px;border:1px solid transparent;white-space:nowrap;font-weight:550}
+.b-active{background:var(--ok-soft);color:var(--ok)}
+.b-paused{background:var(--off-soft);color:var(--off)}
+.b-draft{background:var(--warn-soft);color:var(--warn)}
+.b-blocked{background:var(--danger-soft);color:var(--danger)}
+.b-plain{background:var(--panel-2);color:var(--ink-3);border-color:var(--line)}
+.cmeta{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- drawer ---------- */
+.scrim{position:fixed;inset:0;background:rgba(8,10,14,.45);opacity:0;pointer-events:none;transition:opacity .16s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(620px,100%);background:var(--panel);border-left:1px solid var(--line);
+  box-shadow:-8px 0 40px rgba(8,10,14,.22);transform:translateX(100%);transition:transform .2s ease;z-index:50;
+  display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.dhead{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.dhead h2{margin:0;font-size:19px;letter-spacing:-.015em}
+.dbody{overflow-y:auto;padding:18px 22px 60px;flex:1}
+.closebtn{margin-left:auto;background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink-2);
+  width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;line-height:1;flex:none}
+.closebtn:hover{border-color:var(--accent);color:var(--accent)}
+.sect{margin:0 0 20px}
+.sect h3{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:0 0 8px;font-weight:600}
+.sect p{margin:0 0 8px;font-size:14px;color:var(--ink-2)}
+.sect ul{margin:0;padding-left:18px;font-size:13.8px;color:var(--ink-2)}
+.sect li{margin-bottom:5px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13.5px;align-items:baseline}
+.kv dt{color:var(--ink-3);white-space:nowrap}
+.kv dd{margin:0;color:var(--ink)}
+code,.mono{font-family:var(--mono);font-size:12.6px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:5px;padding:1px 5px;word-break:break-all}
+.filelist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.filelist li{font-family:var(--mono);font-size:12.2px;color:var(--ink-2);background:var(--panel-2);
+  border:1px solid var(--line);border-radius:6px;padding:5px 9px;word-break:break-all}
+.filelist li b{color:var(--ink);font-weight:600}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.note{background:var(--warn-soft);border:1px solid transparent;border-left:3px solid var(--warn);
+  border-radius:0 8px 8px 0;padding:10px 12px;font-size:13.3px;color:var(--ink-2)}
+.note b{color:var(--ink)}
+.rel{background:none;border:1px solid var(--line-2);border-radius:7px;padding:5px 10px;font-size:12.5px;
+  color:var(--accent);cursor:pointer;font-family:inherit}
+.rel:hover{border-color:var(--accent);background:var(--accent-soft)}
+
+/* ---------- schedule view ---------- */
+.schedwrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow);overflow-x:auto}
+.schedwrap h2{margin:0 0 4px;font-size:17px;letter-spacing:-.01em}
+.schedwrap .hint{color:var(--ink-3);font-size:13px;margin:0 0 18px}
+.track{min-width:720px}
+.hours{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;margin-bottom:6px}
+.hourbar{display:grid;grid-template-columns:repeat(24,1fr);font-size:10px;color:var(--ink-3);text-align:center}
+.hourbar span{border-left:1px solid var(--line);padding-bottom:3px}
+.srow{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;padding:5px 0;border-top:1px solid var(--line)}
+.sname{font-size:12.8px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.sname:hover{color:var(--accent)}
+.slots{position:relative;display:grid;grid-template-columns:repeat(24,1fr);height:22px;background:
+  repeating-linear-gradient(to right,transparent,transparent calc(100%/24 - 1px),var(--line) calc(100%/24 - 1px),var(--line) calc(100%/24));
+  border-radius:4px}
+.slot{grid-row:1;height:22px;border-radius:4px;background:var(--accent);opacity:.85}
+.slot.paused{background:var(--off);opacity:.55}
+.slot.cont{background:var(--accent);opacity:.35;grid-column:1/25}
+.slot.cont.paused{background:var(--off);opacity:.4}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:12.3px;color:var(--ink-3)}
+.legend i{display:inline-block;width:22px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+
+/* ---------- flows view ---------- */
+.flows{display:flex;flex-direction:column;gap:16px}
+.flow{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.flow h2{margin:0 0 3px;font-size:16.5px;letter-spacing:-.01em}
+.flow .hint{color:var(--ink-3);font-size:13px;margin:0 0 16px}
+.chain{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.node{background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 12px;min-width:132px;
+  cursor:pointer;font-family:inherit;text-align:left;color:inherit;flex:0 1 auto}
+.node:hover{border-color:var(--accent)}
+.node.static{cursor:default}
+.node.static:hover{border-color:var(--line-2)}
+.node b{display:block;font-size:13px;font-weight:600;letter-spacing:-.005em}
+.node span{display:block;font-size:11.3px;color:var(--ink-3);margin-top:2px;font-family:var(--mono)}
+.arrow{align-self:center;color:var(--ink-3);font-size:16px;flex:none}
+.stack{display:flex;flex-direction:column;gap:8px}
+
+@media (max-width:640px){
+  .wrap{padding:16px 14px 60px}
+  h1{font-size:22px}
+  .grid{grid-template-columns:1fr}
+  .srow,.hours{grid-template-columns:120px 1fr}
+  .dhead,.dbody{padding-left:16px;padding-right:16px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Agent Explorer</h1>
+    <p class="sub">Every Agent Skill, persona and workflow in this repo — what it is, when it runs, and what it touches. Generated by <code>tools/agents_explorer.py</code>.</p>
+  </div>
+  <button class="themebtn" id="themebtn" type="button">◐ Theme</button>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="toolbar">
+  <div class="searchrow">
+    <input id="q" type="search" placeholder="Search name, purpose, trigger, tool, file…" autocomplete="off">
+    <div class="views" role="group" aria-label="View">
+      <button type="button" data-view="grid" aria-pressed="true">Catalog</button>
+      <button type="button" data-view="sched" aria-pressed="false">Schedule</button>
+      <button type="button" data-view="flow" aria-pressed="false">Pipelines</button>
+    </div>
+  </div>
+  <div class="filters" id="filters"></div>
+</div>
+
+<div id="gridview">
+  <p class="count" id="count"></p>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="schedview" hidden>
+  <div class="schedwrap">
+    <h2>When things run</h2>
+    <p class="hint">One 24-hour day. Continuous and interval jobs span the full bar. Click a name for detail.</p>
+    <div class="track" id="track"></div>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>Running today</span>
+      <span><i style="background:var(--off);opacity:.55"></i>Schedule disabled / expired</span>
+      <span><i style="background:var(--accent);opacity:.35"></i>Continuous or interval</span>
+    </div>
+  </div>
+</div>
+
+<div id="flowview" hidden><div class="flows" id="flows"></div></div>
+
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dhead">
+    <div class="icon" id="dicon"></div>
+    <div style="min-width:0">
+      <h2 id="dtitle"></h2>
+      <div class="cinvoke" id="dinvoke"></div>
+    </div>
+    <button class="closebtn" id="closebtn" type="button" aria-label="Close">✕</button>
+  </div>
+  <div class="dbody" id="dbody"></div>
+</aside>
+
+<script>
+/* ============================================================
+   AGENT INVENTORY
+   Generated by agents_explorer.py — do not edit by hand.
+   Metrics are real: `lines` = wc -l of the primary file,
+   `files` = files in the agent's directory, `commits` = git
+   log count for that file.
+   ============================================================ */
+const AGENTS = [
+ {
+  "id": "cad-design",
+  "name": "CAD Design",
+  "icon": "📐",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/cad-design  ·  skills/cad-design/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Create and edit CAD designs agentically with two open-source, MCP-driven CAD apps: SolidCraft (parametric 3D parts and assemblies → STEP/STL/3MF/URDF) and CADCraft (2D AutoCAD-style drafting → DXF/DWG/PDF/SVG). Use for any request to model, draw, draft, dimension, export or 3D-print a part, bracket, plate, enclosure, case, mount, adapter, jig, floor plan, shop drawing or fabrication drawing — 'design a bracket', 'model this in CAD', 'make a STEP file', 'STL for the printer', 'draw a plan', 'DXF for the laser cutter', 'add a dimension', 'change the width to 120' — and for installing, updating or configuring the CAD tools themselves.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/cad-design/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/cad-design/examples/",
+    "d": "2 files"
+   },
+   {
+    "p": "skills/cad-design/reference/",
+    "d": "2 files"
+   },
+   {
+    "p": "skills/cad-design/scripts/",
+    "d": "2 files"
+   }
+  ],
+  "metrics": {
+   "lines": 162,
+   "words": 1593,
+   "files": 7,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "car-hunt",
+  "name": "Car Hunt",
+  "icon": "🚗",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/car-hunt  ·  skills/car-hunt/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Find, research, and rank used Honda/Toyota/Scion vehicles (Civic, Accord, CR-V, Camry, Corolla, RAV4, Tacoma, Scion tC/xD) by CPM (cost per remaining mile). Also supports Insurance Claim Comp mode: finds the highest-priced national dealer comps for a totalled vehicle to maximize insurance ACV payout. Researches reliability by model year, searches AutoTrader/CarGurus/Facebook Marketplace/Auto.dev, calculates value score, ranks candidates, and runs VIN recall/TCO lookups via NHTSA + Auto.dev CLI.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/car-hunt/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/car-hunt/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/car-hunt/eval/",
+    "d": "4 files"
+   },
+   {
+    "p": "skills/car-hunt/forms/",
+    "d": "2 files"
+   },
+   {
+    "p": "skills/car-hunt/qualification/",
+    "d": "13 files"
+   },
+   {
+    "p": "skills/car-hunt/references/",
+    "d": "7 files"
+   }
+  ],
+  "metrics": {
+   "lines": 510,
+   "words": 5134,
+   "files": 34,
+   "commits": 7,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "drive-cleanup",
+  "name": "Drive Cleanup",
+  "icon": "🗂️",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/drive-cleanup  ·  skills/drive-cleanup/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Audit, deduplicate, and repair Google Drive files. Identifies and repairs broken/dangling shortcuts, trashes zero-byte corrupted files, resolves case-conflict naming collisions, and safely deduplicates byte-for-byte identical files with full JSON undo logging and Google Drive Trash safety. Use whenever the user asks to clean up Drive, check for duplicates, fix conflict files, or remove broken files in Google Drive.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/drive-cleanup/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/drive-cleanup/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/drive-cleanup/references/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/drive-cleanup/scripts/",
+    "d": "3 files"
+   }
+  ],
+  "metrics": {
+   "lines": 86,
+   "words": 672,
+   "files": 6,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "drive-ocr",
+  "name": "Drive OCR",
+  "icon": "🗂️",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/drive-ocr  ·  skills/drive-ocr/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Find Google Drive PDFs missing an OCR text layer, OCR them with ocrmypdf, and replace in-place via the Drive API. Use when the user says \"OCR my Drive PDFs\", \"fix scanned PDFs in Drive\", \"add text layer to Drive PDFs\", or similar. Handles setup checks, dry runs, and full processing runs.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/drive-ocr/SKILL.md",
+    "d": "the skill"
+   }
+  ],
+  "metrics": {
+   "lines": 140,
+   "words": 825,
+   "files": 5,
+   "commits": 2,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "flight-price-optimizer",
+  "name": "Flight Price Optimizer",
+  "icon": "💺",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/flight-price-optimizer  ·  skills/flight-price-optimizer/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Decide when to buy plane tickets and which ticket is actually cheapest all-in (bags, seats together, airport drive, parking, a night-before hotel), then run the fare watch that catches the drop. Use for airfare timing, price, or airport or carrier choice — \"when should we book,\" \"is this a good price,\" \"buy now or wait,\" \"watch this fare,\" \"track flight prices,\" \"how much are flights to X,\" \"is it cheaper out of the bigger airport,\" \"miles or cash,\" \"do we have enough miles,\" \"Southwest or Delta,\" \"bag fees,\" \"did the price drop,\" \"can we get money back since it's cheaper now,\" \"set a price alert.\" Handles flexible dates around a fixed anchor (\"give or take a couple of days,\" \"cheapest week to go,\" Thanksgiving, Christmas or spring break flights) as a priced date grid, and answers \"should we just drive\" in cash, fuel and hours. Covers the 24-hour free-cancel re-shop and re-faring after a drop. Run it whenever a planned trip still needs tickets. Never buys; it hands over a recommendation and schedule.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/flight-price-optimizer/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/flight-price-optimizer/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/flight-price-optimizer/reference/",
+    "d": "4 files"
+   },
+   {
+    "p": "skills/flight-price-optimizer/scripts/",
+    "d": "2 files"
+   }
+  ],
+  "metrics": {
+   "lines": 426,
+   "words": 4172,
+   "files": 8,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "goods-hunt",
+  "name": "Goods Hunt",
+  "icon": "📦",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/goods-hunt  ·  skills/goods-hunt/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Find, research, score, and rank high-value used goods by Cost Per Remaining Useful-life Unit (CPRU) — a generalization of car-hunt's CPM. Loads a domain pack (cars, tractors, furniture, beekeeping, generic, …) that supplies the domain knowledge; the engine supplies the pipeline. Also supports Valuation/Comp mode (the generalized Insurance-Comp): find the highest verifiable comps to maximize an insured payout or justify a price.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/goods-hunt/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/goods-hunt/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/goods-hunt/domains/",
+    "d": "5 files"
+   },
+   {
+    "p": "skills/goods-hunt/eval/",
+    "d": "1 file"
+   }
+  ],
+  "metrics": {
+   "lines": 473,
+   "words": 3821,
+   "files": 11,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "onenote-migration",
+  "name": "OneNote Migration",
+  "icon": "🗂️",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/onenote-migration  ·  skills/onenote-migration/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Migrate a personal Microsoft OneNote account (outlook.com, hotmail.com, live.com) into a Git repository of Markdown files through Microsoft Graph — every notebook, section, page and subpage, with attachments, images, YAML front matter and one backdated commit per page. Use when the user wants to export, back up or leave OneNote, move notes to Markdown, Obsidian or GitHub, or resume an interrupted OneNote migration.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/onenote-migration/SKILL.md",
+    "d": "the skill"
+   }
+  ],
+  "metrics": {
+   "lines": 40,
+   "words": 299,
+   "files": 5,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "packaging-scout",
+  "name": "Packaging Scout",
+  "icon": "📦",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/packaging-scout  ·  skills/packaging-scout/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Research, compare, and evaluate packaging for a product, then deliver a scored comparison, a ranked recommendation, a sourcing list with links, and a PDF report. Use whenever the user wants to find or choose packaging — boxes, cartons, sleeves, mailers, tubes, jars, tins, labels, void fill, inserts — for something they make or sell. Trigger on requests like \"find packaging for my candles,\" \"what box should I ship these in,\" \"compare these mailers,\" \"source kraft boxes under $3,\" or any vendor/MOQ/unit-cost packaging comparison — even if the user never says \"packaging.\" Also use to build or update a saved packaging spec or vendor catalog. A protective shipping box, mailer, tube, or void fill IS packaging and stays in scope even when the user says \"ship,\" \"postage,\" or \"protect\" — handle the packaging; leave postage math to a carrier tool. Send elsewhere only for: designing label artwork/graphics; comparing carrier rates (USPS vs UPS) with no packaging choice; or software \"package\" management (npm, pip, apt).",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/packaging-scout/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/packaging-scout/assets/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/packaging-scout/references/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/packaging-scout/scripts/",
+    "d": "1 file"
+   }
+  ],
+  "metrics": {
+   "lines": 241,
+   "words": 2714,
+   "files": 4,
+   "commits": 2,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "printer-troubleshooting",
+  "name": "Printer Troubleshooting",
+  "icon": "🖨️",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/printer-troubleshooting  ·  skills/printer-troubleshooting/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Diagnose and recover Brother network laser printers (tested on HL-L2395DW and HL-2370DW) — offline or \"looking for printer\", jobs stuck in the queue, deep sleep that won't wake, stalled spoolers (PJL reset), toner/drum/jam counters, AirPrint across VLANs, and Wi-Fi link quality. Use when a printer is offline, not printing, or unreachable from some devices.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/printer-troubleshooting/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/printer-troubleshooting/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/printer-troubleshooting/scripts/",
+    "d": "1 file"
+   }
+  ],
+  "metrics": {
+   "lines": 165,
+   "words": 1231,
+   "files": 3,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-red-team",
+  "name": "Red Team",
+  "icon": "🥊",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/red-team.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Shared adversary for household advisory teams (legal, tax-wealth, health). Reads a draft, plan or position from the other side's seat — opposing party, insurance adjuster, health-plan appeal reviewer, IRS or ADOR examiner, opposing counsel, a skeptical CPA or judge — and returns the strongest objections, procedural traps, missed deadlines, penalty or sanctions exposure, and any escalation the draft should have triggered. Never edits the draft. Use before anything leaves the repo, and as the opposing seat in an advisory-board debate.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/red-team.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 46,
+   "words": 450,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-source-verifier",
+  "name": "Source Verifier",
+  "icon": "🔍",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/source-verifier.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Shared verifier for household advisory teams (legal, tax-wealth, health). Given a draft, traces every authority (case, statute, rule, regulation, IRS or state revenue publication, policy clause) and every load-bearing figure or date back to a fetched primary source, checks quotations word for word, and returns a PASS / FAIL / BLOCKED / MANUAL table. Never edits the draft and never marks anything passed without evidence. Use before any draft leaves drafts/, and whenever a skill asks for verification.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/source-verifier.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 64,
+   "words": 629,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-20"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "wf-skills",
+  "name": "skills",
+  "icon": "⚙️",
+  "kind": "Scheduled workflow",
+  "status": "Active",
+  "surface": "GitHub Actions",
+  "invoke": ".github/workflows/skills.yml",
+  "trigger": "push, pull_request",
+  "desc": "The skills workflow.",
+  "does": [],
+  "tools": [],
+  "files": [
+   {
+    "p": ".github/workflows/skills.yml",
+    "d": "63 lines"
+   }
+  ],
+  "metrics": {
+   "lines": 63,
+   "words": 257,
+   "files": 1,
+   "commits": 3,
+   "modified": "2026-11-21"
+  },
+  "tags": [],
+  "note": "",
+  "related": []
+ }
+];
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const el = (t,c,txt) => { const n=document.createElement(t); if(c)n.className=c; if(txt!=null)n.textContent=txt; return n; };
+const esc = s => String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+const STATUS_CLASS = {Active:"b-active", Paused:"b-paused", Draft:"b-draft", Expired:"b-paused", Blocked:"b-blocked"};
+const state = { q:"", kind:new Set(), status:new Set(), surface:new Set(), view:"grid" };
+
+/* --- stats --- */
+(function stats(){
+  const scheduled = AGENTS.filter(a=>a.sched).length;
+  const running = AGENTS.filter(a=>a.sched && a.status==="Active").length;
+  const skills = AGENTS.filter(a=>a.kind==="Skill").length;
+  const lines = AGENTS.reduce((s,a)=>s+(a.metrics.lines||0),0);
+  const data = [
+    [AGENTS.length,"agents catalogued"],
+    [skills,"invocable skills"],
+    [scheduled,"scheduled jobs"],
+    [running,"running today"],
+    [lines.toLocaleString(),"lines of agent spec"],
+    [new Set(AGENTS.map(a=>a.surface)).size,"execution surfaces"]
+  ];
+  const box=$("#stats");
+  data.forEach(([n,l])=>{ const s=el("div","stat"); s.appendChild(el("b",null,String(n))); s.appendChild(el("span",null,l)); box.appendChild(s); });
+})();
+
+/* --- filters --- */
+function buildFilters(){
+  const box=$("#filters"); box.innerHTML="";
+  const groups = [
+    ["Type","kind", [...new Set(AGENTS.map(a=>a.kind))]],
+    ["Status","status", [...new Set(AGENTS.map(a=>a.status))]],
+    ["Runs on","surface", [...new Set(AGENTS.map(a=>a.surface))]]
+  ];
+  groups.forEach(([label,key,vals])=>{
+    const g=el("div","fgroup"); g.appendChild(el("span","flabel",label));
+    vals.forEach(v=>{
+      const b=el("button","chip"); b.type="button";
+      b.appendChild(document.createTextNode(v));
+      const n=el("span","n",String(AGENTS.filter(a=>a[key]===v).length)); b.appendChild(n);
+      b.setAttribute("aria-pressed", state[key].has(v));
+      b.onclick=()=>{ state[key].has(v)?state[key].delete(v):state[key].add(v); buildFilters(); render(); };
+      g.appendChild(b);
+    });
+    box.appendChild(g);
+  });
+  const clr=el("button","clearbtn","Reset filters"); clr.type="button";
+  clr.onclick=()=>{ state.kind.clear(); state.status.clear(); state.surface.clear(); state.q=""; $("#q").value=""; buildFilters(); render(); };
+  box.appendChild(clr);
+}
+
+function matches(a){
+  if(state.kind.size && !state.kind.has(a.kind)) return false;
+  if(state.status.size && !state.status.has(a.status)) return false;
+  if(state.surface.size && !state.surface.has(a.surface)) return false;
+  if(!state.q) return true;
+  const hay = [a.name,a.desc,a.invoke,a.trigger,a.note||"",a.kind,a.status,a.surface,
+    (a.tags||[]).join(" "),(a.tools||[]).join(" "),(a.does||[]).join(" "),
+    (a.files||[]).map(f=>f.p+" "+f.d).join(" ")].join(" ").toLowerCase();
+  return state.q.toLowerCase().split(/\s+/).filter(Boolean).every(t=>hay.includes(t));
+}
+
+function card(a){
+  const b=el("button","card"); b.type="button";
+  const head=el("div","chead");
+  head.appendChild(el("div","icon",a.icon));
+  const t=el("div"); t.style.minWidth="0";
+  t.appendChild(el("p","cname",a.name));
+  t.appendChild(el("p","cinvoke",a.invoke));
+  head.appendChild(t); b.appendChild(head);
+  b.appendChild(el("p","cdesc",a.desc));
+  const badges=el("div","badges");
+  badges.appendChild(el("span","badge "+(STATUS_CLASS[a.status]||"b-plain"),a.status));
+  badges.appendChild(el("span","badge b-plain",a.kind));
+  badges.appendChild(el("span","badge b-plain",a.surface));
+  b.appendChild(badges);
+  const m=a.metrics, meta=el("div","cmeta");
+  if(m.lines) meta.appendChild(el("span",null,m.lines.toLocaleString()+" lines"));
+  if(m.files) meta.appendChild(el("span",null,m.files+" file"+(m.files>1?"s":"")));
+  if(m.commits) meta.appendChild(el("span",null,m.commits+" commits"));
+  if(m.modified) meta.appendChild(el("span",null,"updated "+m.modified));
+  b.appendChild(meta);
+  b.onclick=()=>open(a.id);
+  return b;
+}
+
+function render(){
+  const list=AGENTS.filter(matches)
+    .sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}));
+  const g=$("#grid"); g.innerHTML="";
+  list.forEach(a=>g.appendChild(card(a)));
+  $("#count").textContent = list.length===AGENTS.length
+    ? AGENTS.length+" agents"
+    : list.length+" of "+AGENTS.length+" agents";
+  if(!list.length){ g.appendChild(el("p","sub","Nothing matches. Try a broader term or reset the filters.")); }
+}
+
+/* --- drawer --- */
+function sect(title, node){ const s=el("section","sect"); s.appendChild(el("h3",null,title)); s.appendChild(node); return s; }
+
+function open(id){
+  const a=AGENTS.find(x=>x.id===id); if(!a) return;
+  $("#dicon").textContent=a.icon;
+  $("#dtitle").textContent=a.name;
+  $("#dinvoke").textContent=a.invoke;
+  const body=$("#dbody"); body.innerHTML="";
+
+  const badges=el("div","badges"); badges.style.marginBottom="14px";
+  badges.appendChild(el("span","badge "+(STATUS_CLASS[a.status]||"b-plain"),a.status));
+  badges.appendChild(el("span","badge b-plain",a.kind));
+  badges.appendChild(el("span","badge b-plain",a.surface));
+  body.appendChild(badges);
+
+  body.appendChild(sect("What it is", el("p",null,a.desc)));
+
+  const dl=el("dl","kv");
+  const add=(k,v)=>{ dl.appendChild(el("dt",null,k)); dl.appendChild(el("dd",null,v)); };
+  add("Trigger", a.trigger);
+  if(a.sched) add("Cadence", a.sched.label);
+  const m=a.metrics;
+  if(m.lines) add("Size", m.lines.toLocaleString()+" lines · "+m.words.toLocaleString()+" words");
+  if(m.files) add("Files", String(m.files));
+  if(m.commits) add("Revisions", m.commits+" commits");
+  if(m.modified) add("Last change", m.modified);
+  body.appendChild(sect("At a glance", dl));
+
+  if(a.does && a.does.length){
+    const ul=el("ul"); a.does.forEach(d=>ul.appendChild(el("li",null,d)));
+    body.appendChild(sect("How it works", ul));
+  }
+  if(a.note){
+    const n=el("div","note"); n.innerHTML="<b>Worth knowing.</b> "+esc(a.note);
+    body.appendChild(sect("Worth knowing", n));
+  }
+  if(a.tools && a.tools.length){
+    const t=el("div","tags"); a.tools.forEach(x=>t.appendChild(el("span","badge b-plain",x)));
+    body.appendChild(sect("Tools it may use", t));
+  }
+  if(a.files && a.files.length){
+    const ul=el("ul","filelist");
+    a.files.forEach(f=>{ const li=el("li"); const b=el("b",null,f.p); li.appendChild(b);
+      li.appendChild(document.createTextNode(" — "+f.d)); ul.appendChild(li); });
+    body.appendChild(sect("Where it lives", ul));
+  }
+  if(a.tags && a.tags.length){
+    const t=el("div","tags"); a.tags.forEach(x=>t.appendChild(el("span","badge b-plain","#"+x)));
+    body.appendChild(sect("Tags", t));
+  }
+  if(a.related && a.related.length){
+    const t=el("div","tags");
+    a.related.forEach(r=>{ const o=AGENTS.find(x=>x.id===r); if(!o) return;
+      const b=el("button","rel",o.icon+" "+o.name); b.type="button"; b.onclick=()=>open(r); t.appendChild(b); });
+    if(t.children.length) body.appendChild(sect("Connected to", t));
+  }
+  $("#drawer").classList.add("on"); $("#drawer").setAttribute("aria-hidden","false");
+  $("#scrim").classList.add("on"); body.scrollTop=0;
+}
+function close(){ $("#drawer").classList.remove("on"); $("#drawer").setAttribute("aria-hidden","true"); $("#scrim").classList.remove("on"); }
+
+/* --- schedule --- */
+function buildSchedule(){
+  const t=$("#track"); t.innerHTML="";
+  const head=el("div","hours"); head.appendChild(el("div","flabel","Agent"));
+  const hb=el("div","hourbar");
+  for(let h=0;h<24;h++) hb.appendChild(el("span",null, h%3===0? (h===0?"12a":h<12?h+"a":h===12?"12p":(h-12)+"p") : ""));
+  head.appendChild(hb); t.appendChild(head);
+
+  AGENTS.filter(a=>a.sched).forEach(a=>{
+    const row=el("div","srow");
+    const nm=el("div","sname",a.icon+"  "+a.name);
+    nm.onclick=()=>open(a.id); row.appendChild(nm);
+    const slots=el("div","slots");
+    const paused = a.status!=="Active";
+    if(a.sched.type==="interval"){
+      const s=el("div","slot cont"); if(paused) s.classList.add("paused"); slots.appendChild(s);
+    } else {
+      a.sched.hours.forEach(h=>{ const s=el("div","slot"); if(paused) s.classList.add("paused");
+        s.style.gridColumn=(h+1)+" / "+(h+2); s.title=a.sched.label; slots.appendChild(s); });
+    }
+    row.appendChild(slots);
+    const lbl=el("div","cmeta"); lbl.style.gridColumn="1 / -1"; lbl.style.marginTop="2px";
+    lbl.appendChild(el("span",null,a.sched.label+(paused?"  ·  "+a.status.toLowerCase():"")));
+    row.appendChild(lbl);
+    t.appendChild(row);
+  });
+}
+
+/* --- pipelines --- */
+const FLOWS = [];
+
+function buildFlows(){
+  const box=$("#flows"); box.innerHTML="";
+  FLOWS.forEach(f=>{
+    const w=el("div","flow");
+    w.appendChild(el("h2",null,f.title));
+    w.appendChild(el("p","hint",f.hint));
+    const stack=el("div","stack");
+    f.rows.forEach(row=>{
+      const c=el("div","chain");
+      row.forEach(item=>{
+        if(item==="→"){ c.appendChild(el("div","arrow","→")); return; }
+        const n=el("button","node"+(item.static?" static":"")); n.type="button";
+        n.appendChild(el("b",null,item.b)); n.appendChild(el("span",null,item.s));
+        if(item.id) n.onclick=()=>open(item.id); else n.disabled=true;
+        c.appendChild(n);
+      });
+      stack.appendChild(c);
+    });
+    w.appendChild(stack); box.appendChild(w);
+  });
+}
+
+/* --- wiring --- */
+$("#q").addEventListener("input", e=>{ state.q=e.target.value; render(); });
+$("#closebtn").onclick=close; $("#scrim").onclick=close;
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape") close();
+  if(e.key==="/" && document.activeElement!==$("#q")){ e.preventDefault(); $("#q").focus(); }
+});
+document.querySelectorAll(".views button").forEach(b=>{
+  b.onclick=()=>{
+    state.view=b.dataset.view;
+    document.querySelectorAll(".views button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    $("#gridview").hidden = state.view!=="grid";
+    $("#schedview").hidden = state.view!=="sched";
+    $("#flowview").hidden = state.view!=="flow";
+  };
+});
+$("#themebtn").onclick=()=>{
+  const cur=document.documentElement.getAttribute("data-theme");
+  const dark=matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = cur ? (cur==="dark"?"light":"dark") : (dark?"light":"dark");
+  document.documentElement.setAttribute("data-theme", next);
+};
+
+buildFilters(); render(); buildSchedule(); buildFlows();
+</script>
+</body>
+</html>

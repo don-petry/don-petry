@@ -1,0 +1,35 @@
+{
+ "_about": "FICTIONAL sample of a my Social Security statement transcribed to JSON, for scripts/ssa_pia.py. Not a real person. estimates_monthly holds only the full-retirement-age figure, set to what ssa_pia.py reproduces (a regression fixture, not an SSA figure).",
+ "name": "Parent A",
+ "born": "1980-01-15",
+ "full_retirement_age": 67,
+ "estimates_monthly": {
+  "67": 3135
+ },
+ "fica_earnings": {
+  "2002": 30000,
+  "2003": 31500,
+  "2004": 33075,
+  "2005": 34729,
+  "2006": 36465,
+  "2007": 38288,
+  "2008": 40203,
+  "2009": 42213,
+  "2010": 44324,
+  "2011": 46540,
+  "2012": 48867,
+  "2013": 51310,
+  "2014": 53876,
+  "2015": 56569,
+  "2016": 59398,
+  "2017": 62368,
+  "2018": 65486,
+  "2019": 68761,
+  "2020": 72199,
+  "2021": 75809,
+  "2022": 79599,
+  "2023": 83579,
+  "2024": 87758,
+  "2025": 92146
+ }
+}

@@ -1,0 +1,173 @@
+{
+ "_about": "FICTIONAL retirement case for scripts/retirement.py (Owl). Every figure is made up; replace each with your own, keeping a source note beside it.",
+ "label": "Example household — early retirement scenarios",
+ "start_date": "2026-10-01",
+ "state": "AL",
+ "people": [
+  {
+   "id": "parent_a",
+   "name": "Parent A",
+   "sex": "F",
+   "born": "1980-01-15",
+   "life_expectancy": 90,
+   "source": "example"
+  },
+  {
+   "id": "parent_b",
+   "name": "Parent B",
+   "sex": "M",
+   "born": "1978-06-30",
+   "life_expectancy": 88,
+   "source": "example"
+  }
+ ],
+ "balances": {
+  "_source": "example — read balances from your custodians' statements",
+  "parent_a": {
+   "taxable": 50000.0,
+   "tax_deferred": 400000.0,
+   "tax_free": 30000.0
+  },
+  "parent_b": {
+   "taxable": 120000.0,
+   "tax_deferred": 600000.0,
+   "tax_free": 20000.0
+  }
+ },
+ "wages": {
+  "_basis": "W-2 box-1 wages from the latest filed return; contributions are today's pattern",
+  "parent_a": {
+   "box1_wages": 150000.0,
+   "contrib_today": {
+    "401k_ctrb": 20000.0,
+    "roth_401k_ctrb": 4000.0
+   },
+   "contrib_2026_remaining": {
+    "401k_ctrb": 3000.0,
+    "roth_401k_ctrb": 1000.0
+   }
+  },
+  "parent_b": {
+   "box1_wages": 110000.0,
+   "contrib_today": {
+    "401k_ctrb": 15000.0,
+    "roth_401k_ctrb": 2000.0
+   },
+   "contrib_2026_remaining": {
+    "401k_ctrb": 2500.0,
+    "roth_401k_ctrb": 500.0
+   }
+  }
+ },
+ "pensions": {
+  "parent_a": {
+   "monthly": 0.0,
+   "age": 65.0,
+   "indexed": false,
+   "survivor_fraction": 0.0,
+   "status": "none"
+  },
+  "parent_b": {
+   "monthly": 2000.0,
+   "age": 65.0,
+   "indexed": false,
+   "survivor_fraction": 0.5,
+   "status": "example plan estimate"
+  }
+ },
+ "social_security": {
+  "_basis": "parent_a: PIA per last working year from scripts/ssa_pia.py on examples/ssa-statement.example.json; parent_b: an annual benefit at 70 converted with Owl's claiming factor",
+  "parent_a": {
+   "claim_age": 70.0,
+   "pia_by_last_work_year": {
+    "2026": 2249,
+    "2030": 2530,
+    "2034": 2811
+   }
+  },
+  "parent_b": {
+   "annual_benefit": 36000.0,
+   "at_age": 70.0,
+   "claim_age": 70.0
+  }
+ },
+ "spending": {
+  "net_annual_today": 90000.0,
+  "profile": "flat",
+  "survivor_percent": 60,
+  "source": "example"
+ },
+ "rates": {
+  "method": "user",
+  "values": [
+   6.0,
+   4.0,
+   3.3,
+   3.0
+  ],
+  "source": "example — [stocks, corporate bonds, 10-yr Treasuries, inflation] in percent"
+ },
+ "allocation": {
+  "stocks_bonds": [
+   60,
+   40
+  ],
+  "source": "example assumption"
+ },
+ "events": {
+  "_source": "today's dollars, grown at the plan's inflation. Negative = expense",
+  "items": [
+   {
+    "what": "Child 1's education",
+    "who": "parent_a",
+    "years": [
+     2030,
+     2031,
+     2032,
+     2033
+    ],
+    "amount_today": -10000.0
+   }
+  ],
+  "rental_income": {
+   "who": "parent_b",
+   "annual_today": 6000.0,
+   "source": "example"
+  },
+  "health_care_pre_medicare": {
+   "annual_today_per_person": 9000.0,
+   "medicare_age": 65,
+   "source": "example"
+  }
+ },
+ "scenarios": {
+  "_about": "last_work_year = the final calendar year with wages, for each person",
+  "work_through_2026": {
+   "parent_a": 2026,
+   "parent_b": 2026
+  },
+  "work_through_2030": {
+   "parent_a": 2030,
+   "parent_b": 2030
+  },
+  "work_through_2034": {
+   "parent_a": 2034,
+   "parent_b": 2034
+  }
+ },
+ "objectives": [
+  {
+   "name": "max_spending",
+   "objective": "maxSpending",
+   "bequest_today": 0.0
+  },
+  {
+   "name": "estate_at_baseline",
+   "objective": "maxBequest",
+   "net_spending_today": 90000.0
+  }
+ ],
+ "pending": [
+  "example — list what is still an assumption"
+ ]
+}

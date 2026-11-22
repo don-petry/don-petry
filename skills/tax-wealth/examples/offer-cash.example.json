@@ -1,0 +1,29 @@
+{
+ "label": "FICTIONAL salaried offer comparison",
+ "assumptions": [
+  "Every figure here is made up for illustration."
+ ],
+ "comp_limit": 360000,
+ "baseline": {
+  "name": "Stay",
+  "base": 150000,
+  "bonus": 15000,
+  "employer_retirement": 9000
+ },
+ "offers": [
+  {
+   "name": "Offer 175 / 10%",
+   "base": 175000,
+   "bonus_pct": 0.1,
+   "employer_retirement_pct": 0.05,
+   "year1_employer_retirement_pct": 0.0
+  }
+ ],
+ "breakeven": [
+  {
+   "name": "Year 1, no bonus",
+   "bonus_pct": 0.0,
+   "year1_employer_retirement_pct": 0.0
+  }
+ ]
+}

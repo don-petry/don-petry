@@ -1,0 +1,54 @@
+{
+ "tax_year": 2026,
+ "state": "AL",
+ "label": "FICTIONAL example household \u2014 salary plus a year-end gift",
+ "assumptions": [
+  "Every figure here is made up for illustration."
+ ],
+ "adults": [
+  {
+   "id": "parent_a",
+   "age": 46
+  },
+  {
+   "id": "parent_b",
+   "age": 48
+  }
+ ],
+ "dependents": [
+  {
+   "id": "child_1",
+   "age": 12
+  }
+ ],
+ "cases": {
+  "base": {
+   "parent_a.wages": 150000,
+   "parent_b.wages": 110000,
+   "parent_a.pretax_payroll": 20000,
+   "parent_a.real_estate_taxes": 3000,
+   "parent_a.mortgage_interest": 9000,
+   "tu.state_income_tax_paid": 11000
+  },
+  "gift": {
+   "parent_a.wages": 150000,
+   "parent_b.wages": 110000,
+   "parent_a.pretax_payroll": 20000,
+   "parent_a.real_estate_taxes": 3000,
+   "parent_a.mortgage_interest": 9000,
+   "tu.state_income_tax_paid": 11000,
+   "parent_a.charitable_cash": 15000
+  }
+ },
+ "derive": [
+  {
+   "name": "gift_tax_saving",
+   "type": "delta",
+   "case": "base",
+   "base": "gift",
+   "vars": [
+    "total_tax"
+   ]
+  }
+ ]
+}

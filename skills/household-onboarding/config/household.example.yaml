@@ -1,0 +1,70 @@
+# Copy to config/household.yaml and fill in your own household. That file is yours; keep it out of
+# any public repo (it names people, places and documents). Every value below is fictional.
+# SKILL.md reads it at Step 0; until it exists, the skill only explains and asks.
+
+household:
+  name: Example household
+  user: Parent A                 # runs the skill; "someone the user acts for" is relative to this person
+  respondents:                   # who answers interviews; the first is the default respondent
+    - name: Parent A
+      owner: true                # owns the phone page (page/questions.html), if you use it
+    - name: Parent B
+  protected_persons:             # adults the household cares for: facts only, never decisions or asset moves
+    - name: Grandparent 1
+      note: "Who holds authority for them (guardian, conservator, POA agent) and on what document."
+  minors_note: "Child 1 and Child 2 are minors; record each child's majority date in the facts file."
+  answers_need_confirmation: false   # true = a second respondent must confirm each answer before write-back
+  credential_store: your password manager   # credentials go there, never into these files
+
+paths:                           # relative to your repository root
+  workspace: notes/onboarding    # holds plan.md, coverage.yaml, cards/, sessions/
+  plan: notes/onboarding/plan.md         # your run of references/plan.md (waves and dates); optional
+  coverage: notes/onboarding/coverage.yaml   # start from examples/coverage.example.yaml
+  cards: notes/onboarding/cards
+  sessions: notes/onboarding/sessions
+  household_facts: notes/household-facts.md   # people, dates of birth, AUTHORITY DOCUMENTS, open questions
+  fact_question_prefix: Q-HF     # ids for new household-fact questions
+  advisory_contract: docs/advisory-teams.md   # shared advisory-team contract (escalation table in §5)
+  sitemap: null                  # a top-level index of your notes, if you keep one
+  identity_store: [notes/vital-records/]      # where identity numbers live; link them, never copy them
+  project_validator: null        # a command that validates a matter's project.yaml, if you use one
+  values_file: null              # optional: a file of the household's own values (see references/plan.md §8)
+  transcript_skill: null         # a skill that processes recorded conversations, if you have one
+  repo_checks: []                # commands to run before committing (lint, encoding guard)
+
+note_frontmatter: {}             # extra frontmatter keys your notes carry (e.g. notebook, section); added to every card and session log
+
+schema:                          # rename the generic advisory: fields only if your project.yaml uses other names
+  field_names:
+    capacity: capacity
+    personal_interest: personal_interest
+
+areas:                           # your names, landing paths and lead respondent per area (references/areas.md)
+  A1: {name: "People, relationships & authority", lands_in: "notes/household-facts.md", lead: Parent A}
+  A2: {name: Estate, lands_in: notes/estate/project.yaml, lead: joint}
+  A3: {name: Legal matters, lands_in: "notes/legal/index.md + one project.yaml per matter", lead: Parent A}
+  A4: {name: "Money — accounts, income, debts, tax", lands_in: notes/money/, lead: Parent A}
+  A5: {name: "Insurance & risk", lands_in: notes/insurance/, lead: Parent A}
+  A6: {name: Property, lands_in: notes/property/, lead: Parent A, note: "Home at 100 Example Lane; one rental"}
+  A7: {name: "Work & career", lands_in: notes/work/, lead: Parent A, note: "Parent B leads their own benefits"}
+  A8: {name: "Kids & education", lands_in: notes/kids/, lead: Parent A}
+  A9: {name: "Elder & dependent care", lands_in: notes/grandparent-1/, lead: Parent B}
+  A10: {name: Health, lands_in: notes/health/, lead: Parent A}
+  A11: {name: Vehicles, lands_in: notes/vehicles/, lead: Parent A}
+  A12: {name: "Community & small business", lands_in: notes/community/, lead: Parent A,
+        note: "School board seat; a home bakery"}
+  A13: {name: "Digital life & continuity", lands_in: notes/continuity.md, lead: Parent A}
+  A14: {name: "Family history & values", lands_in: notes/values.md, lead: joint}
+
+connectors:                      # extra read-only sources discovery may use, by area (e.g. a health-records connector)
+  A10: []
+
+drive:
+  domain_label: null             # a label your files carry that lists one area's documents in one search
+  domains: []                    # your top-level document folders
+
+phone_page:                      # optional async question page (page/questions.html; references/phone-page.md)
+  url: null
+  settings: {respondents: [Parent A, Parent B], owner: Parent A}
+
+harnesses: []                    # agents you run this with (informational)

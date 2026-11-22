@@ -420,6 +420,56 @@ const AGENTS = [
   "related": []
  },
  {
+  "id": "eob-sync",
+  "name": "Eob Sync",
+  "icon": "📝",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/eob-sync  ·  skills/eob-sync/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Sync a household's health and dental Explanations of Benefits from any insurer, claim by claim, and flag every claim that needs a person: denials, coordination-of-benefits holds, records requests, out-of-network and balance billing, provider bills above the EOB, aged pending claims, appeal deadlines, duplicates, unread EOB notices, prior-authorization changes, missed premiums, expected claims that never arrived, and deductible / out-of-pocket / dental-maximum position and unused cleanings before year end. Notice emails trigger it; the signed-in member portal is the source; EOB PDFs go to the document store. Plans and thresholds are configured; Blue Cross is the worked portal example. Use for \"sync the EOBs\", \"check the EOBs\", \"Blue Cross claims\", \"did insurance pay\", \"dental claim\", \"prior authorization\", \"am I being overbilled\", \"how much of the deductible is left\", \"appeal a denial\". Read-only: never appeals, pays, calls, changes preferences or submits a claim.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/eob-sync/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/eob-sync/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/eob-sync/examples/",
+    "d": "5 files"
+   },
+   {
+    "p": "skills/eob-sync/reference/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/eob-sync/scripts/",
+    "d": "3 files"
+   }
+  ],
+  "metrics": {
+   "lines": 161,
+   "words": 1868,
+   "files": 11,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
   "id": "flight-price-optimizer",
   "name": "Flight Price Optimizer",
   "icon": "💺",
@@ -504,6 +554,194 @@ const AGENTS = [
    "files": 11,
    "commits": 1,
    "modified": "2026-11-20"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "health-advocate",
+  "name": "Health Advocate",
+  "icon": "🩺",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/health-advocate  ·  skills/health-advocate/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Household healthcare advocate — the health advisory team for a family's plan members. Runs a who-may-act gate (spouses, minors, children of separated parents, adult children, HIPAA authorizations) and escalations first, then works claims and EOBs (eob-sync), HSA and limited-purpose FSA reimbursement (hsa-fsa-reimburse), appeals, coordination of benefits with Medicaid, records access, year-end benefit use and open enrollment — every rule from a fetched primary source, every figure from an EOB or plan document. Members, plans and jurisdiction are configured. Drafts only; never submits, pays, appeals, calls or signs. Not medical, legal or tax advice. Use for \"health status\", \"what's open on medical / dental\", \"reimburse from the HSA\", \"FSA balance due\", \"appeal a denial\", \"prior authorization\", \"Medicaid secondary\", \"HIPAA authorization\", \"open enrollment\", \"use the benefits before year end\", \"health weekly\". Not for clinical questions, tax dependency calls or disputes outside the plan's process.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/health-advocate/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/health-advocate/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/health-advocate/reference/",
+    "d": "4 files"
+   }
+  ],
+  "metrics": {
+   "lines": 195,
+   "words": 2212,
+   "files": 6,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "household-onboarding",
+  "name": "Household Onboarding",
+  "icon": "🧭",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/household-onboarding  ·  skills/household-onboarding/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Build a sourced picture of a household for its advisory teams (legal, tax and wealth, health) — past, current and future for each of 14 areas of concern: people and authority, estate, legal matters, money, insurance, property, work, kids and education, elder and dependent care, health, vehicles, community and small business, digital continuity, and family history and values. Discovery first (notes, documents, mail, calendar; read-only), every field sourced or marked conflict or gap; then short interviews (at most 12 questions) limited to conflicts, gaps and intent; then write-back into the files the teams already read, with coverage tracked per area. Never infers custody, capacity, relationship or intent. Use for \"onboarding\", \"run the onboarding plan\", \"discover <area>\", \"interview me about <area>\", \"what do the teams still not know\", \"onboarding coverage\", \"write back the session\", or after a life event that reopens an area.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/household-onboarding/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/household-onboarding/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/household-onboarding/examples/",
+    "d": "3 files"
+   },
+   {
+    "p": "skills/household-onboarding/page/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/household-onboarding/references/",
+    "d": "5 files"
+   },
+   {
+    "p": "skills/household-onboarding/scripts/",
+    "d": "2 files"
+   }
+  ],
+  "metrics": {
+   "lines": 172,
+   "words": 1665,
+   "files": 14,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "hsa-fsa-reimburse",
+  "name": "Hsa Fsa Reimburse",
+  "icon": "💰",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/hsa-fsa-reimburse  ·  skills/hsa-fsa-reimburse/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "A household's HSA and limited-purpose health FSA \"shoebox\": plan, package and record reimbursements with the saved EOBs as receipts. Holds any claim whose patient's HSA eligibility is unsettled (the tax side decides dependency), routes dental and vision to the FSA while that year's election has room, routes orthodontics to the invoices actually paid, finds ledger or card evidence of out-of-pocket payment, builds a submission packet, records what was filed (including claims split between accounts), and clears FSA \"balance due\" substantiation. Reads Alegeus WealthCare portal activity into a register and a Beancount ledger. Administrator, account holder and accounts are configured. Part of the health team (health-advocate). Use for \"reimburse from the HSA\", \"HSA receipts\", \"what can we claim\", \"FSA balance due\", \"submit the FSA claims\", \"orthodontic FSA\", \"mark it reimbursed\", \"HSA shoebox\". Never submits, transfers or changes an election — the account holder files.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/hsa-fsa-reimburse/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/hsa-fsa-reimburse/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/hsa-fsa-reimburse/examples/",
+    "d": "9 files"
+   },
+   {
+    "p": "skills/hsa-fsa-reimburse/scripts/",
+    "d": "5 files"
+   }
+  ],
+  "metrics": {
+   "lines": 113,
+   "words": 1175,
+   "files": 16,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "legal",
+  "name": "Legal",
+  "icon": "⚖️",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/legal  ·  skills/legal/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Household legal guide — legal questions, insurance claims and disputes, demand and counter letters, settlement offers and releases, contracts and leases, estate documents, landlord-tenant, small claims, court filings for a minor or ward, deadlines and limitation periods, and \"do I need a lawyer\". Runs a capacity-and-escalation gate first, keeps a matter file, drafts into drafts/, and lets nothing reach outbound/ until every citation and quotation passes the verification gate; hands off to a licensed attorney when an escalation fires. The jurisdiction is configured per household. Not a lawyer and not legal advice; never files, signs or sends. Use for \"legal\", \"is this legal\", \"can they do that\", \"demand letter\", \"counteroffer\", \"release\", \"settlement\", \"statute\", \"deadline to sue\", \"small claims\", \"court approval of a minor's settlement\", \"lawyer\".",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/legal/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/legal/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/legal/playbooks/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/legal/reference/",
+    "d": "3 files"
+   }
+  ],
+  "metrics": {
+   "lines": 164,
+   "words": 1783,
+   "files": 6,
+   "commits": 1,
+   "modified": "2026-11-21"
   },
   "tags": [
    "model-invoked"
@@ -634,6 +872,335 @@ const AGENTS = [
   "related": []
  },
  {
+  "id": "tax-wealth",
+  "name": "Tax Wealth",
+  "icon": "💰",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/tax-wealth  ·  skills/tax-wealth/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Household tax, wealth and financial-planning guide — the tax & wealth advisory team. Runs a capacity gate and escalations first, then works tax projections, year-end moves, estimated payments, 529 and education funding, dependency questions, rental and side-business tax facts, titling and beneficiary inventory, retirement and Social Security scenarios, and the CPA packet, with every figure from a deterministic engine run (PolicyEngine-US, Owl) and every rule from a fetched primary source. The state is configured per household (Alabama is the worked example). Hands return positions to a CPA or EA and legal documents to an attorney. Not tax, legal or investment advice; never files, pays or signs. Use for \"taxes\", \"tax projection\", \"year-end tax moves\", \"estimated taxes\", \"W-4\", \"529 contribution\", \"can we claim\", \"dependents\", \"charitable bunching\", \"donor-advised fund\", \"Schedule E\", \"Schedule C or F\", \"Roth\", \"rollover\", \"retirement scenarios\", \"tax-wealth status\", \"CPA packet\", \"IRS notice\".",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/tax-wealth/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/tax-wealth/config/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/tax-wealth/examples/",
+    "d": "4 files"
+   },
+   {
+    "p": "skills/tax-wealth/reference/",
+    "d": "5 files"
+   },
+   {
+    "p": "skills/tax-wealth/scripts/",
+    "d": "12 files"
+   }
+  ],
+  "metrics": {
+   "lines": 166,
+   "words": 1645,
+   "files": 23,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "tax-wealth-intake",
+  "name": "Tax Wealth Intake",
+  "icon": "📥",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/tax-wealth-intake  ·  skills/tax-wealth-intake/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Build or refresh the household fact finder for the tax & wealth and legal advisory teams — people, birthdays, who lives where, custody and guardianship orders, POAs, trusts, dependents' income, accounts, side business and household workers — mined from the household's own notes with a source for every fact, then list only what is genuinely missing as shared open questions. Never infers custody, relationship, capacity or authority, and never computes figures. Use for \"tax-wealth intake\", \"update household facts\", \"authority documents\", \"what do we still need to know\", after any life event (birth, move, new order, job change, new account), or when the tax-wealth skill runs intake.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/tax-wealth-intake/SKILL.md",
+    "d": "the skill"
+   }
+  ],
+  "metrics": {
+   "lines": 43,
+   "words": 361,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "tax-wealth-job-offer",
+  "name": "Tax Wealth Job Offer",
+  "icon": "📈",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/tax-wealth-job-offer  ·  skills/tax-wealth-job-offer/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Analyze a job offer or job change for a household adult from the tax, wealth and asset-management side — cash vs. equity structures, stock options, ISO/NSO, early exercise and 83(b), QSBS, AMT, break-even exit values, liquidity and concentration risk, and the benefits lost by leaving the current employer (group umbrella and life insurance, disability, 401(k) match, HSA/FSA) — with every figure from the deterministic equity and offer scripts or a tax engine. Routes offer-letter and equity-plan terms to legal and an employment attorney, and the 83(b) filing to a CPA or EA. Not tax, legal or investment advice; never recommends accepting, signing, exercising or electing. Use for \"job offer\", \"equity offer\", \"offer structures\", \"cash vs equity\", \"stock options\", \"83(b)\", \"QSBS\", \"should I take the equity\", \"compare offers\", \"what do we lose if I leave\".",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/tax-wealth-job-offer/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/tax-wealth-job-offer/scripts/",
+    "d": "2 files"
+   }
+  ],
+  "metrics": {
+   "lines": 74,
+   "words": 732,
+   "files": 3,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "tax-wealth-returns",
+  "name": "Tax Wealth Returns",
+  "icon": "🧾",
+  "kind": "Skill",
+  "status": "Active",
+  "surface": "Agent Skills",
+  "invoke": "/tax-wealth-returns  ·  skills/tax-wealth-returns/SKILL.md",
+  "trigger": "On demand (model-invoked)",
+  "desc": "Extract a household's filed tax returns (federal Form 1040 with schedules, and a mapped state return — Alabama Form 40 is the worked example) from the PDFs into structured JSON — every line with its page and source token, a key-lines summary, identity checks and cross-checks against the preparer's cover summary — and keep a multi-year table for quick reference and analysis. Deterministic: no figure is typed by a model. Use for \"extract our tax returns\", \"pull last year's return\", \"what was our AGI / taxable income / total tax in <year>\", \"add the <year> return\", \"tax history\", \"compare our returns\", \"did we itemize\", \"how much did we owe\", or when a tax-wealth analysis needs actual filed figures (calibrating an engine, a projection, the CPA packet). Part of the tax & wealth team; not tax advice.",
+  "does": [],
+  "tools": [
+   "Read",
+   "Bash"
+  ],
+  "files": [
+   {
+    "p": "skills/tax-wealth-returns/SKILL.md",
+    "d": "the skill"
+   },
+   {
+    "p": "skills/tax-wealth-returns/reference/",
+    "d": "1 file"
+   },
+   {
+    "p": "skills/tax-wealth-returns/scripts/",
+    "d": "5 files"
+   }
+  ],
+  "metrics": {
+   "lines": 94,
+   "words": 1001,
+   "files": 7,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "model-invoked"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-health-benefits-analyst",
+  "name": "Health Benefits Analyst",
+  "icon": "🩺",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/health-benefits-analyst.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Health team analyst for the money side of coverage — HSA and limited-purpose FSA eligibility and substantiation, which account a paid claim should be reimbursed from, FSA use-it-or-lose-it and carryover, year-end benefit use (deductible, out-of-pocket, dental maximum, cleanings), and open-enrollment comparisons. Works only from EOB rows, plan documents, the reimbursement register and dated rules; every figure from a script or a quoted document, never its own arithmetic. Hands dependency calls to whoever decides the household's taxes. Use when a reimbursement decision, an FSA balance-due notice, a year-end question or an enrollment choice comes up.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/health-benefits-analyst.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 56,
+   "words": 515,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-health-intake",
+  "name": "Health Intake",
+  "icon": "📥",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/health-intake.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Health team intake. For one household plan member, fills that person's health project — plans and member IDs, providers by name and role, who may act for them and on what signed document, HSA eligibility status as recorded by whoever decides the household's taxes, open clocks — from the household's records, mail, documents and calendar, with a source on every field, and lists only what is genuinely missing as questions. Never infers coverage, dependency, custody, capacity or consent, and never records clinical detail. Use at the start of health work for a person, after a plan or provider change, a birthday that changes who may act, or a new authorization.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/health-intake.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 66,
+   "words": 661,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-legal-intake",
+  "name": "Legal Intake",
+  "icon": "📥",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/legal-intake.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Intake for the household legal team. Turns a legal question or a pile of documents into a structured matter file — who the party is, in what capacity the user acts, forum, jurisdiction, parties and counsel, documents, every clock with its source, and the escalation triggers that fire — then derives the gate mode. Asks rather than infers. Use at the start of any legal matter, when a new document or letter arrives, and whenever the capacity or forum may have changed.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/legal-intake.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 88,
+   "words": 771,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-onboarding-discovery",
+  "name": "Onboarding Discovery",
+  "icon": "🧭",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/onboarding-discovery.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Household onboarding discovery. For one area of concern (A1–A14 in skills/household-onboarding/references/areas.md), sweeps the household's notes, documents, mail and calendar read-only and builds a draft state card — past timeline, current state, future goals and clocks — with a source on every field and each field marked sourced, conflict or gap. Never infers custody, capacity, relationship or intent, never changes a label or sends anything. Use before any onboarding interview, after a life event, and on each area's quarterly refresh.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/onboarding-discovery.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 97,
+   "words": 860,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-onboarding-interviewer",
+  "name": "Onboarding Interviewer",
+  "icon": "🧭",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/onboarding-interviewer.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Household onboarding interviewer. Turns a draft state card's conflicts and gaps into at most 12 questions in a fixed order (confirm, resolve conflicts, fill gaps, narrate the past, state intent, set policy), runs the session with a household respondent live, async or from a transcript, and records every answer attributed and dated in a session log. Asks, never infers; stops and hands off when an escalation surfaces. Use after onboarding-discovery has built a card for an area.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/onboarding-interviewer.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 85,
+   "words": 699,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
   "id": "agent-red-team",
   "name": "Red Team",
   "icon": "🥊",
@@ -692,6 +1259,72 @@ const AGENTS = [
    "files": 1,
    "commits": 1,
    "modified": "2026-11-20"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-tax-wealth-equity-analyst",
+  "name": "Tax Wealth Equity Analyst",
+  "icon": "📈",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/tax-wealth-equity-analyst.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Tax-wealth team analyst for equity compensation in a job offer or an existing grant — stock options (ISO/NSO), restricted stock, RSUs, ESOP allocations, early exercise and 83(b), QSBS (IRC 1202), AMT, vesting, acceleration, post-termination exercise, repurchase rights, liquidity path. Maps every tax event and its clock, models offers only through skills/tax-wealth/scripts/equity_scenarios.py and engine runs, and adds the wealth view (liquidity, concentration, benefits lost from the current employer). Never computes a figure itself. Use when an offer, grant, plan document or exit event involves equity.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/tax-wealth-equity-analyst.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 86,
+   "words": 889,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
+  },
+  "tags": [
+   "persona"
+  ],
+  "note": "",
+  "related": []
+ },
+ {
+  "id": "agent-tax-wealth-intake",
+  "name": "Tax Wealth Intake",
+  "icon": "📥",
+  "kind": "Agent persona",
+  "status": "Active",
+  "surface": "Subagent",
+  "invoke": "Delegate, or read inline  ·  agents/tax-wealth-intake.md",
+  "trigger": "Delegated by a skill, or invoked inline",
+  "desc": "Tax-wealth team intake. Mines the household's own notes for facts and authority documents (custody and guardianship orders, POAs, trusts, birthdays, dependents, income sources, accounts) and writes them into the household fact finder with a source for every fact, then lists only the facts that are genuinely missing as open questions. Never infers custody, relationship, capacity or authority, and never computes figures. Use at the start of tax-wealth work, after any life event, and when the tax-wealth skill runs intake.",
+  "does": [],
+  "tools": [
+   "All tools"
+  ],
+  "files": [
+   {
+    "p": "agents/tax-wealth-intake.md",
+    "d": "the persona — frontmatter is name + description only"
+   }
+  ],
+  "metrics": {
+   "lines": 61,
+   "words": 593,
+   "files": 1,
+   "commits": 1,
+   "modified": "2026-11-21"
   },
   "tags": [
    "persona"

@@ -1,0 +1,8 @@
+plan,claim_id,patient,provider,network,service_date,processed_date,billed,allowed,plan_paid,deductible,copay,coinsurance,not_covered,patient_resp,status,remarks,appeal_by,provider_billed,reimbursed,eob_drive_id,resolution,notes,cleaning
+dental,D1001,Parent A,Example Family Dental,out,2026-02-25,2026-03-02,120.00,120.00,70.00,50.00,,,,50.00,paid,,,,,sample-eob-D1001.pdf,,PREVENTIVE,covered
+dental,D1002,Parent B,Example Family Dental,out,2026-04-14,2026-04-20,180.00,180.00,135.00,0.00,,,,45.00,paid,,,,,sample-eob-D1002.pdf,,DIAGNOSTIC,
+dental,D1005,Child 1,Example Orthodontics,out,2026-07-01,2026-07-09,400.00,400.00,400.00,0.00,,,,0.00,paid,,,,,,,ORTHODONTICS,
+dental,D1006,Child 1,Example Orthodontics,out,2026-08-01,2026-08-09,150.00,150.00,60.00,0.00,,,,90.00,paid,,,,,sample-eob-D1006.pdf,,ORTHODONTICS,
+medical,M2001,Child 1,Example Clinic,in,2026-03-10,2026-03-20,210.00,140.00,0.00,140.00,,,,140.00,paid,,,,,sample-eob-M2001.pdf,,,
+medical,M2002,Parent A,Example Urgent Care,in,2026-05-02,2026-05-12,95.00,75.00,0.00,75.00,,,,75.00,paid,,,,,,,,
+medical,M2003,Child 2,Example Imaging Center,in,2026-09-11,2026-09-25,330.00,180.00,144.00,0.00,,36.00,,36.00,paid,,,,,sample-eob-M2003.pdf,,,

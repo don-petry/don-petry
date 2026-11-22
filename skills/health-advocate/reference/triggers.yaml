@@ -1,0 +1,62 @@
+# Health capability triggers — shared format: the advisory contract (config paths.advisory_contract).
+#
+# Nothing here is installed by default and nothing records "enabled". Each run probes what THIS session has
+# (SKILL.md Step 0.3), records a gap in the person's advisory.gaps when a capability was missing
+# (`- {trigger: T-…, date: YYYY-MM-DD, note: …}`), and raises a trigger to the user as an open question when its
+# signal is met. On a yes, the setup is committed for the harnesses the household uses (config `harnesses`); git
+# history is the record.
+#
+# `setup.any` applies to every harness; per-harness keys appear only where the step differs.
+#
+# Shorthand used in signals:  H = every <config paths.projects>/*/project.yaml
+#                              E = config paths.eob_store
+
+- id: T-PORTAL-SESSION
+  condition: a run needs claim, accumulator, prior-auth or HSA/FSA data that only a signed-in portal shows (config `portals`)
+  signal: "two or more T-PORTAL-SESSION gap entries in H within 30 days"
+  probe: "an agent browser is available and the portal page reads as signed in, not a login form"
+  setup:
+    any: "the account holder signs in once in the agent's browser with 'remember me'; the agent never types the password"
+  secrets: none — sessions only
+  verify: "the plan's claim_list_url (E/plans.yaml) loads the claims list without a sign-in page"
+  proposed_as: question
+
+- id: T-EOB-FEED
+  condition: medical EOB notices never reach the mailbox the sync reads (eob_check FEED_MISSING), so new medical claims are found only by a portal read
+  signal: "eob_check.py reports FEED_MISSING for a plan"
+  probe: "a mailbox search for the plan's EOB sender returns a message from the last 60 days"
+  setup:
+    any: "config eob_feed_fix — usually: the subscriber turns on email EOB notices in the insurer's portal, to an address the sync reads, or forwards them with a mail filter; record the sender in E/plans.yaml notices.eob"
+  secrets: none
+  verify: "eob_check.py no longer reports FEED_MISSING"
+  proposed_as: question
+
+- id: T-HSA-FEED
+  condition: the reimbursement register needs the HSA's cash balance and distributions without a browser read
+  signal: "reimburse.py status reports HSA distributions 'unknown' on two monthly runs"
+  probe: "a read-only bank-aggregator link for the HSA exists (config hsa_feed)"
+  setup:
+    any: "link the HSA through a read-only aggregator in shadow mode (config hsa_feed); whether the aggregator supports the custodian is the test"
+  secrets: the aggregator's access token, read-only, stored the way your own rules store read-only keys
+  verify: "a shadow sync lists the HSA's transactions for the last 30 days"
+  proposed_as: question
+
+- id: T-CLOCK
+  condition: an appeal or external-review clock is set by rule rather than printed on a document
+  signal: "an open clock in H whose source says 'rule:erisa-appeal-180' or 'rule:external-review-4mo'"
+  probe: "test -f <config paths.deadline_calc>"
+  setup:
+    any: "the shared deadline engine (advisory contract); add a health rule set (calendar days from receipt of the notice)"
+  secrets: none
+  verify: "<deadline_calc> --rule erisa-appeal-180 --from <date> prints a computation trace"
+  proposed_as: question
+
+- id: T-CLINICAL-RECORDS
+  condition: a medical-necessity appeal needs clinical records the household does not hold
+  signal: "a draft in H/../drafts names records as a missing exhibit"
+  probe: "a patient-authorized records tool is available (config clinical_records) and shows a sync newer than 30 days"
+  setup:
+    any: "the person links their own providers in the records service (the identity check is theirs); records are read only for the appeal at hand"
+  secrets: none — the person's own consent in the service
+  verify: "the tool returns encounters for the provider named in the appeal"
+  proposed_as: question

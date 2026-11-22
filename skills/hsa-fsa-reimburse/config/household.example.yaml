@@ -1,0 +1,61 @@
+# Copy to config/household.yaml and fill in your own household. That file is yours; keep it out of
+# any public repo. Every value below is fictional. SKILL.md and the scripts read it.
+# FSA elections, claim deadlines, the HSA policy and name → project slugs go in the store's
+# accounts.yaml (see examples/store/accounts.yaml), not here.
+
+household:
+  account_holder: Parent B              # holds the HSA / FSA and files the claims
+  employer: Example Employer
+  timezone: America/New_York
+
+paths:                                  # relative to your repository root
+  store: data/insurance-eobs            # claims.csv (from skills/eob-sync), accounts.yaml, reimbursements.csv
+  projects: data/health                 # <slug>/project.yaml → health.hsa_eligible (skills/health-advocate)
+  ledger: null                          # a folder of Beancount files to search for out-of-pocket payments, if you keep one
+  admin_store: data/insurance-eobs/administrator   # activity.csv and accounts.csv from the administrator's portal
+  admin_ledger: null                    # where alegeus_sync.py ledger writes its Beancount file (not payment evidence)
+  packets: data/health/drafts
+  bean_check: bean-check main.bean
+  manual_ledger: null
+  eob_skill: skills/eob-sync
+  team_skill: skills/health-advocate
+  mojibake_guard: python3 tools/mojibake_guard.py --staged
+
+administrator:
+  name: Example Benefits (Alegeus WealthCare portal)
+  short_name: Example Benefits
+  hsa_custodian: Example Bank
+  codes: {hsa: HSA, fsa: FSA, dcfsa: DCA}   # the portal's account type codes
+  activity_url: https://example.wealthcareportal.com/Page/AccountActivity
+  sign_in: The account holder signs in and opens Account Activity.
+  file_in: the administrator's portal (Reimbursement → Add expense)
+
+pdfs:
+  link_template: null                   # e.g. a document store's file URL with {id}; null prints the EOB id as is
+
+orthodontics:
+  invoices: orthodontist's invoices     # reimburse what was actually paid on these, not the EOB amount
+  note: null
+
+ledger:
+  title: Parent B's HSA, health FSA and dependent-care FSA (Example Employer).
+  fsa_comment: null
+  id_key: alegeus_id                    # Beancount metadata key holding the portal row id
+  accounts:                             # Beancount account names; omit any to keep the default
+    hsa_cash: Assets:HSA:Cash
+    hsa_invested: Assets:HSA:Invested
+    fsa: Assets:FSA:Health
+    dcfsa: Assets:FSA:DependentCare
+    payroll: Income:Salary:Employer
+  category_hints:                       # extra merchant words (your dentist's name, your pharmacy chain)
+    dental: []
+    pharmacy: []
+    childcare: []
+
+decisions:
+  hsa_policy_question: null             # where the household's reimburse-now-or-defer answer is recorded
+  dcfsa_tracking: null
+  balance_due_action: null
+  plan_totals_action: null
+
+commit: Commit the store after each run.

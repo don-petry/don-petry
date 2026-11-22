@@ -1,0 +1,3 @@
+id: health-child-2
+health:
+  hsa_eligible: {status: unknown, basis: "dependency for this year not yet decided by whoever does the taxes (sample)", source: "sample"}

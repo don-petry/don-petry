@@ -1,0 +1,48 @@
+# FICTIONAL sample EOB store for skills/eob-sync — every name, number and provider is made up.
+# Try it:  python3 skills/eob-sync/scripts/eob_check.py --dir skills/eob-sync/examples/store --today 2026-11-08
+
+plans:
+  dental:
+    name: Example Dental PPO (individual policy)
+    carrier: Example Insurer
+    contract: EX000000000             # contract / member number from the ID card
+    subscriber: Parent A
+    members: [Parent A, Parent B, Child 1, Child 2]
+    plan_year: calendar
+    deductible: 50
+    annual_max: 1500
+    cleanings_per_year: 2             # from the benefit booklet
+    portal_names: {Parenta Example: Parent A, Child1 Example: Child 1}   # how the portal truncates names
+    portal: https://portal.insurer.example
+    claim_list_url: https://portal.insurer.example/member/claims
+    notices:
+      eob: eob-notices@example.com
+      premium_paid: payments@example.com
+  medical:
+    name: Example Employer PPO (group plan)
+    carrier: Example Insurer
+    member_id: EXM000000000
+    subscriber: Parent B
+    members: [Parent A, Parent B, Child 1, Child 2]
+    plan_year: calendar
+    in_network: {deductible: 3000, oop_max: 6000}
+    portal: https://portal.insurer.example
+    claim_list_url: https://portal.insurer.example/member/claims
+    notices:
+      prior_auth: precert@example.com
+      eob: unknown                    # this plan's EOB emails do not reach the mailbox the sync reads
+
+expected_claims:
+  - id: ortho-child-1
+    plan: dental
+    patient: Child 1
+    provider: Example Orthodontics
+    what: Orthodontic benefit the office said it filed
+    expect_by: 2026-10-01
+
+thresholds:
+  high_patient_resp: 250
+  pending_days: 30
+  appeal_warn_days: 30
+  stale_days: 14
+  accumulator_warn: 0.8

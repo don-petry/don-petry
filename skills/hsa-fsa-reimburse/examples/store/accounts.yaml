@@ -1,0 +1,33 @@
+# FICTIONAL sample for skills/hsa-fsa-reimburse — every name and number is made up.
+# Try it:  python3 skills/hsa-fsa-reimburse/scripts/reimburse.py --store skills/hsa-fsa-reimburse/examples/store \
+#            --projects skills/hsa-fsa-reimburse/examples/projects --today 2026-11-08 plan --year 2026 --detail
+
+hsa:
+  holder: parent-b
+  custodian: Example Bank
+  administrator: Example Benefits (Alegeus WealthCare portal)
+  opened: 2020-01-01                   # only expenses incurred after this date qualify [rule:hsa-incurred-after]
+  policy: reimburse_now                # or: defer (let the HSA grow; keep the register as the record). null = ask
+
+fsa:                                   # limited-purpose: dental and vision only, alongside the HSA [rule:lpfsa-compatible]
+  administrator: Example Benefits
+  years:
+    2026:
+      election: 300
+      claim_deadline: 2027-03-31       # from the FSA plan rules
+      carryover_cap: 680
+      used_outside_register: 120       # card charges already made from the FSA — substantiate, don't re-claim
+
+dcfsa:                                 # dependent-care FSA: not a health account; listed so its deadline is in one place
+  years:
+    2026: {election: 5000, deposited: 4166.80, claimed: 5000, claim_deadline: 2027-03-31}
+
+fsa_eligible_plans: [dental]           # plans whose claims the limited-purpose FSA can take
+ortho_plans: [dental]
+ortho_match: [Example Orthodontics, ORTHODONTICS]   # routed apart: reimburse the orthodontist's invoices actually paid
+
+people:                                # claims.csv patient → project slug (projects/<slug>/project.yaml)
+  Parent A: parent-a
+  Parent B: parent-b
+  Child 1: child-1
+  Child 2: child-2

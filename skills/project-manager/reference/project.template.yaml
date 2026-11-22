@@ -1,0 +1,87 @@
+# project.yaml — state for one effort run by the project-manager skill.
+# Field reference: <skill>/reference/project-schema.md · filled example: <skill>/examples/kitchen-remodel/
+# Lives in the project's own notes folder, beside its index.md.
+# Edit by hand; run `python3 <skill>/scripts/pm.py validate <this file>` after.
+# Key names are fixed: validate rejects any it does not know (a misnamed key hides state).
+
+id: example                      # short slug; also names the scheduled-run prompt file
+title: Example Project
+status: active                   # active | paused | complete
+owners: [Parent A, Parent B]    # config household.decision_makers
+hard_deadline: null              # YYYY-MM-DD or null
+notes_root: notes/example
+runtime: cloud                   # cloud | local
+trigger_id: null                 # the scheduler's id once `routine` mode has created the job
+cadence:
+  cron: "CRON_TZ=America/New_York 30 11 * * 1-5"  # config routine.default_cron; same as <routine.dir>/<id>.md; null for interactive-only
+  urgency_window_days: 10
+  overdue_reping_days: 7         # an overdue item pings again this often until re-dated or closed
+calendar_for_reminders: family-calendar-id@example.com   # config calendar_for_reminders.id
+
+charter:
+  goal: One sentence — what "done" means.
+  scope: []
+  out_of_scope: []
+  success_criteria: []
+
+summary: |
+  Three to eight lines of current status, rewritten by each run. Rendered at the top of index.md.
+
+wind_down: []                    # when ALL are true, the run says so and recommends retiring the routine
+
+workstreams: []                  # - {id: roof, title: Roof, notes: ./roof.md}   link, never duplicate
+
+watch:
+  parties: []
+  # - name: Mike South, P.E.
+  #   org: South Engineering
+  #   emails: [mike@example.com]
+  #   domains: [example.com]
+  #   phones: ["205-555-0100"]   # informational; the thread is retained by a text-archiving skill
+  #   waiting_on: re-sealed permit set
+  #   last_heard: 2026-07-30
+  #   silent_after_days: 7
+  #   status: active        # active | done | declined | dropped | paused
+  identifiers: []                # policy / claim / permit / invoice numbers to search mail for
+  keywords: []                   # keep these specific — this is where search noise comes from
+  exclude: []                    # raw Gmail terms to subtract: ["from:parent.a+cc@example.com"]
+  drive_folders: []              # - {name: Plans, id: <folder id>}
+  calendars: []                  # - {name: Family Calendar, id: …}
+  web: []                        # - {url: https://…, check: permit status}
+  texts: []                      # - notes/example/texts/mike-south   (text-archiving skill)
+
+requirements: []                 # hard tests any incoming quote / bid / offer must pass
+do_not: []
+playbook_notes: []               # project-specific judgment the engine can't know
+
+raid:
+  risks: []
+  assumptions: []
+  issues: []
+  dependencies: []
+
+decisions: []
+# - {id: D1, text: …, status: DECIDED, date: 2026-07-09, rationale: …, ref: ./notes.md}
+
+actions: []
+# - {id: A1, text: …, owner: Parent A, due: 2026-09-15, status: open, next_step: …, blocked_by: Q1, draft_id: r-123}
+
+clocks: []
+# - {id: C1, due: 2026-10-12, item: …, owner: the insurer, on_miss: …}
+
+questions: []
+# - {id: Q1, text: …, for: Parent A, blocking: A1, raised: 2026-09-12, status: open}
+
+needs_local: []
+# - {id: L1, task: …, why: needs a logged-in browser, raised: 2026-09-12, status: open}
+
+discard_drafts: []               # superseded Gmail drafts for a human to delete — the engine never does
+# - {id: r-123, subject: "Re: cabinet bid", why: superseded by r-456, raised: 2026-09-15}
+
+escalate_when: []
+
+last_run:                          # written by `pm.py record` — never by hand
+  at: null
+  runtime: null
+  result: null
+  escalated: []
